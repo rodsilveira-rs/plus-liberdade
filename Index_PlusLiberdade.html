@@ -246,37 +246,29 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   background: rgba(6,167,125,0.12); color: var(--verde);
 }
 
-/* RANKING */
+/* EQUIPE (todos como destaque por padrão) */
 .rank-list { display: flex; flex-direction: column; gap: 8px; }
 .rank-row {
   display: flex; align-items: center; gap: 12px;
   background: var(--surface); border-radius: var(--radius);
   padding: 12px 14px; box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+  transition: border-color .2s;
 }
-.rank-pos {
-  width: 32px; height: 32px; border-radius: 50%;
-  display: grid; place-items: center;
-  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
-  background: var(--surface-2); color: var(--text-muted);
-  flex-shrink: 0;
-}
-.rank-row[data-pos="1"] .rank-pos {
-  background: linear-gradient(135deg, #FFD700, #FFB627);
-  color: #5a3a00; box-shadow: 0 2px 8px rgba(255,182,39,0.4);
-}
-.rank-row[data-pos="2"] .rank-pos {
-  background: linear-gradient(135deg, #E0E0E0, #BDBDBD); color: #333;
-}
-.rank-row[data-pos="3"] .rank-pos {
-  background: linear-gradient(135deg, #D49B6A, #B07840); color: #fff;
+.rank-row[data-destaque="1"] {
+  border-color: rgba(255,182,39,0.4);
+  background: linear-gradient(135deg, #fff 0%, #FFFAF0 100%);
 }
 .rank-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 40px; height: 40px; border-radius: 50%;
   background: linear-gradient(135deg, var(--laranja), var(--dourado));
-  color: #fff; font-weight: 800; font-size: 14px;
+  color: #fff; font-weight: 800; font-size: 16px;
   display: grid; place-items: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(255,107,53,0.25);
+}
+.rank-row[data-destaque="1"] .rank-avatar {
+  box-shadow: 0 2px 10px rgba(255,182,39,0.5);
 }
 .rank-info { flex: 1; min-width: 0; }
 .rank-name { font-size: 14px; font-weight: 700; }
@@ -299,6 +291,126 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   background: linear-gradient(90deg, #FFB627, #FF8F5C); color: #fff;
   font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
 }
+
+/* ===== ESTRATÉGIAS DE ATENDIMENTO ===== */
+.estrategias-intro { margin-bottom: 12px; }
+.estrat-segredo {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFE9CC 100%);
+  border: 1px solid rgba(255,107,53,0.25);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.estrat-segredo-ic { font-size: 28px; line-height: 1; flex-shrink: 0; }
+.estrat-segredo-titulo {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--laranja-escuro); margin-bottom: 4px;
+}
+.estrat-segredo-texto { font-size: 14px; color: var(--text); line-height: 1.4; }
+.estrat-segredo-texto strong { color: var(--laranja-escuro); }
+.estrat-segredo-texto em { color: var(--text-muted); font-style: italic; }
+
+.estrat-item {
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); margin-bottom: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.estrat-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px;
+  cursor: pointer;
+  width: 100%; text-align: left;
+}
+.estrat-num {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--laranja), var(--dourado));
+  display: grid; place-items: center;
+  font-size: 22px; line-height: 1;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(255,107,53,0.25);
+}
+.estrat-titulo-wrap { flex: 1; }
+.estrat-titulo { font-size: 14px; font-weight: 800; color: var(--text); }
+.estrat-foco {
+  font-size: 11px; font-weight: 600; color: var(--laranja-escuro);
+  margin-top: 2px;
+}
+.estrat-item[data-open="1"] .acc-chev { transform: rotate(180deg); }
+.estrat-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height .35s ease-out;
+  padding: 0 14px;
+}
+.estrat-item[data-open="1"] .estrat-body {
+  max-height: 1500px; padding: 0 14px 14px;
+}
+.estrat-acao {
+  font-size: 13px; color: var(--text-muted);
+  background: var(--surface-2); padding: 10px 12px;
+  border-radius: 10px; margin-bottom: 12px;
+  line-height: 1.45;
+}
+.estrat-acao strong { color: var(--text); }
+.estrat-falas { display: flex; flex-direction: column; gap: 10px; }
+.estrat-fala {
+  background: linear-gradient(135deg, rgba(255,107,53,0.04), rgba(255,182,39,0.06));
+  border-left: 3px solid var(--laranja);
+  border-radius: 0 10px 10px 0;
+  padding: 10px 12px;
+}
+.estrat-fala-ctx {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--laranja-escuro);
+  margin-bottom: 4px;
+}
+.estrat-fala-txt {
+  font-size: 13.5px; color: var(--text); line-height: 1.45;
+  font-style: italic;
+}
+.estrat-fala-dica {
+  font-size: 11.5px; color: var(--text-muted);
+  background: rgba(255,182,39,0.10); padding: 6px 8px;
+  border-radius: 6px; margin-top: 8px;
+  line-height: 1.4;
+}
+
+.estrat-lembrete {
+  background: linear-gradient(135deg, var(--laranja) 0%, var(--laranja-escuro) 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow-md);
+}
+.estrat-lembrete-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.estrat-lembrete-ic { font-size: 18px; }
+.estrat-lembrete-txt { font-size: 13.5px; line-height: 1.5; }
+.estrat-lembrete-txt strong { background: rgba(255,255,255,0.22); padding: 0 4px; border-radius: 4px; }
+
+.estrat-dica {
+  background: linear-gradient(135deg, rgba(6,167,125,0.10), rgba(45,192,154,0.05));
+  border: 1px solid rgba(6,167,125,0.25);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-top: 10px;
+}
+.estrat-dica-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--verde);
+  margin-bottom: 6px;
+}
+.estrat-dica-ic { font-size: 18px; }
+.estrat-dica-txt { font-size: 13px; color: var(--text); line-height: 1.5; }
+.estrat-dica-txt strong { color: var(--verde); }
 
 /* ACCORDION REGRAS */
 .acc-item {
@@ -691,12 +803,28 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   </div>
   <div class="cat-list" id="cat-list"></div>
 
-  <!-- RANKING -->
+  <!-- EQUIPE -->
   <div class="sec-title">
-    <h2>🏆 Ranking da Equipe</h2>
+    <h2>🤝 Nossa Equipe</h2>
     <span class="count" id="rank-count">—</span>
   </div>
   <div class="rank-list" id="rank-list"></div>
+
+  <!-- ESTRATÉGIAS DE ATENDIMENTO -->
+  <div class="sec-title">
+    <h2>🎯 Estratégias de Atendimento</h2>
+    <span class="count">Plus Mercearia</span>
+  </div>
+  <div class="estrategias-intro">
+    <div class="estrat-segredo">
+      <span class="estrat-segredo-ic">💡</span>
+      <div>
+        <div class="estrat-segredo-titulo">O segredo do Plus</div>
+        <div class="estrat-segredo-texto">Nunca pergunte <em>"Sim ou Não"</em>. Ofereça sempre <strong>"A ou B"</strong>!</div>
+      </div>
+    </div>
+  </div>
+  <div id="estrat-list"></div>
 
   <!-- REGRAS -->
   <div class="sec-title">
@@ -1164,16 +1292,21 @@ const ENGINE = (() => {
     const total = cats.length;
     const validadas = cats.filter(c => c.status === 'VALIDADO').length;
     const totalPremio = divisao.totalPremio || cats.reduce((s, c) => s + (c.premTotal || 0), 0);
-    const sumVenda = cats.reduce((s, c) => s + c.venda, 0);
-    const sumMeta  = cats.reduce((s, c) => s + c.meta, 0);
-    const pctEquipe = sumMeta > 0 ? (sumVenda / sumMeta) : 0;
+
+    // % equipe = média aritmética dos % de cada categoria, CAPADO em 100% por categoria
+    // (assim Café a 177% não infla o total: cada categoria contribui no máximo com 100%)
+    // Esse é o melhor reflexo de "quanto a equipe atingiu, no conjunto"
+    let pctEquipe = 0;
+    if (total > 0) {
+      const soma = cats.reduce((s, c) => s + Math.min(1, c.pct || 0), 0);
+      pctEquipe = soma / total;
+    }
 
     return {
       totalCategorias: total,
       validadas,
       pctValidadas: total > 0 ? validadas / total : 0,
       totalPremio,
-      sumVenda, sumMeta,
       pctEquipe
     };
   }
@@ -1311,43 +1444,185 @@ const UI = (() => {
 
     const enriched = atendentes.map(a => {
       const cond = mapCond[a.nome.toLowerCase().trim()];
-      return { ...a, condNivel: cond ? cond.nivel : 'ok', condIndice: cond ? cond.indice : a.conduta };
+      const nivel = cond ? cond.nivel : 'ok';
+      const condIndice = cond ? cond.indice : a.conduta;
+      const hasIssue = cond && (cond.faltas > 0 || cond.atrasos > 0 || cond.advV > 0 || cond.advE > 0 || cond.susp > 0);
+      return { ...a, condNivel: nivel, condIndice, hasIssue, cond };
     });
-    // Ordena: total desc, depois conduta desc
-    enriched.sort((a, b) => (b.total - a.total) || (b.condIndice - a.condIndice));
+
+    // Ordena alfabético — todos são iguais, não tem ranking
+    enriched.sort((a, b) => a.nome.localeCompare(b.nome));
 
     const list = document.getElementById('rank-list');
     document.getElementById('rank-count').textContent = `${enriched.length} no time`;
     list.innerHTML = '';
 
-    // Identifica destaque (top 1 elegível)
-    const destaqueIdx = enriched.findIndex(p => p.elegivel && p.total > 0);
-
-    enriched.forEach((p, idx) => {
+    enriched.forEach((p) => {
       const inicial = p.nome.trim().charAt(0).toUpperCase();
-      const badgeCls = p.condNivel === 'exemplar' || p.condNivel === 'ok' ? 'ok' :
-                       p.condNivel === 'atencao' ? 'warn' : 'bad';
-      const badgeTxt = p.condNivel === 'exemplar' ? 'Conduta exemplar' :
-                       p.condNivel === 'ok' ? 'Elegível' :
-                       p.condNivel === 'atencao' ? 'Atenção' : 'Não elegível';
-      const isDestaque = idx === destaqueIdx;
+      // Lógica: todos sem issue = "Destaque do Mês"
+      // Quem tem issue: badge diferenciado (amarelo se ainda elegível, vermelho se não)
+      let badgeCls, badgeTxt, destaque = false;
+      if (!p.hasIssue && p.elegivel) {
+        badgeCls = 'ok'; badgeTxt = 'Conduta exemplar'; destaque = true;
+      } else if (p.elegivel) {
+        badgeCls = 'warn'; badgeTxt = 'Atenção · ainda elegível';
+      } else {
+        badgeCls = 'bad'; badgeTxt = 'Não elegível neste mês';
+      }
+
       const row = document.createElement('div');
       row.className = 'rank-row';
-      row.setAttribute('data-pos', idx + 1);
+      row.setAttribute('data-destaque', destaque ? '1' : '0');
       row.innerHTML = `
-        <div class="rank-pos">${idx + 1}</div>
         <div class="rank-avatar">${inicial}</div>
         <div class="rank-info">
           <div class="rank-name">${p.nome}</div>
           <div class="rank-meta">
             <span class="rank-badge ${badgeCls}">${badgeTxt}</span>
-            ${isDestaque ? '<span class="destaque-pill">⭐ Destaque</span>' : ''}
+            ${destaque ? '<span class="destaque-pill">⭐ Destaque</span>' : ''}
           </div>
         </div>
         <div class="rank-value"><span class="c">R$</span>${fmtBRLdec(p.total)}</div>
       `;
       list.appendChild(row);
     });
+  }
+
+  // ----- ESTRATÉGIAS DE ATENDIMENTO -----
+  const ESTRATEGIAS = [
+    {
+      num: 1,
+      titulo: 'A Chegada',
+      foco: 'Água e Entrada',
+      icone: '🚪',
+      acao: 'O cliente sentou, você domina a mesa com hospitalidade.',
+      falas: [
+        {
+          contexto: 'Boas-vindas',
+          texto: 'Boa tarde/Boa noite! Meu nome é [Seu Nome], vou atender vocês hoje. Já conhecem a casa?'
+        },
+        {
+          contexto: 'Se for a primeira vez',
+          texto: 'Nossa especialidade é a culinária asiática quente, com pratos tradicionais do Japão, China e Coreia. Os grandes sucessos são os Ramens, o Teishoku, o Bibimbap coreano e o Yakisoba com camarões rosas grandes.'
+        },
+        {
+          contexto: 'A Água — na entrega do cardápio',
+          texto: 'Enquanto vocês olham o cardápio, trago uma água com ou sem gás pra vocês?'
+        },
+        {
+          contexto: 'A Entrada',
+          texto: 'Querem começar com uma entrada rápida? Recomendo muito o Onigiri, o Karaage (frango sequinho e crocante) ou a Gyoza.',
+          dica: 'Ofereça sempre o que estiver com saída rápida na cozinha no dia. Verifique antes.'
+        }
+      ]
+    },
+    {
+      num: 2,
+      titulo: 'Durante a Refeição',
+      foco: 'Bebidas extras e Drinks',
+      icone: '🥢',
+      acao: 'A Regra dos 30%: o copo/garrafa chegou no finalzinho? Antecipe-se.',
+      falas: [
+        {
+          contexto: 'Bebida acabando',
+          texto: 'Vejo que a bebida está no fim. Já trago outra gelando pra vocês?'
+        },
+        {
+          contexto: 'Se pediram só água/refri antes',
+          texto: 'Nossos pratos combinam muito bem com o drink Hanami, que leva Soju, uva roxa e lichia. Alguém da mesa gostaria de experimentar hoje?'
+        }
+      ]
+    },
+    {
+      num: 3,
+      titulo: 'A Limpeza da Mesa',
+      foco: 'Sobremesa e Café',
+      icone: '🍰',
+      acao: 'Retire os pratos sujos antes de oferecer. Mesa limpa chama o doce.',
+      falas: [
+        {
+          contexto: 'Sobremesa em par com café',
+          texto: 'Pra fechar a experiência muito bem, o que vocês preferem: dividir o nosso petit gateau com gelato com café expresso bem fresquinho?'
+        }
+      ]
+    },
+    {
+      num: 4,
+      titulo: 'A Diversão',
+      foco: 'Karaokê',
+      icone: '🎤',
+      acao: 'Mesa conversando alto, rindo ou terminando de comer.',
+      falas: [
+        {
+          contexto: 'Convite ao Karaokê',
+          texto: 'A mesa de vocês está super animada! Já sabem qual música vão cantar no nosso Karaokê hoje? A ficha custa só R$ 2,99, vale muito a pena pra fechar a noite com chave de ouro!'
+        }
+      ]
+    }
+  ];
+
+  function renderEstrategias() {
+    const list = document.getElementById('estrat-list');
+    if (!list) return;
+    list.innerHTML = '';
+    ESTRATEGIAS.forEach(e => {
+      const item = document.createElement('div');
+      item.className = 'estrat-item';
+      const falasHTML = e.falas.map(f => `
+        <div class="estrat-fala">
+          <div class="estrat-fala-ctx">${f.contexto}</div>
+          <div class="estrat-fala-txt">"${f.texto}"</div>
+          ${f.dica ? `<div class="estrat-fala-dica">💡 ${f.dica}</div>` : ''}
+        </div>
+      `).join('');
+
+      item.innerHTML = `
+        <button class="estrat-head" type="button">
+          <div class="estrat-num">${e.icone}</div>
+          <div class="estrat-titulo-wrap">
+            <div class="estrat-titulo">${e.num}. ${e.titulo}</div>
+            <div class="estrat-foco">Foco: ${e.foco}</div>
+          </div>
+          <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="estrat-body">
+          <div class="estrat-acao"><strong>Ação:</strong> ${e.acao}</div>
+          <div class="estrat-falas">${falasHTML}</div>
+        </div>
+      `;
+      item.querySelector('.estrat-head').addEventListener('click', () => {
+        const open = item.getAttribute('data-open') === '1';
+        item.setAttribute('data-open', open ? '0' : '1');
+      });
+      list.appendChild(item);
+    });
+
+    // Lembrete final + dica de treinamento
+    const lembrete = document.createElement('div');
+    lembrete.className = 'estrat-lembrete';
+    lembrete.innerHTML = `
+      <div class="estrat-lembrete-head">
+        <span class="estrat-lembrete-ic">🔥</span>
+        <span>Lembrete Diário</span>
+      </div>
+      <div class="estrat-lembrete-txt">
+        Cada água, sobremesa ou ficha a mais oferecida é <strong>dinheiro direto no seu bolso</strong> com a meta validada. Ofereça com um sorriso! 😊
+      </div>
+    `;
+    list.appendChild(lembrete);
+
+    const dica = document.createElement('div');
+    dica.className = 'estrat-dica';
+    dica.innerHTML = `
+      <div class="estrat-dica-head">
+        <span class="estrat-dica-ic">🎓</span>
+        <span>Dica de Treinamento (antes do turno)</span>
+      </div>
+      <div class="estrat-dica-txt">
+        <strong>Degustação:</strong> reúna a equipe 10 minutos antes de abrir o salão, faça um drink Hanami (ou o drink foco do dia) e dê um "chorinho" pra cada atendente provar. Conhecendo o sabor (doce, cítrico, refrescante), a venda acontece com muito mais confiança.
+      </div>
+    `;
+    list.appendChild(dica);
   }
 
   function renderRegras(regras) {
@@ -1383,6 +1658,7 @@ const UI = (() => {
     renderCategorias(state.cats);
     renderRanking(state.divisao.atendentes, state.comport);
     renderRegras(state.regras);
+    renderEstrategias();
     document.getElementById('last-update').textContent = fmtDate(state.ts);
     if (state.offline) {
       document.getElementById('offline-pill').classList.add('on');
