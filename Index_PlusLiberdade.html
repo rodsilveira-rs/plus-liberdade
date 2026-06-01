@@ -850,7 +850,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.3 · 01/06/2026 · % excedente + rateio por conduta</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.4 · 01/06/2026 · badges motivacionais corrigidos</div>
   </div>
 </main>
 
@@ -1529,15 +1529,23 @@ const UI = (() => {
 
     enriched.forEach((p) => {
       const inicial = p.nome.trim().charAt(0).toUpperCase();
-      // Lógica: todos sem issue = "Destaque do Mês"
-      // Quem tem issue: badge diferenciado (amarelo se ainda elegível, vermelho se não)
+      // Nova lógica: usa dados de Comportamento (hasIssue + condIndice) ao invés do
+      // campo 'elegivel' da Divisão Equipe (que reflete o modelo antigo de destaque).
+      // Microcopy sempre motivacional — nunca punitiva.
       let badgeCls, badgeTxt, destaque = false;
-      if (!p.hasIssue && p.elegivel) {
+      const isSuspenso = p.cond && p.cond.susp > 0;
+      if (!p.hasIssue) {
+        // Conduta perfeita — sem nenhuma ocorrência
         badgeCls = 'ok'; badgeTxt = 'Conduta exemplar'; destaque = true;
-      } else if (p.elegivel) {
-        badgeCls = 'warn'; badgeTxt = 'Atenção · ainda elegível';
+      } else if (isSuspenso) {
+        // Caso extremo de suspensão — tom discreto e respeitoso
+        badgeCls = 'bad'; badgeTxt = 'Mês de reset';
+      } else if (p.condIndice >= 0.8) {
+        // Teve algo, mas conduta ainda forte
+        badgeCls = 'warn'; badgeTxt = 'Mantém o ritmo!';
       } else {
-        badgeCls = 'bad'; badgeTxt = 'Não elegível neste mês';
+        // Conduta crítica mas ainda recebe (proporcional ao peso)
+        badgeCls = 'warn'; badgeTxt = 'Bora retomar 💪';
       }
 
       const row = document.createElement('div');
