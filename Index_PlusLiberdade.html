@@ -6,6 +6,10 @@
 <meta name="theme-color" content="#FF6B35">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Anti-cache: força navegador a buscar versão mais recente -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Plus Liberdade • Mercearia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -245,6 +249,15 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .cat[data-status="VALIDADO"] .cat-premio {
   background: rgba(6,167,125,0.12); color: var(--verde);
 }
+.cat-pct-detail {
+  display: block;
+  font-size: 11.5px; color: var(--text-muted); font-weight: 600;
+  margin-top: 6px; line-height: 1.4;
+}
+.cat-pct-detail strong { color: var(--verde); font-weight: 800; }
+.cat-pct-detail em { color: var(--st-foco); font-style: normal; font-weight: 700; }
+.cat[data-status="QUASE"] .cat-pct-detail em { color: var(--st-quase); }
+.cat[data-status="PROXIMO"] .cat-pct-detail em { color: var(--st-proximo); }
 
 /* EQUIPE (todos como destaque por padrão) */
 .rank-list { display: flex; flex-direction: column; gap: 8px; }
@@ -785,8 +798,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
         <div class="l">Metas batidas</div>
       </div>
       <div class="hero-stat">
-        <div class="k"><span id="hero-pct">0</span>%</div>
-        <div class="l">Equipe atingiu</div>
+        <div class="k">+<span id="hero-pct">0</span>%</div>
+        <div class="l">Gerando R$</div>
       </div>
     </div>
     <div class="hero-progress-wrap">
@@ -837,6 +850,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.3 · 01/06/2026 · % excedente + rateio por conduta</div>
   </div>
 </main>
 
@@ -1293,13 +1307,18 @@ const ENGINE = (() => {
     const validadas = cats.filter(c => c.status === 'VALIDADO').length;
     const totalPremio = divisao.totalPremio || cats.reduce((s, c) => s + (c.premTotal || 0), 0);
 
-    // % equipe = média aritmética dos % de cada categoria, CAPADO em 100% por categoria
-    // (assim Café a 177% não infla o total: cada categoria contribui no máximo com 100%)
-    // Esse é o melhor reflexo de "quanto a equipe atingiu, no conjunto"
-    let pctEquipe = 0;
+    // % de metas batidas = quantas categorias atingiram 100%
+    // Categoria a 93% conta como 0 (ainda não monetizou nada)
+    // Categoria a 105% conta como 1 (validou e excedente já vira R$)
+    const pctEquipe = total > 0 ? (validadas / total) : 0;
+
+    // % excedente médio = média de "quanto além de 100% a equipe gerou em cada categoria"
+    // É o "% que vale pro funcionário" — só conta o que está acima da meta
+    // Ex: Refri a 117% → excedente 17%; Água a 93% → excedente 0%
+    let pctExcedente = 0;
     if (total > 0) {
-      const soma = cats.reduce((s, c) => s + Math.min(1, c.pct || 0), 0);
-      pctEquipe = soma / total;
+      const somaExced = cats.reduce((s, c) => s + Math.max(0, (c.pct || 0) - 1), 0);
+      pctExcedente = somaExced / total;
     }
 
     return {
@@ -1307,8 +1326,38 @@ const ENGINE = (() => {
       validadas,
       pctValidadas: total > 0 ? validadas / total : 0,
       totalPremio,
-      pctEquipe
+      pctEquipe,
+      pctExcedente
     };
+  }
+
+  // Distribuição CORRETA: rateio do prêmio total proporcional ao peso (Índice de Conduta)
+  // Sempre paga o TOTAL DA CAMPANHA — quem tem peso menor faz os outros receberem mais
+  // Fórmula: Premio_i = (peso_i / soma_pesos) × Total
+  function distribuirPremioPorConduta(totalPremio, atendentes, comport) {
+    // Mapa nome → índice de conduta
+    const pesoMap = {};
+    comport.forEach(p => {
+      pesoMap[p.nome.toLowerCase().trim()] = p.indice;
+    });
+
+    // Calcula peso de cada atendente
+    let somaPesos = 0;
+    const enriched = atendentes.map(a => {
+      const peso = pesoMap[a.nome.toLowerCase().trim()] ?? 1.0; // se não achar, assume 1
+      somaPesos += peso;
+      return { ...a, peso };
+    });
+
+    // Edge case: ninguém com peso > 0 (todos suspensos)
+    if (somaPesos === 0) {
+      return enriched.map(a => ({ ...a, premioCalculado: 0 }));
+    }
+
+    return enriched.map(a => ({
+      ...a,
+      premioCalculado: (a.peso / somaPesos) * totalPremio
+    }));
   }
 
   // Delta diário comparando com snapshot
@@ -1330,7 +1379,8 @@ const ENGINE = (() => {
   return {
     normCampanha, normDivisao, normComportamento, normRegras,
     computeKPIs, computeDelta, filterForTV,
-    classifyStatus, emojiCategoria
+    classifyStatus, emojiCategoria,
+    distribuirPremioPorConduta
   };
 })();
 
@@ -1373,8 +1423,10 @@ const UI = (() => {
   function renderHero(kpi, delta) {
     document.getElementById('hero-validadas').textContent = `${kpi.validadas}/${kpi.totalCategorias}`;
     animateNumber(document.getElementById('hero-valor'), 0, kpi.totalPremio, 1400, fmtBRL);
-    animateNumber(document.getElementById('hero-pct'), 0, kpi.pctEquipe * 100, 1400, n => Math.round(n));
+    // Card 2 mostra % excedente médio (só o que está gerando R$ acima da meta)
+    animateNumber(document.getElementById('hero-pct'), 0, kpi.pctExcedente * 100, 1400, n => Math.round(n));
     setTimeout(() => {
+      // Barra mostra progresso de metas batidas (% das categorias validadas)
       const pctTarget = Math.min(100, Math.round(kpi.pctEquipe * 100));
       document.getElementById('hero-bar').style.width = pctTarget + '%';
     }, 200);
@@ -1401,7 +1453,13 @@ const UI = (() => {
     document.getElementById('cat-count').textContent = `${cats.length} no mês`;
     list.innerHTML = '';
     cats.forEach((c, idx) => {
-      const pctClamp = Math.min(100, Math.round(c.pct * 100));
+      // Barra de progresso visual: cap em 100% (não passa do final)
+      const pctBarra = Math.min(100, Math.round(c.pct * 100));
+      // % atingido real (pode passar de 100, ex: 117%, 245%)
+      const pctReal = Math.round(c.pct * 100);
+      // % de excedente (só o que está acima de 100%, é o que VALE pro funcionário)
+      const pctExcedente = Math.max(0, pctReal - 100);
+
       const card = document.createElement('div');
       card.className = 'cat';
       card.setAttribute('data-status', c.status);
@@ -1411,6 +1469,13 @@ const UI = (() => {
       const premioTxt = c.premTotal > 0
         ? `🏆 R$ ${fmtBRLdec(c.premTotal)} gerados`
         : (c.premUnit > 0 ? `R$ ${fmtBRLdec(c.premUnit)} por un. excedente` : '');
+
+      // Linha de status com os DOIS números: % atingido + % gerando R$ (excedente)
+      // Só mostra o "+X% gerando R$" quando bateu 100%
+      const pctLine = c.status === 'VALIDADO'
+        ? `<span class="cat-pct-detail">${pctReal}% atingido${pctExcedente > 0 ? ` · <strong>+${pctExcedente}% gerando R$</strong>` : ''}</span>`
+        : `<span class="cat-pct-detail">${pctReal}% atingido · <em>falta bater meta</em></span>`;
+
       card.innerHTML = `
         <div class="cat-head">
           <div class="cat-emoji">${c.emoji}</div>
@@ -1418,13 +1483,14 @@ const UI = (() => {
             <div class="cat-name">${c.nome}</div>
             <div class="cat-grupo">${c.grupo}</div>
           </div>
-          <div class="cat-pct">${pctClamp}%</div>
+          <div class="cat-pct">${pctReal}%</div>
         </div>
-        <div class="cat-bar"><div class="cat-bar-fill" data-target="${pctClamp}"></div></div>
+        <div class="cat-bar"><div class="cat-bar-fill" data-target="${pctBarra}"></div></div>
         <div class="cat-foot">
           <span class="cat-status">${c.statusLabel}</span>
           <span class="cat-falta">${faltaTxt}</span>
         </div>
+        ${pctLine}
         ${premioTxt ? `<div class="cat-premio">${premioTxt}</div>` : ''}
       `;
       list.appendChild(card);
@@ -1437,12 +1503,16 @@ const UI = (() => {
     }, 150);
   }
 
-  function renderRanking(atendentes, comport) {
-    // Combina prêmio + conduta
+  function renderRanking(atendentes, comport, totalPremio) {
+    // SOBREESCREVE o cálculo da planilha: distribui SEMPRE o total da campanha
+    // proporcional ao peso (Índice de Conduta) — quem tem menor peso faz os outros ganharem mais
+    const distribuido = ENGINE.distribuirPremioPorConduta(totalPremio || 0, atendentes, comport);
+
+    // Combina com conduta
     const mapCond = {};
     comport.forEach(p => mapCond[p.nome.toLowerCase().trim()] = p);
 
-    const enriched = atendentes.map(a => {
+    const enriched = distribuido.map(a => {
       const cond = mapCond[a.nome.toLowerCase().trim()];
       const nivel = cond ? cond.nivel : 'ok';
       const condIndice = cond ? cond.indice : a.conduta;
@@ -1482,7 +1552,7 @@ const UI = (() => {
             ${destaque ? '<span class="destaque-pill">⭐ Destaque</span>' : ''}
           </div>
         </div>
-        <div class="rank-value"><span class="c">R$</span>${fmtBRLdec(p.total)}</div>
+        <div class="rank-value"><span class="c">R$</span>${fmtBRLdec(p.premioCalculado)}</div>
       `;
       list.appendChild(row);
     });
@@ -1656,7 +1726,7 @@ const UI = (() => {
     document.getElementById('ref-mes').textContent = `Mercearia · ${mesAtualPT()}`;
     renderHero(state.kpi, state.delta);
     renderCategorias(state.cats);
-    renderRanking(state.divisao.atendentes, state.comport);
+    renderRanking(state.divisao.atendentes, state.comport, state.kpi.totalPremio);
     renderRegras(state.regras);
     renderEstrategias();
     document.getElementById('last-update').textContent = fmtDate(state.ts);
@@ -1702,13 +1772,17 @@ const UI = (() => {
     } else {
       const cols = Math.min(validadas.length, 3);
       grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-      grid.innerHTML = validadas.map(c => `
+      grid.innerHTML = validadas.map(c => {
+        const excedente = Math.max(0, c.pctDisplay - 100);
+        return `
         <div class="tv-cat-big">
           <div class="em">${c.emoji}</div>
           <div class="nm">${c.nome}</div>
-          <div class="pc">${c.pctDisplay}%</div>
+          <div class="pc">+${excedente}%</div>
+          <div style="font-size:1vw;opacity:.8;margin-top:0.5vh;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">gerando R$</div>
         </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     // SLIDE 3 — FOCO (top 5 abaixo da meta, ordenado por % desc)
@@ -1731,12 +1805,18 @@ const UI = (() => {
     }
 
     // SLIDE 4 — RANKING
-    const top = [...state.divisao.atendentes]
-      .sort((a, b) => b.total - a.total)
+    // Distribui prêmio pelo peso (igual ao mobile) pra mostrar valor correto na TV
+    const distribuidoTV = ENGINE.distribuirPremioPorConduta(
+      state.kpi.totalPremio || 0,
+      state.divisao.atendentes,
+      state.comport
+    );
+    const top = [...distribuidoTV]
+      .sort((a, b) => b.premioCalculado - a.premioCalculado)
       .slice(0, 5);
     const rankList = document.getElementById('tv-rank-list');
     const medals = ['🥇', '🥈', '🥉', '🏅', '🏅'];
-    if (top.length === 0 || top.every(p => p.total === 0)) {
+    if (top.length === 0 || top.every(p => p.premioCalculado === 0)) {
       // Mostra time alfabético se ainda não tem prêmio calculado
       const alfabetica = [...state.divisao.atendentes].sort((a,b) => a.nome.localeCompare(b.nome)).slice(0, 6);
       rankList.innerHTML = alfabetica.length > 0
@@ -1754,7 +1834,7 @@ const UI = (() => {
           <div class="tv-rank-pos">${i+1}</div>
           <div class="tv-rank-medal">${medals[i] || '⭐'}</div>
           <div class="tv-rank-nome">${p.nome}</div>
-          <div class="tv-rank-prem"><span class="c">R$ </span>${fmtBRL(p.total)}</div>
+          <div class="tv-rank-prem"><span class="c">R$ </span>${fmtBRL(p.premioCalculado)}</div>
         </div>
       `).join('');
     }
@@ -1884,6 +1964,10 @@ const APP = (() => {
       const btn = document.getElementById('btn-refresh');
       btn.style.transform = 'rotate(360deg)';
       btn.style.transition = 'transform .6s';
+      // Limpa cache do localStorage antes de buscar (força versão fresca)
+      try {
+        localStorage.removeItem('plus_liberdade_cache_v1');
+      } catch(e) {}
       load(true).then(() => {
         setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 700);
       });
