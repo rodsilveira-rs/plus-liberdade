@@ -853,7 +853,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.6 · 03/06/2026 · cache-buster nas URLs CSV</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.7 · 03/06/2026 · headers HTTP no-cache (CDN Google)</div>
   </div>
 </main>
 
@@ -995,16 +995,22 @@ const DATA = (() => {
     return isNaN(n) ? 0 : n;
   }
 
-  // Fetch com timeout + cache-buster (adiciona timestamp único)
-  // O Google Sheets CSV é cacheado pelo browser; adicionar &_=<timestamp>
-  // força nova requisição sempre, sem usar cache HTTP
+  // Fetch com timeout + bypass de cache via HEADERS HTTP
+  // OBS: o Google Sheets IGNORA query strings extras (como &_=timestamp),
+  // mas respeita os headers Cache-Control e Pragma. Esses headers forçam
+  // o CDN do Google a revalidar com origin, retornando sempre dados frescos.
   async function fetchCSV(url, timeoutMs = 12000) {
-    const sep = url.indexOf('?') >= 0 ? '&' : '?';
-    const urlFinal = url + sep + '_=' + Date.now();
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-      const r = await fetch(urlFinal, { signal: ctrl.signal, cache: 'no-store' });
+      const r = await fetch(url, {
+        signal: ctrl.signal,
+        cache: 'reload',  // força bypass de TODO cache (memória, disco e HTTP)
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const txt = await r.text();
       return parseCSV(txt);
