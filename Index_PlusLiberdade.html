@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#FF6B35">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Favicon inline (evita 404) - "m." Mercearia em laranja -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FF6B35'/%3E%3Cpath d='M14 48 L14 24 Q14 16 22 16 Q30 16 30 24 L30 48 M30 24 Q30 16 38 16 Q46 16 46 24 L46 48' stroke='white' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='46' r='4' fill='white'/%3E%3C/svg%3E">
 <!-- Anti-cache: força navegador a buscar versão mais recente -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -850,7 +853,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.5 · 01/06/2026 · % corrigido (venda/meta direto)</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.6 · 03/06/2026 · cache-buster nas URLs CSV</div>
   </div>
 </main>
 
@@ -992,12 +995,16 @@ const DATA = (() => {
     return isNaN(n) ? 0 : n;
   }
 
-  // Fetch com timeout
+  // Fetch com timeout + cache-buster (adiciona timestamp único)
+  // O Google Sheets CSV é cacheado pelo browser; adicionar &_=<timestamp>
+  // força nova requisição sempre, sem usar cache HTTP
   async function fetchCSV(url, timeoutMs = 12000) {
+    const sep = url.indexOf('?') >= 0 ? '&' : '?';
+    const urlFinal = url + sep + '_=' + Date.now();
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-      const r = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+      const r = await fetch(urlFinal, { signal: ctrl.signal, cache: 'no-store' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const txt = await r.text();
       return parseCSV(txt);
