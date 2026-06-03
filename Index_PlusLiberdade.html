@@ -853,7 +853,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.7 · 03/06/2026 · headers HTTP no-cache (CDN Google)</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.8 · 03/06/2026 · primeira carga sempre fresh</div>
   </div>
 </main>
 
@@ -1977,6 +1977,12 @@ const APP = (() => {
   }
 
   function init() {
+    // Limpeza automática de cache obsoleto (v1) no boot
+    try {
+      localStorage.removeItem('plus_liberdade_cache_v1');
+      localStorage.removeItem('plus_liberdade_snapshot_v1');
+    } catch(e){}
+
     // Eventos
     document.getElementById('btn-refresh').addEventListener('click', () => {
       const btn = document.getElementById('btn-refresh');
@@ -2015,7 +2021,7 @@ const APP = (() => {
     window.addEventListener('online',  () => { document.getElementById('offline-pill').classList.remove('on'); load(true); });
     window.addEventListener('offline', () => { document.getElementById('offline-pill').classList.add('on'); });
 
-    load(false).then(() => startAutoRefresh());
+    load(true).then(() => startAutoRefresh());  // primeira carga SEMPRE fresh (ignora localStorage)
   }
 
   return { init, reload, load };
