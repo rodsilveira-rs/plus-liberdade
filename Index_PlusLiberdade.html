@@ -850,7 +850,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.4 · 01/06/2026 · badges motivacionais corrigidos</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.5 · 01/06/2026 · % corrigido (venda/meta direto)</div>
   </div>
 </main>
 
@@ -949,8 +949,8 @@ const DATA = (() => {
     regras:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vRYlNWhQDwwkhp9dw_h3Df0K6IQD05XvWumUhc0TJcpAIC58YH4yVPMiajVwdg252HHwXYXsIgkByiU/pub?gid=2131482615&single=true&output=csv'
   };
 
-  const CACHE_KEY      = 'plus_liberdade_cache_v1';
-  const SNAPSHOT_KEY   = 'plus_liberdade_snapshot_v1';
+  const CACHE_KEY      = 'plus_liberdade_cache_v2';
+  const SNAPSHOT_KEY   = 'plus_liberdade_snapshot_v2';
   const CACHE_TTL_MS   = 5 * 60 * 1000;   // 5 minutos pro auto-refresh
   const SNAPSHOT_TTL_H = 18;              // snapshot vira "ontem" depois de 18h
 
@@ -1147,13 +1147,10 @@ const ENGINE = (() => {
       const venda = DATA.toNumber(row[iVenda]);
       const premUnit = DATA.toNumber(row[iPrem]);
       const premTot  = DATA.toNumber(row[iPrTot]);
-      let pct;
-      if (iPct >= 0 && row[iPct]) {
-        pct = DATA.toNumber(row[iPct]);
-        if (pct > 5) pct = pct / 100; // se veio "85" em vez de "0.85"
-      } else {
-        pct = meta > 0 ? venda / meta : 0;
-      }
+      // Calcula % atingido sempre como venda/meta — não confia na coluna formatada
+      // da planilha (CSV pode exportar "1%" como "1" ou "0.01" dependendo do formato).
+      // Cálculo direto é matematicamente robusto e elimina ambiguidade.
+      const pct = meta > 0 ? venda / meta : 0;
       const status = classifyStatus(pct);
       const falta = Math.max(0, Math.ceil(meta - venda));
 
@@ -1973,8 +1970,10 @@ const APP = (() => {
       btn.style.transform = 'rotate(360deg)';
       btn.style.transition = 'transform .6s';
       // Limpa cache do localStorage antes de buscar (força versão fresca)
+      // Limpa AMBAS as versões (v1 antiga e v2 atual) por segurança
       try {
         localStorage.removeItem('plus_liberdade_cache_v1');
+        localStorage.removeItem('plus_liberdade_cache_v2');
       } catch(e) {}
       load(true).then(() => {
         setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 700);
