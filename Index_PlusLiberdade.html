@@ -862,6 +862,388 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .aniv-prio-lista { grid-template-columns: 1fr; }
 }
 
+/* ===== BOTÃO ANIVERSÁRIO + OVERLAY + APRESENTAÇÃO ===== */
+.aniv-banner {
+  position: relative; display: flex; align-items: center; gap: 14px;
+  width: 100%;
+  background: linear-gradient(135deg, #6B0E13 0%, #8B1A1F 50%, #4A0509 100%);
+  border: none; border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  color: #fff; cursor: pointer;
+  margin: 0 0 14px 0;
+  box-shadow: 0 10px 30px rgba(107,14,19,0.25), 0 4px 8px rgba(0,0,0,0.08);
+  overflow: hidden; text-align: left;
+  transition: transform .2s;
+  animation: anivPulse 2.4s ease-in-out infinite;
+  font-family: inherit;
+}
+.aniv-banner:active { transform: scale(0.98); }
+.aniv-banner::before {
+  content: ''; position: absolute; border-radius: 50%;
+  background: rgba(255,182,39,0.20);
+  width: 200px; height: 200px; top: -80px; right: -60px;
+}
+.aniv-banner::after {
+  content: ''; position: absolute; border-radius: 50%;
+  background: rgba(255,107,53,0.15);
+  width: 140px; height: 140px; bottom: -70px; left: -30px;
+}
+.aniv-banner > * { position: relative; z-index: 1; }
+.aniv-banner-emoji { font-size: 44px; line-height: 1; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25)); }
+.aniv-banner-content { flex: 1; min-width: 0; }
+.aniv-banner-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30px; line-height: 1; letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #FFD27A 0%, #FFB627 70%, #FF8F5C 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.aniv-banner-sub { font-size: 12px; opacity: 0.92; font-weight: 600; margin-top: 4px; }
+.aniv-banner-arrow { font-size: 26px; font-weight: 800; opacity: 0.8; flex-shrink: 0; }
+@keyframes anivPulse {
+  0%, 100% { box-shadow: 0 10px 30px rgba(107,14,19,0.25), 0 4px 8px rgba(0,0,0,0.08); }
+  50%      { box-shadow: 0 10px 36px rgba(255,182,39,0.40), 0 4px 8px rgba(0,0,0,0.08); }
+}
+
+/* Overlay fullscreen */
+.aniv-overlay {
+  position: fixed; inset: 0; z-index: 950;
+  background: var(--bg);
+  display: none; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.aniv-overlay.on { display: block; }
+.aniv-overlay-header {
+  position: sticky; top: 0; z-index: 10;
+  background: linear-gradient(135deg, #6B0E13 0%, #4A0509 100%);
+  color: #fff;
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 2px 12px rgba(74,5,9,0.35);
+}
+.aniv-overlay-title { flex: 1; min-width: 0; }
+.aniv-overlay-title h2 {
+  font-size: 15px; font-weight: 800; letter-spacing: -0.01em;
+  text-transform: uppercase; line-height: 1.1;
+}
+.aniv-overlay-title .sub { font-size: 11px; opacity: 0.85; font-weight: 500; margin-top: 2px; }
+.aniv-overlay-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, var(--dourado), var(--laranja));
+  color: #4A0509; font-weight: 800;
+  border: none; border-radius: 12px;
+  padding: 8px 14px; font-size: 12px;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 2px 8px rgba(255,182,39,0.4);
+}
+.aniv-overlay-btn:active { transform: scale(0.95); }
+.aniv-overlay-close {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: rgba(255,255,255,0.18); color: #fff; font-size: 18px;
+  display: grid; place-items: center; border: none; cursor: pointer;
+  font-family: inherit; flex-shrink: 0;
+}
+.aniv-overlay-close:active { background: rgba(255,255,255,0.30); transform: scale(0.94); }
+.aniv-overlay-body { padding: 14px 14px 60px; max-width: 720px; margin: 0 auto; }
+
+/* ===== MODO APRESENTAÇÃO (slides do aniversário) ===== */
+.aniv-pres {
+  position: fixed; inset: 0; z-index: 1100;
+  background: radial-gradient(ellipse at top, #2a0a10 0%, #0a0407 100%);
+  color: #fff;
+  display: none;
+  overflow: hidden;
+}
+.aniv-pres.on { display: block; }
+.aniv-pres-exit {
+  position: absolute; top: 18px; right: 18px; z-index: 20;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); color: #fff; font-size: 18px;
+  display: grid; place-items: center;
+  backdrop-filter: blur(8px); border: none; cursor: pointer;
+  font-family: inherit;
+}
+.aniv-pres-exit:active { background: rgba(255,255,255,0.28); }
+
+.aniv-pres-slide {
+  position: absolute; inset: 0;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity .55s, transform .55s;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 6vh 6vw 12vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.aniv-pres-slide.active { opacity: 1; transform: translateY(0); }
+
+.aniv-pres-tag {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.25em;
+  color: var(--dourado); font-weight: 800; margin-bottom: 14px;
+}
+.aniv-pres-tag::before {
+  content: ''; display: inline-block;
+  width: 28px; height: 2px; background: var(--dourado);
+  vertical-align: middle; margin-right: 12px;
+}
+.aniv-pres h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 7vw, 88px);
+  line-height: 0.95; letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #FFD27A 0%, #FFB627 50%, #FF8F5C 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+.aniv-pres h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(32px, 5.5vw, 64px);
+  line-height: 1; letter-spacing: 0.01em;
+  color: var(--dourado);
+  margin-bottom: 18px;
+}
+.aniv-pres-lead {
+  font-size: clamp(16px, 2.4vw, 22px);
+  line-height: 1.5; opacity: 0.92;
+  max-width: 1100px;
+}
+.aniv-pres-lead strong { color: var(--dourado); font-weight: 800; }
+.aniv-pres-body { font-size: clamp(15px, 2vw, 19px); line-height: 1.5; }
+
+.aniv-pres-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,182,39,0.25);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+.aniv-pres-card-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(22px, 3vw, 32px);
+  color: var(--dourado);
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+.aniv-pres-card-sub {
+  font-size: clamp(13px, 1.6vw, 16px);
+  opacity: 0.75; font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+.aniv-pres-grid-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  margin-top: 14px;
+}
+.aniv-pres-grid-3 {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-top: 14px;
+}
+.aniv-pres-grid-4 {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-top: 14px;
+}
+@media (max-width: 700px) {
+  .aniv-pres-grid-2, .aniv-pres-grid-3, .aniv-pres-grid-4 { grid-template-columns: 1fr 1fr; }
+}
+
+.aniv-pres-check {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: clamp(15px, 1.9vw, 19px);
+  line-height: 1.45; padding: 6px 0;
+}
+.aniv-pres-check::before {
+  content: '✓'; flex-shrink: 0;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--dourado), var(--laranja));
+  color: #4A0509; font-weight: 900; font-size: 14px;
+  display: grid; place-items: center;
+  margin-top: 2px;
+}
+
+.aniv-pres-etapa {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: rgba(107,14,19,0.35);
+  border-left: 4px solid var(--dourado);
+  border-radius: 0 12px 12px 0;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.aniv-pres-etapa-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(28px, 3.5vw, 38px);
+  line-height: 1; color: var(--dourado);
+  min-width: 36px; flex-shrink: 0;
+}
+.aniv-pres-etapa-content { flex: 1; }
+.aniv-pres-etapa-titulo {
+  font-weight: 800; font-size: clamp(15px, 1.9vw, 19px);
+}
+.aniv-pres-etapa-desc {
+  font-size: clamp(13px, 1.6vw, 16px); opacity: 0.85;
+  margin-top: 2px;
+}
+
+.aniv-pres-aviso {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: linear-gradient(135deg, rgba(255,182,39,0.18), rgba(255,107,53,0.10));
+  border: 1px solid rgba(255,182,39,0.4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 14px;
+  font-size: clamp(13px, 1.7vw, 17px);
+  font-weight: 600;
+}
+.aniv-pres-aviso-ic { font-size: 22px; flex-shrink: 0; }
+
+/* Cards de cardápio na apresentação */
+.aniv-pres-menu-grupo {
+  margin-bottom: 16px;
+}
+.aniv-pres-menu-titulo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(22px, 2.6vw, 28px);
+  color: var(--dourado);
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+.aniv-pres-menu-item {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.15);
+  gap: 14px;
+  font-size: clamp(13px, 1.7vw, 17px);
+}
+.aniv-pres-menu-item:last-child { border-bottom: none; }
+.aniv-pres-menu-nome { flex: 1; }
+.aniv-pres-menu-desc { font-size: 0.85em; opacity: 0.65; display: block; margin-top: 2px; }
+.aniv-pres-menu-preco {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(18px, 2.2vw, 24px);
+  color: var(--dourado); white-space: nowrap;
+}
+.aniv-pres-menu-combo {
+  background: linear-gradient(135deg, rgba(255,182,39,0.10), rgba(255,107,53,0.05));
+  border: 1px solid rgba(255,182,39,0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.aniv-pres-menu-combo .aniv-pres-menu-item { border: none; padding: 0; }
+
+.aniv-pres-resp {
+  background: rgba(255,255,255,0.06);
+  border-top: 3px solid var(--dourado);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.aniv-pres-resp.vinho { border-top-color: #B8252C; }
+.aniv-pres-resp.escuro { border-top-color: #6E5A1A; }
+.aniv-pres-resp-nome {
+  font-weight: 800; font-size: clamp(14px, 1.8vw, 18px);
+  margin-bottom: 4px;
+}
+.aniv-pres-resp-cargo {
+  font-size: clamp(11px, 1.4vw, 13px); color: var(--dourado);
+  text-transform: uppercase; letter-spacing: 0.05em; font-weight: 800;
+  margin-bottom: 6px;
+}
+.aniv-pres-resp-desc {
+  font-size: clamp(11px, 1.4vw, 14px); opacity: 0.80; line-height: 1.4;
+}
+
+.aniv-pres-caixa {
+  background: rgba(107,14,19,0.30);
+  border: 1px solid rgba(255,182,39,0.25);
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+.aniv-pres-caixa-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 10px;
+}
+.aniv-pres-caixa-num {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--dourado); color: #4A0509;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.aniv-pres-caixa-tit {
+  font-weight: 800; font-size: clamp(15px, 1.9vw, 19px);
+}
+.aniv-pres-caixa-resp {
+  font-size: clamp(12px, 1.5vw, 14px); opacity: 0.85;
+  font-style: italic;
+}
+.aniv-pres-caixa-resp strong { color: var(--dourado); font-style: normal; }
+.aniv-pres-caixa-li {
+  font-size: clamp(13px, 1.6vw, 16px);
+  padding: 3px 0;
+  display: flex; gap: 8px;
+}
+.aniv-pres-caixa-li::before { content: '•'; color: var(--dourado); font-weight: 800; }
+
+.aniv-pres-dica {
+  background: linear-gradient(135deg, rgba(255,182,39,0.18), rgba(255,107,53,0.08));
+  border: 1px solid rgba(255,182,39,0.45);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 14px;
+  font-size: clamp(13px, 1.7vw, 17px);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.aniv-pres-dica strong {
+  background: var(--dourado); color: #4A0509;
+  padding: 2px 8px; border-radius: 5px;
+  font-weight: 800;
+}
+
+.aniv-pres-cta {
+  background: linear-gradient(135deg, var(--dourado), var(--laranja));
+  color: #4A0509;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-top: 18px;
+  font-size: clamp(15px, 2vw, 20px); font-weight: 800;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(255,182,39,0.35);
+}
+
+/* Rodapé com info de navegação */
+.aniv-pres-foot {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.6));
+  z-index: 10;
+}
+.aniv-pres-counter {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; color: var(--dourado);
+  letter-spacing: 0.05em;
+}
+.aniv-pres-hint {
+  font-size: 12px; opacity: 0.7; font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.aniv-pres-hint kbd {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 2px 8px; border-radius: 5px;
+  font-family: inherit; font-size: 11px;
+  margin: 0 2px;
+}
+.aniv-pres-progress {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: rgba(255,255,255,0.10);
+  z-index: 9;
+}
+.aniv-pres-progress-bar {
+  height: 100%; background: linear-gradient(90deg, var(--laranja), var(--dourado));
+  transition: width .4s ease-out;
+  box-shadow: 0 0 8px var(--dourado);
+}
+
 /* FOOTER */
 .footer {
   text-align: center; padding: 24px 16px;
@@ -1184,6 +1566,16 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 <!-- MAIN MOBILE -->
 <main class="main" id="mobile-view">
 
+  <!-- BANNER ANIVERSÁRIO (botão grande de destaque) -->
+  <button class="aniv-banner" id="btn-aniv-open" type="button">
+    <div class="aniv-banner-emoji">🎉</div>
+    <div class="aniv-banner-content">
+      <div class="aniv-banner-titulo">Aniversário Liberdade</div>
+      <div class="aniv-banner-sub">Toque aqui pra ver o guia da operação</div>
+    </div>
+    <div class="aniv-banner-arrow">→</div>
+  </button>
+
   <!-- HERO -->
   <section class="hero">
     <div class="hero-label">Prêmio total da campanha</div>
@@ -1241,246 +1633,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   </div>
   <div id="estrat-list"></div>
 
-  <!-- ANIVERSÁRIO MERCEARIA -->
-  <div class="sec-title">
-    <h2>🎉 Aniversário · Operação</h2>
-    <span class="count">Guia da Equipe</span>
-  </div>
-
-  <section class="aniv-hero">
-    <div class="aniv-hero-confetti">🎉</div>
-    <h3>ANIVERSÁRIO</h3>
-    <p>Operação Especial</p>
-    <div class="aniv-hero-meta">📍 4 Áreas · Atendimento Simultâneo</div>
-  </section>
-
-  <div class="aniv-objetivo">
-    <span class="aniv-objetivo-ic">🎯</span>
-    <div>
-      <div class="aniv-objetivo-label">Nosso Objetivo</div>
-      <div class="aniv-objetivo-texto">Garantir um atendimento <strong>rápido</strong>, <strong>organizado</strong> e <strong>excelente experiência</strong> para os clientes — com operação simultânea em 4 áreas.</div>
-    </div>
-  </div>
-
-  <div class="aniv-areas-grid">
-    <div class="aniv-area-card" data-area="1" data-target-acc="0">
-      <div class="aniv-area-num">1</div>
-      <div class="aniv-area-icon">🏕️</div>
-      <div>
-        <div class="aniv-area-titulo">Área Externa</div>
-        <div class="aniv-area-desc">Barracas de alimentação e bebidas</div>
-      </div>
-    </div>
-    <div class="aniv-area-card" data-area="2" data-target-acc="0">
-      <div class="aniv-area-num">2</div>
-      <div class="aniv-area-icon">🍽️</div>
-      <div>
-        <div class="aniv-area-titulo">Salão 1º Piso</div>
-        <div class="aniv-area-desc">Circulação, consumo e compras</div>
-      </div>
-    </div>
-    <div class="aniv-area-card" data-area="3" data-target-acc="0">
-      <div class="aniv-area-num">3</div>
-      <div class="aniv-area-icon">🛒</div>
-      <div>
-        <div class="aniv-area-titulo">Mercearia</div>
-        <div class="aniv-area-desc">Compras normais no estabelecimento</div>
-      </div>
-    </div>
-    <div class="aniv-area-card" data-area="4" data-target-acc="1">
-      <div class="aniv-area-num">4</div>
-      <div class="aniv-area-icon">🍜</div>
-      <div>
-        <div class="aniv-area-titulo">Salão 2º Piso</div>
-        <div class="aniv-area-desc">Cardápio exclusivo da cozinha</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Fluxo 1º Piso -->
-  <div class="acc-item aniv-acc" data-aniv-idx="0">
-    <button class="acc-head" type="button">
-      <div class="acc-num vinho">1º</div>
-      <div class="acc-titulo-wrap">
-        <div class="acc-titulo">1º Piso & Barracas</div>
-        <div class="aniv-acc-subtitulo">Externo + Salão térreo</div>
-      </div>
-      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="acc-body">
-      <div class="aniv-fluxo-titulo">O cliente pode:</div>
-      <div class="aniv-checklist">
-        <div class="aniv-checklist-item">Comprar alimentos e bebidas nas barracas externas</div>
-        <div class="aniv-checklist-item">Consumir nas mesas externas</div>
-        <div class="aniv-checklist-item">Consumir no salão interno do 1º Piso</div>
-        <div class="aniv-checklist-item">Fazer compras normalmente na mercearia</div>
-      </div>
-      <div class="aniv-fluxo-titulo">Fluxo das Barracas:</div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">1</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pedido na Barraca</div><div class="aniv-fluxo-content-desc">Cliente escolhe e solicita o item</div></div></div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">2</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pagamento na Hora</div><div class="aniv-fluxo-content-desc">Pagamento realizado no momento da compra</div></div></div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">3</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Ficha de Retirada</div><div class="aniv-fluxo-content-desc">Cliente recebe uma ficha numerada</div></div></div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">4</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Retirada Direta</div><div class="aniv-fluxo-content-desc">Produto retirado diretamente na barraca</div></div></div>
-      <div class="aniv-aviso"><span class="aniv-aviso-ic">⚠️</span><span class="aniv-aviso-txt">Não haverá atendimento de mesa para os produtos vendidos nas barracas.</span></div>
-    </div>
-  </div>
-
-  <!-- Fluxo 2º Piso -->
-  <div class="acc-item aniv-acc" data-aniv-idx="1">
-    <button class="acc-head" type="button">
-      <div class="acc-num dourado">2º</div>
-      <div class="acc-titulo-wrap">
-        <div class="acc-titulo">2º Piso · Cozinha</div>
-        <div class="aniv-acc-subtitulo">Pratos da cozinha · Atendimento de mesa</div>
-      </div>
-      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="acc-body">
-      <div class="aniv-aviso" style="margin-top:0"><span class="aniv-aviso-ic">🍜</span><span class="aniv-aviso-txt">Exclusivo para clientes que desejam consumir pratos produzidos pela cozinha.</span></div>
-      <div class="aniv-fluxo-titulo">5 Etapas do Fluxo:</div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">1</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Chegada ao Salão</div><div class="aniv-fluxo-content-desc">Cliente sobe ao 2º andar</div></div></div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">2</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Recebe Comanda</div><div class="aniv-fluxo-content-desc">Mariana entrega a comanda no início da escada</div></div></div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">3</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Escolhe a Mesa</div><div class="aniv-fluxo-content-desc">Cliente se acomoda</div></div></div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">4</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pedido pelo Tablet</div><div class="aniv-fluxo-content-desc">Itens lançados na comanda via tablet</div></div></div>
-      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">5</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pagamento</div><div class="aniv-fluxo-content-desc">Realizado no Caixa do 2º Piso (início da escada)</div></div></div>
-    </div>
-  </div>
-
-  <!-- Cardápio Barracas -->
-  <div class="acc-item aniv-acc">
-    <button class="acc-head" type="button">
-      <div class="acc-num laranja">🏕️</div>
-      <div class="acc-titulo-wrap">
-        <div class="acc-titulo">Cardápio · Barracas Externas</div>
-        <div class="aniv-acc-subtitulo">Entradas · Combos · Bebidas</div>
-      </div>
-      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="acc-body">
-      <div class="aniv-cardapio-grupo">
-        <div class="aniv-cardapio-grupo-titulo">🥢 Entradas</div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Tempurá de Legumes</div></div><div class="aniv-cardapio-item-preco">R$ 32,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Corn Dog</div></div><div class="aniv-cardapio-item-preco">R$ 24,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Onigiri de Salmão com Kewpie</div></div><div class="aniv-cardapio-item-preco">R$ 29,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Karaague + 2 un. Gyoza de Salmão (200g)</div></div><div class="aniv-cardapio-item-preco">R$ 29,90</div></div>
-      </div>
-      <div class="aniv-cardapio-grupo">
-        <div class="aniv-cardapio-grupo-titulo">🎁 Combos</div>
-        <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Busan Street Combo</div><div class="aniv-cardapio-item-desc">Karaague + 2 Korokke de Salmão + Toppoki</div></div><div class="aniv-cardapio-item-preco">R$ 39,90</div></div></div>
-        <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Alma de Seoul Combo</div><div class="aniv-cardapio-item-desc">Gohan + Kimchi + Dakgangjeong + 2 Gyozas Suínas</div></div><div class="aniv-cardapio-item-preco">R$ 45,90</div></div></div>
-        <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Arirang Tour Combo</div><div class="aniv-cardapio-item-desc">Karaague + 2 Korokke + 2 Gyozas Suínas + Dakgangjeong</div></div><div class="aniv-cardapio-item-preco">R$ 54,90</div></div></div>
-      </div>
-      <div class="aniv-cardapio-bebidas">
-        <div class="aniv-cardapio-bebidas-label">🍺 Bebidas</div>
-        Heineken <strong>R$ 13,90</strong> · Stella Pure Gold <strong>R$ 13,90</strong> · Caipisakês (4 sabores) · Água <strong>R$ 5,90–6,90</strong> · Refrigerante <strong>R$ 8,90</strong>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cardápio 2º Piso -->
-  <div class="acc-item aniv-acc">
-    <button class="acc-head" type="button">
-      <div class="acc-num vinho">🍜</div>
-      <div class="acc-titulo-wrap">
-        <div class="acc-titulo">Cardápio · 2º Piso</div>
-        <div class="aniv-acc-subtitulo">Yakissoba · Ramen · Mexido Coreano</div>
-      </div>
-      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="acc-body">
-      <div class="aniv-cardapio-grupo">
-        <div class="aniv-cardapio-grupo-titulo">🥢 Yakissoba Chinês</div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Misto (Filé + Frango)</div></div><div class="aniv-cardapio-item-preco">R$ 59,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Cogumelos <span class="aniv-vegano-tag">VEGANO</span></div></div><div class="aniv-cardapio-item-preco">R$ 57,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Camarão</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
-      </div>
-      <div class="aniv-cardapio-grupo">
-        <div class="aniv-cardapio-grupo-titulo">🍥 Ramen Japonês</div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Shoyu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Shoyu + Chicken Katsu</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Missô Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Missô + Chicken Katsu</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Tonkotsu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Torikatsu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
-      </div>
-      <div class="aniv-cardapio-grupo">
-        <div class="aniv-cardapio-grupo-titulo">🍲 Mexido Coreano</div>
-        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Bibimbap</div><div class="aniv-cardapio-item-desc">Prato coreano com arroz, legumes salteados e molho especial</div></div><div class="aniv-cardapio-item-preco">R$ 59,90</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Quem faz o quê -->
-  <div class="acc-item aniv-acc">
-    <button class="acc-head" type="button">
-      <div class="acc-num laranja">👥</div>
-      <div class="acc-titulo-wrap">
-        <div class="acc-titulo">Quem faz o quê</div>
-        <div class="aniv-acc-subtitulo">8 setores · Responsáveis</div>
-      </div>
-      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="acc-body">
-      <div class="aniv-resp-grid" style="margin-top:10px;">
-        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Laís</div><div class="aniv-resp-cargo">Drinks Externos</div><div class="aniv-resp-desc">Carrinho de drinks externo</div></div>
-        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Tarcísio</div><div class="aniv-resp-cargo">Bar Interno</div><div class="aniv-resp-desc">Bar interno do 1º Piso</div></div>
-        <div class="aniv-resp-card dourado"><div class="aniv-resp-nome">Daiane</div><div class="aniv-resp-cargo">Caixa Entrada</div><div class="aniv-resp-desc">Mercearia, fichas, fluxo de entrada</div></div>
-        <div class="aniv-resp-card escuro"><div class="aniv-resp-nome">Mariana</div><div class="aniv-resp-cargo">2º Piso & Supervisão</div><div class="aniv-resp-desc">Comandas, caixa 2º piso, supervisão geral</div></div>
-        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Geovanni & Maycon</div><div class="aniv-resp-cargo">Salão 1º Piso</div><div class="aniv-resp-desc">Mesas, limpeza, mercearia</div></div>
-        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Marcos, Leandro & Mayara</div><div class="aniv-resp-cargo">Barracas Externas</div><div class="aniv-resp-desc">Produção, entregas, fichas, controle</div></div>
-        <div class="aniv-resp-card dourado"><div class="aniv-resp-nome">Janaína & Valdo</div><div class="aniv-resp-cargo">Salão 2º Piso</div><div class="aniv-resp-desc">Mesas, limpeza, suporte operacional</div></div>
-        <div class="aniv-resp-card escuro"><div class="aniv-resp-nome">Gabriel</div><div class="aniv-resp-cargo">Apoio Geral · Cumim</div><div class="aniv-resp-desc">Dois andares, recolhimento, suporte emergencial</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Caixas e Recebimentos -->
-  <div class="acc-item aniv-acc">
-    <button class="acc-head" type="button">
-      <div class="acc-num dourado">💰</div>
-      <div class="acc-titulo-wrap">
-        <div class="acc-titulo">Caixas e Recebimentos</div>
-        <div class="aniv-acc-subtitulo">3 caixas · Onde pagar o quê</div>
-      </div>
-      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="acc-body">
-      <div style="margin-top:10px;">
-        <div class="aniv-caixa-card" data-caixa="1">
-          <div class="aniv-caixa-head"><div class="aniv-caixa-num">1</div><div><div class="aniv-caixa-titulo">Caixa da Barraca</div><div class="aniv-caixa-resp">Responsável: <strong>Túlio</strong></div></div></div>
-          <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Pagamentos das barracas externas</div><div class="aniv-caixa-lista-item">Entrega de fichas de retirada</div></div>
-        </div>
-        <div class="aniv-caixa-card" data-caixa="2">
-          <div class="aniv-caixa-head"><div class="aniv-caixa-num">2</div><div><div class="aniv-caixa-titulo">Caixa da Entrada</div><div class="aniv-caixa-resp">Responsável: <strong>Daiane</strong></div></div></div>
-          <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Compras da mercearia</div><div class="aniv-caixa-lista-item">Venda de fichas do evento</div><div class="aniv-caixa-lista-item">Apoio ao fluxo geral</div></div>
-        </div>
-        <div class="aniv-caixa-card" data-caixa="3">
-          <div class="aniv-caixa-head"><div class="aniv-caixa-num">3</div><div><div class="aniv-caixa-titulo">Caixa do 2º Piso</div><div class="aniv-caixa-resp">Responsável: <strong>Mariana</strong></div></div></div>
-          <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Consumos via comandas</div><div class="aniv-caixa-lista-item">Fechamento de mesa do salão superior</div></div>
-        </div>
-        <div class="aniv-dica-sistema">
-          <span class="aniv-dica-sistema-ic">💡</span>
-          <div class="aniv-dica-sistema-txt">No sistema, pesquise por <strong>EVENTO</strong> para acessar os itens cadastrados para o aniversário. Em dúvidas, consultar Mariana.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Prioridades -->
-  <div class="aniv-prio-card">
-    <div class="aniv-prio-titulo">🎯 Nosso compromisso</div>
-    <div class="aniv-prio-sub">Durante todo o evento</div>
-    <div class="aniv-prio-lista">
-      <div class="aniv-prio-item">Limpeza constante das mesas</div>
-      <div class="aniv-prio-item">Organização dos salões</div>
-      <div class="aniv-prio-item">Agilidade no atendimento</div>
-      <div class="aniv-prio-item">Cordialidade com os clientes</div>
-      <div class="aniv-prio-item">Reposição e organização da mercearia</div>
-      <div class="aniv-prio-item">Comunicação rápida entre setores</div>
-      <div class="aniv-prio-item">Conferência dos pedidos antes da entrega</div>
-      <div class="aniv-prio-item">Manutenção da boa experiência</div>
-    </div>
-    <div class="aniv-prio-cta">🎉 Juntos vamos garantir uma experiência incrível!</div>
-  </div>
 
   <!-- REGRAS -->
   <div class="sec-title">
@@ -1493,7 +1645,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v2.0 · 11/06/2026 · + Seção Aniversário (guia da equipe)</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v2.1 · 11/06/2026 · Aniversário em botão grande + apresentação por slides</div>
   </div>
 </main>
 
@@ -2649,6 +2801,71 @@ const APP = (() => {
       localStorage.removeItem('plus_liberdade_snapshot_v1');
     } catch(e){}
 
+    // ===== ANIVERSÁRIO: overlay + modo apresentação =====
+    const anivOverlay = document.getElementById('aniv-overlay');
+    const anivPres = document.getElementById('aniv-pres');
+    const anivPresSlides = document.querySelectorAll('.aniv-pres-slide');
+    let anivPresIdx = 0;
+
+    function anivOpen() {
+      anivOverlay.classList.add('on');
+      anivOverlay.scrollTop = 0;
+      document.body.style.overflow = 'hidden';
+    }
+    function anivClose() {
+      anivOverlay.classList.remove('on');
+      document.body.style.overflow = '';
+    }
+    function anivPresStart() {
+      anivPresIdx = 0;
+      anivPresShow();
+      anivPres.classList.add('on');
+      document.body.style.overflow = 'hidden';
+      // Fullscreen (best-effort)
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    }
+    function anivPresStop() {
+      anivPres.classList.remove('on');
+      // Mantém overlay aberto se ele estava aberto (volta pra ele)
+      if (!anivOverlay.classList.contains('on')) {
+        document.body.style.overflow = '';
+      }
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    }
+    function anivPresShow() {
+      anivPresSlides.forEach((s, i) => {
+        s.classList.toggle('active', i === anivPresIdx);
+      });
+      document.getElementById('aniv-pres-cur').textContent = anivPresIdx + 1;
+      document.getElementById('aniv-pres-tot').textContent = anivPresSlides.length;
+      const pct = ((anivPresIdx + 1) / anivPresSlides.length) * 100;
+      document.getElementById('aniv-pres-progress-bar').style.width = pct + '%';
+    }
+    function anivPresNext() {
+      if (anivPresIdx < anivPresSlides.length - 1) {
+        anivPresIdx++;
+        anivPresShow();
+      }
+    }
+    function anivPresPrev() {
+      if (anivPresIdx > 0) {
+        anivPresIdx--;
+        anivPresShow();
+      }
+    }
+
+    document.getElementById('btn-aniv-open').addEventListener('click', anivOpen);
+    document.getElementById('btn-aniv-close').addEventListener('click', anivClose);
+    document.getElementById('btn-aniv-pres').addEventListener('click', anivPresStart);
+    document.getElementById('btn-aniv-pres-exit').addEventListener('click', anivPresStop);
+
+    // Clique no slide avança (mas não nos botões de saída)
+    anivPres.addEventListener('click', (e) => {
+      if (e.target.closest('.aniv-pres-exit, .aniv-pres-foot, kbd')) return;
+      anivPresNext();
+    });
+
     // Wire dos accordions da seção Aniversário (são HTML estáticos no DOM)
     document.querySelectorAll('.aniv-acc').forEach(item => {
       const head = item.querySelector('.acc-head');
@@ -2693,9 +2910,22 @@ const APP = (() => {
     });
     document.getElementById('tv-exit').addEventListener('click', () => UI.tvStop());
 
-    // ESC sai do modo TV
+    // ESC sai do modo TV / apresentação / overlay aniversário
+    // Enter avança slide na apresentação; ← / → navega entre slides
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') UI.tvStop();
+      if (e.key === 'Escape') {
+        if (anivPres.classList.contains('on')) { anivPresStop(); return; }
+        if (anivOverlay.classList.contains('on')) { anivClose(); return; }
+        UI.tvStop();
+      } else if (anivPres.classList.contains('on')) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          anivPresNext();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'Backspace') {
+          e.preventDefault();
+          anivPresPrev();
+        }
+      }
     });
 
     // Pausa auto-refresh quando aba some
@@ -2719,5 +2949,545 @@ const APP = (() => {
 // BOOT
 document.addEventListener('DOMContentLoaded', APP.init);
 </script>
+<!-- OVERLAY ANIVERSÁRIO (abre via botão grande no topo do painel) -->
+<div class="aniv-overlay" id="aniv-overlay">
+  <div class="aniv-overlay-header">
+    <div class="aniv-overlay-title">
+      <h2>🎉 Aniversário Liberdade</h2>
+      <div class="sub">Guia da Operação · Mercearia</div>
+    </div>
+    <button class="aniv-overlay-btn" id="btn-aniv-pres" type="button" title="Apresentação por slides">
+      <span>📺</span> <span>Apresentação</span>
+    </button>
+    <button class="aniv-overlay-close" id="btn-aniv-close" type="button" aria-label="Fechar">✕</button>
+  </div>
+  <div class="aniv-overlay-body">
+      <!-- ANIVERSÁRIO MERCEARIA -->
+      <div class="sec-title">
+        <h2>🎉 Aniversário · Operação</h2>
+        <span class="count">Guia da Equipe</span>
+      </div>
+
+      <section class="aniv-hero">
+        <div class="aniv-hero-confetti">🎉</div>
+        <h3>ANIVERSÁRIO</h3>
+        <p>Operação Especial</p>
+        <div class="aniv-hero-meta">📍 4 Áreas · Atendimento Simultâneo</div>
+      </section>
+
+      <div class="aniv-objetivo">
+        <span class="aniv-objetivo-ic">🎯</span>
+        <div>
+          <div class="aniv-objetivo-label">Nosso Objetivo</div>
+          <div class="aniv-objetivo-texto">Garantir um atendimento <strong>rápido</strong>, <strong>organizado</strong> e <strong>excelente experiência</strong> para os clientes — com operação simultânea em 4 áreas.</div>
+        </div>
+      </div>
+
+      <div class="aniv-areas-grid">
+        <div class="aniv-area-card" data-area="1" data-target-acc="0">
+          <div class="aniv-area-num">1</div>
+          <div class="aniv-area-icon">🏕️</div>
+          <div>
+            <div class="aniv-area-titulo">Área Externa</div>
+            <div class="aniv-area-desc">Barracas de alimentação e bebidas</div>
+          </div>
+        </div>
+        <div class="aniv-area-card" data-area="2" data-target-acc="0">
+          <div class="aniv-area-num">2</div>
+          <div class="aniv-area-icon">🍽️</div>
+          <div>
+            <div class="aniv-area-titulo">Salão 1º Piso</div>
+            <div class="aniv-area-desc">Circulação, consumo e compras</div>
+          </div>
+        </div>
+        <div class="aniv-area-card" data-area="3" data-target-acc="0">
+          <div class="aniv-area-num">3</div>
+          <div class="aniv-area-icon">🛒</div>
+          <div>
+            <div class="aniv-area-titulo">Mercearia</div>
+            <div class="aniv-area-desc">Compras normais no estabelecimento</div>
+          </div>
+        </div>
+        <div class="aniv-area-card" data-area="4" data-target-acc="1">
+          <div class="aniv-area-num">4</div>
+          <div class="aniv-area-icon">🍜</div>
+          <div>
+            <div class="aniv-area-titulo">Salão 2º Piso</div>
+            <div class="aniv-area-desc">Cardápio exclusivo da cozinha</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fluxo 1º Piso -->
+      <div class="acc-item aniv-acc" data-aniv-idx="0">
+        <button class="acc-head" type="button">
+          <div class="acc-num vinho">1º</div>
+          <div class="acc-titulo-wrap">
+            <div class="acc-titulo">1º Piso & Barracas</div>
+            <div class="aniv-acc-subtitulo">Externo + Salão térreo</div>
+          </div>
+          <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="aniv-fluxo-titulo">O cliente pode:</div>
+          <div class="aniv-checklist">
+            <div class="aniv-checklist-item">Comprar alimentos e bebidas nas barracas externas</div>
+            <div class="aniv-checklist-item">Consumir nas mesas externas</div>
+            <div class="aniv-checklist-item">Consumir no salão interno do 1º Piso</div>
+            <div class="aniv-checklist-item">Fazer compras normalmente na mercearia</div>
+          </div>
+          <div class="aniv-fluxo-titulo">Fluxo das Barracas:</div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">1</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pedido na Barraca</div><div class="aniv-fluxo-content-desc">Cliente escolhe e solicita o item</div></div></div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">2</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pagamento na Hora</div><div class="aniv-fluxo-content-desc">Pagamento realizado no momento da compra</div></div></div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">3</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Ficha de Retirada</div><div class="aniv-fluxo-content-desc">Cliente recebe uma ficha numerada</div></div></div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">4</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Retirada Direta</div><div class="aniv-fluxo-content-desc">Produto retirado diretamente na barraca</div></div></div>
+          <div class="aniv-aviso"><span class="aniv-aviso-ic">⚠️</span><span class="aniv-aviso-txt">Não haverá atendimento de mesa para os produtos vendidos nas barracas.</span></div>
+        </div>
+      </div>
+
+      <!-- Fluxo 2º Piso -->
+      <div class="acc-item aniv-acc" data-aniv-idx="1">
+        <button class="acc-head" type="button">
+          <div class="acc-num dourado">2º</div>
+          <div class="acc-titulo-wrap">
+            <div class="acc-titulo">2º Piso · Cozinha</div>
+            <div class="aniv-acc-subtitulo">Pratos da cozinha · Atendimento de mesa</div>
+          </div>
+          <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="aniv-aviso" style="margin-top:0"><span class="aniv-aviso-ic">🍜</span><span class="aniv-aviso-txt">Exclusivo para clientes que desejam consumir pratos produzidos pela cozinha.</span></div>
+          <div class="aniv-fluxo-titulo">5 Etapas do Fluxo:</div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">1</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Chegada ao Salão</div><div class="aniv-fluxo-content-desc">Cliente sobe ao 2º andar</div></div></div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">2</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Recebe Comanda</div><div class="aniv-fluxo-content-desc">Mariana entrega a comanda no início da escada</div></div></div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">3</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Escolhe a Mesa</div><div class="aniv-fluxo-content-desc">Cliente se acomoda</div></div></div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">4</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pedido pelo Tablet</div><div class="aniv-fluxo-content-desc">Itens lançados na comanda via tablet</div></div></div>
+          <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">5</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pagamento</div><div class="aniv-fluxo-content-desc">Realizado no Caixa do 2º Piso (início da escada)</div></div></div>
+        </div>
+      </div>
+
+      <!-- Cardápio Barracas -->
+      <div class="acc-item aniv-acc">
+        <button class="acc-head" type="button">
+          <div class="acc-num laranja">🏕️</div>
+          <div class="acc-titulo-wrap">
+            <div class="acc-titulo">Cardápio · Barracas Externas</div>
+            <div class="aniv-acc-subtitulo">Entradas · Combos · Bebidas</div>
+          </div>
+          <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="aniv-cardapio-grupo">
+            <div class="aniv-cardapio-grupo-titulo">🥢 Entradas</div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Tempurá de Legumes</div></div><div class="aniv-cardapio-item-preco">R$ 32,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Corn Dog</div></div><div class="aniv-cardapio-item-preco">R$ 24,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Onigiri de Salmão com Kewpie</div></div><div class="aniv-cardapio-item-preco">R$ 29,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Karaague + 2 un. Gyoza de Salmão (200g)</div></div><div class="aniv-cardapio-item-preco">R$ 29,90</div></div>
+          </div>
+          <div class="aniv-cardapio-grupo">
+            <div class="aniv-cardapio-grupo-titulo">🎁 Combos</div>
+            <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Busan Street Combo</div><div class="aniv-cardapio-item-desc">Karaague + 2 Korokke de Salmão + Toppoki</div></div><div class="aniv-cardapio-item-preco">R$ 39,90</div></div></div>
+            <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Alma de Seoul Combo</div><div class="aniv-cardapio-item-desc">Gohan + Kimchi + Dakgangjeong + 2 Gyozas Suínas</div></div><div class="aniv-cardapio-item-preco">R$ 45,90</div></div></div>
+            <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Arirang Tour Combo</div><div class="aniv-cardapio-item-desc">Karaague + 2 Korokke + 2 Gyozas Suínas + Dakgangjeong</div></div><div class="aniv-cardapio-item-preco">R$ 54,90</div></div></div>
+          </div>
+          <div class="aniv-cardapio-bebidas">
+            <div class="aniv-cardapio-bebidas-label">🍺 Bebidas</div>
+            Heineken <strong>R$ 13,90</strong> · Stella Pure Gold <strong>R$ 13,90</strong> · Caipisakês (4 sabores) · Água <strong>R$ 5,90–6,90</strong> · Refrigerante <strong>R$ 8,90</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cardápio 2º Piso -->
+      <div class="acc-item aniv-acc">
+        <button class="acc-head" type="button">
+          <div class="acc-num vinho">🍜</div>
+          <div class="acc-titulo-wrap">
+            <div class="acc-titulo">Cardápio · 2º Piso</div>
+            <div class="aniv-acc-subtitulo">Yakissoba · Ramen · Mexido Coreano</div>
+          </div>
+          <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="aniv-cardapio-grupo">
+            <div class="aniv-cardapio-grupo-titulo">🥢 Yakissoba Chinês</div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Misto (Filé + Frango)</div></div><div class="aniv-cardapio-item-preco">R$ 59,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Cogumelos <span class="aniv-vegano-tag">VEGANO</span></div></div><div class="aniv-cardapio-item-preco">R$ 57,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Camarão</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
+          </div>
+          <div class="aniv-cardapio-grupo">
+            <div class="aniv-cardapio-grupo-titulo">🍥 Ramen Japonês</div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Shoyu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Shoyu + Chicken Katsu</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Missô Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Missô + Chicken Katsu</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Tonkotsu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Torikatsu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
+          </div>
+          <div class="aniv-cardapio-grupo">
+            <div class="aniv-cardapio-grupo-titulo">🍲 Mexido Coreano</div>
+            <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Bibimbap</div><div class="aniv-cardapio-item-desc">Prato coreano com arroz, legumes salteados e molho especial</div></div><div class="aniv-cardapio-item-preco">R$ 59,90</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quem faz o quê -->
+      <div class="acc-item aniv-acc">
+        <button class="acc-head" type="button">
+          <div class="acc-num laranja">👥</div>
+          <div class="acc-titulo-wrap">
+            <div class="acc-titulo">Quem faz o quê</div>
+            <div class="aniv-acc-subtitulo">8 setores · Responsáveis</div>
+          </div>
+          <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <div class="aniv-resp-grid" style="margin-top:10px;">
+            <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Laís</div><div class="aniv-resp-cargo">Drinks Externos</div><div class="aniv-resp-desc">Carrinho de drinks externo</div></div>
+            <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Tarcísio</div><div class="aniv-resp-cargo">Bar Interno</div><div class="aniv-resp-desc">Bar interno do 1º Piso</div></div>
+            <div class="aniv-resp-card dourado"><div class="aniv-resp-nome">Daiane</div><div class="aniv-resp-cargo">Caixa Entrada</div><div class="aniv-resp-desc">Mercearia, fichas, fluxo de entrada</div></div>
+            <div class="aniv-resp-card escuro"><div class="aniv-resp-nome">Mariana</div><div class="aniv-resp-cargo">2º Piso & Supervisão</div><div class="aniv-resp-desc">Comandas, caixa 2º piso, supervisão geral</div></div>
+            <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Geovanni & Maycon</div><div class="aniv-resp-cargo">Salão 1º Piso</div><div class="aniv-resp-desc">Mesas, limpeza, mercearia</div></div>
+            <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Marcos, Leandro & Mayara</div><div class="aniv-resp-cargo">Barracas Externas</div><div class="aniv-resp-desc">Produção, entregas, fichas, controle</div></div>
+            <div class="aniv-resp-card dourado"><div class="aniv-resp-nome">Janaína & Valdo</div><div class="aniv-resp-cargo">Salão 2º Piso</div><div class="aniv-resp-desc">Mesas, limpeza, suporte operacional</div></div>
+            <div class="aniv-resp-card escuro"><div class="aniv-resp-nome">Gabriel</div><div class="aniv-resp-cargo">Apoio Geral · Cumim</div><div class="aniv-resp-desc">Dois andares, recolhimento, suporte emergencial</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caixas e Recebimentos -->
+      <div class="acc-item aniv-acc">
+        <button class="acc-head" type="button">
+          <div class="acc-num dourado">💰</div>
+          <div class="acc-titulo-wrap">
+            <div class="acc-titulo">Caixas e Recebimentos</div>
+            <div class="aniv-acc-subtitulo">3 caixas · Onde pagar o quê</div>
+          </div>
+          <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <div style="margin-top:10px;">
+            <div class="aniv-caixa-card" data-caixa="1">
+              <div class="aniv-caixa-head"><div class="aniv-caixa-num">1</div><div><div class="aniv-caixa-titulo">Caixa da Barraca</div><div class="aniv-caixa-resp">Responsável: <strong>Túlio</strong></div></div></div>
+              <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Pagamentos das barracas externas</div><div class="aniv-caixa-lista-item">Entrega de fichas de retirada</div></div>
+            </div>
+            <div class="aniv-caixa-card" data-caixa="2">
+              <div class="aniv-caixa-head"><div class="aniv-caixa-num">2</div><div><div class="aniv-caixa-titulo">Caixa da Entrada</div><div class="aniv-caixa-resp">Responsável: <strong>Daiane</strong></div></div></div>
+              <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Compras da mercearia</div><div class="aniv-caixa-lista-item">Venda de fichas do evento</div><div class="aniv-caixa-lista-item">Apoio ao fluxo geral</div></div>
+            </div>
+            <div class="aniv-caixa-card" data-caixa="3">
+              <div class="aniv-caixa-head"><div class="aniv-caixa-num">3</div><div><div class="aniv-caixa-titulo">Caixa do 2º Piso</div><div class="aniv-caixa-resp">Responsável: <strong>Mariana</strong></div></div></div>
+              <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Consumos via comandas</div><div class="aniv-caixa-lista-item">Fechamento de mesa do salão superior</div></div>
+            </div>
+            <div class="aniv-dica-sistema">
+              <span class="aniv-dica-sistema-ic">💡</span>
+              <div class="aniv-dica-sistema-txt">No sistema, pesquise por <strong>EVENTO</strong> para acessar os itens cadastrados para o aniversário. Em dúvidas, consultar Mariana.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prioridades -->
+      <div class="aniv-prio-card">
+        <div class="aniv-prio-titulo">🎯 Nosso compromisso</div>
+        <div class="aniv-prio-sub">Durante todo o evento</div>
+        <div class="aniv-prio-lista">
+          <div class="aniv-prio-item">Limpeza constante das mesas</div>
+          <div class="aniv-prio-item">Organização dos salões</div>
+          <div class="aniv-prio-item">Agilidade no atendimento</div>
+          <div class="aniv-prio-item">Cordialidade com os clientes</div>
+          <div class="aniv-prio-item">Reposição e organização da mercearia</div>
+          <div class="aniv-prio-item">Comunicação rápida entre setores</div>
+          <div class="aniv-prio-item">Conferência dos pedidos antes da entrega</div>
+          <div class="aniv-prio-item">Manutenção da boa experiência</div>
+        </div>
+        <div class="aniv-prio-cta">🎉 Juntos vamos garantir uma experiência incrível!</div>
+      </div>
+  </div>
+</div>
+
+<!-- MODO APRESENTAÇÃO DO ANIVERSÁRIO (slides cheios, avança com Enter/clique) -->
+<div class="aniv-pres" id="aniv-pres">
+  <button class="aniv-pres-exit" id="btn-aniv-pres-exit" aria-label="Sair">✕</button>
+
+  <!-- SLIDE 1 - CAPA -->
+  <div class="aniv-pres-slide" data-slide="0">
+    <div class="aniv-pres-tag">Mercearia Liberdade</div>
+    <h1>🎉 ANIVERSÁRIO</h1>
+    <h2>Operação Especial</h2>
+    <div class="aniv-pres-lead">
+      Instruções operacionais para <strong>toda a equipe</strong>.<br>
+      Toque <kbd>Enter</kbd> ou clique pra avançar.
+    </div>
+  </div>
+
+  <!-- SLIDE 2 - OBJETIVO + 4 ÁREAS -->
+  <div class="aniv-pres-slide" data-slide="1">
+    <div class="aniv-pres-tag">🎯 Nosso Objetivo</div>
+    <h2>4 áreas · atendimento simultâneo</h2>
+    <div class="aniv-pres-lead">
+      Garantir um atendimento <strong>rápido</strong>, <strong>organizado</strong> e <strong>excelente experiência</strong> para os clientes — com operação simultânea em 4 áreas.
+    </div>
+    <div class="aniv-pres-grid-4">
+      <div class="aniv-pres-card" style="text-align:center;">
+        <div style="font-size:36px;">🏕️</div>
+        <div class="aniv-pres-card-titulo" style="margin-top:6px;">1 · Externa</div>
+        <div style="opacity:0.85;font-size:0.85em;">Barracas de alimentação e bebidas</div>
+      </div>
+      <div class="aniv-pres-card" style="text-align:center;">
+        <div style="font-size:36px;">🍽️</div>
+        <div class="aniv-pres-card-titulo" style="margin-top:6px;">2 · Salão 1º</div>
+        <div style="opacity:0.85;font-size:0.85em;">Circulação, consumo e compras</div>
+      </div>
+      <div class="aniv-pres-card" style="text-align:center;">
+        <div style="font-size:36px;">🛒</div>
+        <div class="aniv-pres-card-titulo" style="margin-top:6px;">3 · Mercearia</div>
+        <div style="opacity:0.85;font-size:0.85em;">Compras normais no estabelecimento</div>
+      </div>
+      <div class="aniv-pres-card" style="text-align:center;">
+        <div style="font-size:36px;">🍜</div>
+        <div class="aniv-pres-card-titulo" style="margin-top:6px;">4 · Salão 2º</div>
+        <div style="opacity:0.85;font-size:0.85em;">Cardápio exclusivo da cozinha</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 - ÁREA EXTERNA / FLUXO BARRACAS -->
+  <div class="aniv-pres-slide" data-slide="2">
+    <div class="aniv-pres-tag">🏕️ Área 1 · Externa</div>
+    <h2>Barracas de alimentação</h2>
+    <div class="aniv-pres-card-sub" style="margin-bottom:12px;">O cliente pode:</div>
+    <div class="aniv-pres-check">Comprar alimentos e bebidas nas barracas externas</div>
+    <div class="aniv-pres-check">Consumir nas mesas externas</div>
+    <div class="aniv-pres-check">Consumir no salão interno do 1º Piso</div>
+    <div class="aniv-pres-check">Fazer compras normalmente na mercearia</div>
+    <div class="aniv-pres-card-sub" style="margin-top:18px;margin-bottom:10px;">Fluxo das barracas:</div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">1</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Pedido na Barraca</div><div class="aniv-pres-etapa-desc">Cliente escolhe e solicita o item</div></div></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">2</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Pagamento na Hora</div><div class="aniv-pres-etapa-desc">Pagamento realizado no momento da compra</div></div></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">3</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Ficha de Retirada</div><div class="aniv-pres-etapa-desc">Cliente recebe uma ficha numerada</div></div></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">4</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Retirada Direta</div><div class="aniv-pres-etapa-desc">Produto retirado diretamente na barraca</div></div></div>
+    <div class="aniv-pres-aviso"><span class="aniv-pres-aviso-ic">⚠️</span><span>Não haverá atendimento de mesa para os produtos vendidos nas barracas.</span></div>
+  </div>
+
+  <!-- SLIDE 4 - SALÃO 1º PISO -->
+  <div class="aniv-pres-slide" data-slide="3">
+    <div class="aniv-pres-tag">🍽️ Área 2 · Salão 1º Piso</div>
+    <h2>Circulação, consumo e compras</h2>
+    <div class="aniv-pres-lead">
+      Espaço de <strong>livre circulação</strong> dentro da Mercearia. Quem comprou nas barracas pode se acomodar no salão interno do 1º Piso, ou ir pra mesa externa.
+    </div>
+    <div class="aniv-pres-grid-2" style="margin-top:24px;">
+      <div class="aniv-pres-card">
+        <div class="aniv-pres-card-titulo">✓ Pode</div>
+        <div class="aniv-pres-check">Consumir o que comprou nas barracas</div>
+        <div class="aniv-pres-check">Fazer compras normais na mercearia</div>
+        <div class="aniv-pres-check">Circular entre barracas e mesas</div>
+      </div>
+      <div class="aniv-pres-card" style="border-color:rgba(229,72,26,0.45);">
+        <div class="aniv-pres-card-titulo" style="color:#FF8F5C;">⚠️ Atenção</div>
+        <div style="font-size:clamp(14px,1.8vw,17px);line-height:1.5;">
+          Não haverá atendimento de mesa para produtos das barracas. O fluxo é sempre: <strong style="color:var(--dourado)">pedir → pagar → receber ficha → retirar</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 - MERCEARIA -->
+  <div class="aniv-pres-slide" data-slide="4">
+    <div class="aniv-pres-tag">🛒 Área 3 · Mercearia</div>
+    <h2>Compras normais durante o evento</h2>
+    <div class="aniv-pres-lead">
+      A Mercearia opera <strong>normalmente</strong>, mesmo durante o aniversário. Quem quiser fazer compras normais (produtos da prateleira) deve ser atendido como em qualquer outro dia.
+    </div>
+    <div class="aniv-pres-grid-2" style="margin-top:24px;">
+      <div class="aniv-pres-card">
+        <div class="aniv-pres-card-titulo">Pagamento</div>
+        <div style="font-size:clamp(14px,1.8vw,17px);line-height:1.5;">
+          Compras da mercearia são pagas no <strong style="color:var(--dourado)">Caixa da Entrada</strong> (Daiane).
+        </div>
+      </div>
+      <div class="aniv-pres-card">
+        <div class="aniv-pres-card-titulo">Apoio</div>
+        <div style="font-size:clamp(14px,1.8vw,17px);line-height:1.5;">
+          <strong style="color:var(--dourado)">Geovanni & Maycon</strong> apoiam mesas, limpeza e reposição da mercearia no 1º Piso.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 - SALÃO 2º PISO -->
+  <div class="aniv-pres-slide" data-slide="5">
+    <div class="aniv-pres-tag">🍜 Área 4 · Salão 2º Piso</div>
+    <h2>Cardápio exclusivo da cozinha</h2>
+    <div class="aniv-pres-aviso" style="margin-bottom:18px;margin-top:0;"><span class="aniv-pres-aviso-ic">🍜</span><span>Exclusivo para clientes que desejam consumir pratos produzidos pela cozinha.</span></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">1</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Chegada ao Salão</div><div class="aniv-pres-etapa-desc">Cliente sobe ao 2º andar</div></div></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">2</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Recebe Comanda</div><div class="aniv-pres-etapa-desc">Mariana entrega a comanda no início da escada</div></div></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">3</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Escolhe a Mesa</div><div class="aniv-pres-etapa-desc">Cliente se acomoda</div></div></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">4</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Pedido pelo Tablet</div><div class="aniv-pres-etapa-desc">Itens lançados na comanda via tablet</div></div></div>
+    <div class="aniv-pres-etapa"><div class="aniv-pres-etapa-num">5</div><div class="aniv-pres-etapa-content"><div class="aniv-pres-etapa-titulo">Pagamento</div><div class="aniv-pres-etapa-desc">Realizado no Caixa do 2º Piso (início da escada)</div></div></div>
+  </div>
+
+  <!-- SLIDE 7 - CARDÁPIO BARRACAS -->
+  <div class="aniv-pres-slide" data-slide="6">
+    <div class="aniv-pres-tag">🥢 Cardápio · Barracas Externas</div>
+    <h2>Entradas · Combos · Bebidas</h2>
+    <div class="aniv-pres-grid-2" style="margin-top:14px;">
+      <div>
+        <div class="aniv-pres-menu-grupo">
+          <div class="aniv-pres-menu-titulo">Entradas</div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Tempurá de Legumes</span><span class="aniv-pres-menu-preco">R$ 32,90</span></div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Corn Dog</span><span class="aniv-pres-menu-preco">R$ 24,90</span></div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Onigiri de Salmão c/ Kewpie</span><span class="aniv-pres-menu-preco">R$ 29,90</span></div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Karaague + 2un Gyoza de Salmão (200g)</span><span class="aniv-pres-menu-preco">R$ 29,90</span></div>
+        </div>
+        <div class="aniv-pres-menu-grupo">
+          <div class="aniv-pres-menu-titulo">🍺 Bebidas</div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Heineken</span><span class="aniv-pres-menu-preco">R$ 13,90</span></div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Stella Pure Gold</span><span class="aniv-pres-menu-preco">R$ 13,90</span></div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Caipisakês (4 sabores)</span><span class="aniv-pres-menu-preco">—</span></div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Água</span><span class="aniv-pres-menu-preco">R$ 5,90–6,90</span></div>
+          <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Refrigerante</span><span class="aniv-pres-menu-preco">R$ 8,90</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="aniv-pres-menu-titulo">🎁 Combos</div>
+        <div class="aniv-pres-menu-combo">
+          <div class="aniv-pres-menu-item">
+            <span class="aniv-pres-menu-nome"><strong>Busan Street Combo</strong><span class="aniv-pres-menu-desc">Karaague + 2 Korokke de Salmão + Toppoki</span></span>
+            <span class="aniv-pres-menu-preco">R$ 39,90</span>
+          </div>
+        </div>
+        <div class="aniv-pres-menu-combo">
+          <div class="aniv-pres-menu-item">
+            <span class="aniv-pres-menu-nome"><strong>Alma de Seoul Combo</strong><span class="aniv-pres-menu-desc">Gohan + Kimchi + Dakgangjeong + 2 Gyozas Suínas</span></span>
+            <span class="aniv-pres-menu-preco">R$ 45,90</span>
+          </div>
+        </div>
+        <div class="aniv-pres-menu-combo">
+          <div class="aniv-pres-menu-item">
+            <span class="aniv-pres-menu-nome"><strong>Arirang Tour Combo</strong><span class="aniv-pres-menu-desc">Karaague + 2 Korokke + 2 Gyozas Suínas + Dakgangjeong</span></span>
+            <span class="aniv-pres-menu-preco">R$ 54,90</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 - CARDÁPIO 2º PISO -->
+  <div class="aniv-pres-slide" data-slide="7">
+    <div class="aniv-pres-tag">🍜 Cardápio · 2º Piso (Cozinha)</div>
+    <h2>Yakissoba · Ramen · Bibimbap</h2>
+    <div class="aniv-pres-grid-3" style="margin-top:14px;">
+      <div class="aniv-pres-menu-grupo">
+        <div class="aniv-pres-menu-titulo">🥢 Yakissoba</div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Misto (Filé + Frango)</span><span class="aniv-pres-menu-preco">R$ 59,90</span></div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Cogumelos <span style="font-size:0.7em;background:var(--verde);color:#fff;padding:2px 6px;border-radius:4px;font-weight:800;">VEGANO</span></span><span class="aniv-pres-menu-preco">R$ 57,90</span></div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Camarão</span><span class="aniv-pres-menu-preco">R$ 79,90</span></div>
+      </div>
+      <div class="aniv-pres-menu-grupo">
+        <div class="aniv-pres-menu-titulo">🍥 Ramen</div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Shoyu Ramen</span><span class="aniv-pres-menu-preco">R$ 69,90</span></div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Shoyu + Chicken Katsu</span><span class="aniv-pres-menu-preco">R$ 69,90</span></div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Missô Ramen</span><span class="aniv-pres-menu-preco">R$ 69,90</span></div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Missô + Chicken Katsu</span><span class="aniv-pres-menu-preco">R$ 69,90</span></div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Tonkotsu Ramen</span><span class="aniv-pres-menu-preco">R$ 79,90</span></div>
+        <div class="aniv-pres-menu-item"><span class="aniv-pres-menu-nome">Torikatsu Ramen</span><span class="aniv-pres-menu-preco">R$ 79,90</span></div>
+      </div>
+      <div class="aniv-pres-menu-grupo">
+        <div class="aniv-pres-menu-titulo">🍲 Mexido Coreano</div>
+        <div class="aniv-pres-menu-item">
+          <span class="aniv-pres-menu-nome">Bibimbap<span class="aniv-pres-menu-desc">Arroz, legumes salteados e molho especial</span></span>
+          <span class="aniv-pres-menu-preco">R$ 59,90</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9 - RESPONSÁVEIS -->
+  <div class="aniv-pres-slide" data-slide="8">
+    <div class="aniv-pres-tag">👥 Quem faz o quê</div>
+    <h2>8 setores · responsáveis</h2>
+    <div class="aniv-pres-grid-4" style="margin-top:14px;">
+      <div class="aniv-pres-resp vinho"><div class="aniv-pres-resp-nome">Laís</div><div class="aniv-pres-resp-cargo">Drinks Externos</div><div class="aniv-pres-resp-desc">Carrinho de drinks externo</div></div>
+      <div class="aniv-pres-resp vinho"><div class="aniv-pres-resp-nome">Tarcísio</div><div class="aniv-pres-resp-cargo">Bar Interno</div><div class="aniv-pres-resp-desc">Bar interno do 1º Piso</div></div>
+      <div class="aniv-pres-resp"><div class="aniv-pres-resp-nome">Daiane</div><div class="aniv-pres-resp-cargo">Caixa Entrada</div><div class="aniv-pres-resp-desc">Mercearia, fichas, fluxo de entrada</div></div>
+      <div class="aniv-pres-resp escuro"><div class="aniv-pres-resp-nome">Mariana</div><div class="aniv-pres-resp-cargo">2º Piso & Supervisão</div><div class="aniv-pres-resp-desc">Comandas, caixa 2º piso, supervisão geral</div></div>
+      <div class="aniv-pres-resp vinho"><div class="aniv-pres-resp-nome">Geovanni & Maycon</div><div class="aniv-pres-resp-cargo">Salão 1º Piso</div><div class="aniv-pres-resp-desc">Mesas, limpeza, mercearia</div></div>
+      <div class="aniv-pres-resp vinho"><div class="aniv-pres-resp-nome">Marcos, Leandro & Mayara</div><div class="aniv-pres-resp-cargo">Barracas Externas</div><div class="aniv-pres-resp-desc">Produção, entregas, fichas, controle</div></div>
+      <div class="aniv-pres-resp"><div class="aniv-pres-resp-nome">Janaína & Valdo</div><div class="aniv-pres-resp-cargo">Salão 2º Piso</div><div class="aniv-pres-resp-desc">Mesas, limpeza, suporte operacional</div></div>
+      <div class="aniv-pres-resp escuro"><div class="aniv-pres-resp-nome">Gabriel</div><div class="aniv-pres-resp-cargo">Apoio Geral · Cumim</div><div class="aniv-pres-resp-desc">Dois andares, recolhimento, suporte emergencial</div></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10 - CAIXAS -->
+  <div class="aniv-pres-slide" data-slide="9">
+    <div class="aniv-pres-tag">💰 Caixas e Recebimentos</div>
+    <h2>3 caixas · onde pagar o quê</h2>
+    <div class="aniv-pres-grid-3" style="margin-top:14px;">
+      <div class="aniv-pres-caixa">
+        <div class="aniv-pres-caixa-head">
+          <div class="aniv-pres-caixa-num">1</div>
+          <div>
+            <div class="aniv-pres-caixa-tit">Caixa da Barraca</div>
+            <div class="aniv-pres-caixa-resp">Resp: <strong>Túlio</strong></div>
+          </div>
+        </div>
+        <div class="aniv-pres-caixa-li">Pagamentos das barracas externas</div>
+        <div class="aniv-pres-caixa-li">Entrega de fichas de retirada</div>
+      </div>
+      <div class="aniv-pres-caixa">
+        <div class="aniv-pres-caixa-head">
+          <div class="aniv-pres-caixa-num">2</div>
+          <div>
+            <div class="aniv-pres-caixa-tit">Caixa da Entrada</div>
+            <div class="aniv-pres-caixa-resp">Resp: <strong>Daiane</strong></div>
+          </div>
+        </div>
+        <div class="aniv-pres-caixa-li">Compras da mercearia</div>
+        <div class="aniv-pres-caixa-li">Venda de fichas do evento</div>
+        <div class="aniv-pres-caixa-li">Apoio ao fluxo geral</div>
+      </div>
+      <div class="aniv-pres-caixa">
+        <div class="aniv-pres-caixa-head">
+          <div class="aniv-pres-caixa-num">3</div>
+          <div>
+            <div class="aniv-pres-caixa-tit">Caixa do 2º Piso</div>
+            <div class="aniv-pres-caixa-resp">Resp: <strong>Mariana</strong></div>
+          </div>
+        </div>
+        <div class="aniv-pres-caixa-li">Consumos via comandas</div>
+        <div class="aniv-pres-caixa-li">Fechamento de mesa do salão superior</div>
+      </div>
+    </div>
+    <div class="aniv-pres-dica">
+      <span style="font-size:22px;flex-shrink:0;">💡</span>
+      <div>No sistema, pesquise por <strong>EVENTO</strong> para acessar os itens cadastrados para o aniversário. Em dúvidas, consultar Mariana.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11 - PRIORIDADES + CTA -->
+  <div class="aniv-pres-slide" data-slide="10">
+    <div class="aniv-pres-tag">🎯 Nosso Compromisso</div>
+    <h2>Prioridades durante todo o evento</h2>
+    <div class="aniv-pres-grid-2" style="margin-top:14px;">
+      <div class="aniv-pres-check">Limpeza constante das mesas</div>
+      <div class="aniv-pres-check">Organização dos salões</div>
+      <div class="aniv-pres-check">Agilidade no atendimento</div>
+      <div class="aniv-pres-check">Cordialidade com os clientes</div>
+      <div class="aniv-pres-check">Reposição e organização da mercearia</div>
+      <div class="aniv-pres-check">Comunicação rápida entre setores</div>
+      <div class="aniv-pres-check">Conferência dos pedidos antes da entrega</div>
+      <div class="aniv-pres-check">Manutenção da boa experiência</div>
+    </div>
+    <div class="aniv-pres-cta">🎉 Juntos vamos garantir uma experiência incrível!</div>
+  </div>
+
+  <!-- Rodapé com navegação -->
+  <div class="aniv-pres-progress"><div class="aniv-pres-progress-bar" id="aniv-pres-progress-bar"></div></div>
+  <div class="aniv-pres-foot">
+    <div class="aniv-pres-counter"><span id="aniv-pres-cur">1</span> / <span id="aniv-pres-tot">11</span></div>
+    <div class="aniv-pres-hint"><kbd>Enter</kbd> ou clique pra avançar · <kbd>←</kbd> voltar · <kbd>Esc</kbd> sair</div>
+  </div>
+</div>
+
 </body>
 </html>
