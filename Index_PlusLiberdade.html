@@ -463,6 +463,405 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .acc-body p { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
 .acc-body p strong { color: var(--text); }
 
+/* ===== ANIVERSÁRIO MERCEARIA ===== */
+.aniv-vinho-dark: #4A0509;
+.aniv-vinho: #6B0E13;
+.aniv-vinho-claro: #8B1A1F;
+
+.aniv-hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(140deg, #6B0E13 0%, #8B1A1F 50%, #B8252C 100%);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px 22px;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(107,14,19,0.20), 0 4px 8px rgba(0,0,0,0.06);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.aniv-hero::before {
+  content: ''; position: absolute; border-radius: 50%;
+  background: rgba(255,182,39,0.18);
+  width: 280px; height: 280px; top: -100px; right: -100px;
+}
+.aniv-hero::after {
+  content: ''; position: absolute; border-radius: 50%;
+  background: rgba(255,107,53,0.15);
+  width: 180px; height: 180px; bottom: -80px; left: -60px;
+}
+.aniv-hero > * { position: relative; z-index: 1; }
+.aniv-hero-confetti { font-size: 38px; line-height: 1; margin-bottom: 4px; }
+.aniv-hero h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px; line-height: 0.95; letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #FFD27A 0%, #FFB627 60%, #FF8F5C 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 2px 0 4px;
+}
+.aniv-hero p {
+  font-size: 11px; opacity: 0.92;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  font-weight: 600;
+}
+.aniv-hero-meta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  margin-top: 10px;
+  border: 1px solid rgba(255,182,39,0.4);
+}
+
+.aniv-objetivo {
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFE9CC 100%);
+  border: 1px solid rgba(255,107,53,0.25);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex; gap: 12px; align-items: flex-start;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 14px;
+}
+.aniv-objetivo-ic { font-size: 24px; line-height: 1; flex-shrink: 0; }
+.aniv-objetivo-label {
+  font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--laranja-escuro); margin-bottom: 3px;
+}
+.aniv-objetivo-texto { font-size: 13px; color: var(--text); line-height: 1.45; }
+.aniv-objetivo-texto strong { color: var(--laranja-escuro); }
+
+.aniv-areas-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-bottom: 14px;
+}
+.aniv-area-card {
+  position: relative; overflow: hidden;
+  border-radius: var(--radius);
+  padding: 14px 12px 12px;
+  color: #fff;
+  cursor: pointer;
+  min-height: 115px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  transition: transform .15s;
+  box-shadow: var(--shadow-md);
+}
+.aniv-area-card:active { transform: scale(0.97); }
+.aniv-area-card[data-area="1"] { background: linear-gradient(135deg, #6B0E13, #4A0509); }
+.aniv-area-card[data-area="2"] { background: linear-gradient(135deg, #B8252C, #8B1A1F); }
+.aniv-area-card[data-area="3"] { background: linear-gradient(135deg, #FFB627, #E58A0A); color: #4A0509; }
+.aniv-area-card[data-area="4"] { background: linear-gradient(135deg, #6E5A1A, #4A3B0A); }
+.aniv-area-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px; line-height: 1;
+  opacity: 0.4;
+  position: absolute; top: 6px; right: 12px;
+}
+.aniv-area-card[data-area="3"] .aniv-area-num { opacity: 0.5; }
+.aniv-area-icon { font-size: 24px; line-height: 1; }
+.aniv-area-titulo {
+  font-size: 13px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  margin-top: 6px;
+}
+.aniv-area-desc {
+  font-size: 10.5px; opacity: 0.85;
+  margin-top: 3px; line-height: 1.35;
+}
+
+/* Accordion reaproveita .acc-item / .acc-head / .acc-body já existentes */
+.aniv-acc .acc-num {
+  width: 36px; height: 36px; border-radius: 10px;
+  font-size: 16px;
+}
+.aniv-acc .acc-num.vinho {
+  background: linear-gradient(135deg, var(--aniv-vinho, #6B0E13), #4A0509);
+}
+.aniv-acc .acc-num.dourado {
+  background: linear-gradient(135deg, var(--dourado), #E58A0A); color: #4A0509;
+}
+.aniv-acc .acc-num.laranja {
+  background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
+}
+.aniv-acc-subtitulo {
+  font-size: 11px; font-weight: 600; color: var(--laranja-escuro);
+  margin-top: 2px;
+}
+
+.aniv-fluxo-titulo {
+  font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: #6B0E13;
+  margin: 12px 0 8px;
+}
+.aniv-fluxo-etapa {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 9px 12px;
+  background: linear-gradient(135deg, rgba(107,14,19,0.04), rgba(255,107,53,0.06));
+  border-left: 3px solid #6B0E13;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 6px;
+}
+.aniv-fluxo-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #6B0E13;
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; line-height: 1;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.aniv-fluxo-content { flex: 1; }
+.aniv-fluxo-content-titulo {
+  font-size: 13px; font-weight: 700; color: var(--text);
+}
+.aniv-fluxo-content-desc {
+  font-size: 11.5px; color: var(--text-muted);
+  margin-top: 2px; line-height: 1.4;
+}
+
+.aniv-checklist { display: flex; flex-direction: column; gap: 5px; }
+.aniv-checklist-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 13px; color: var(--text); line-height: 1.4;
+  padding: 3px 0;
+}
+.aniv-checklist-item::before {
+  content: '✓'; flex-shrink: 0;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--laranja), var(--dourado));
+  color: #fff; font-size: 11px; font-weight: 800;
+  display: grid; place-items: center;
+  margin-top: 1px;
+}
+
+.aniv-aviso {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: linear-gradient(135deg, rgba(255,182,39,0.18), rgba(255,107,53,0.10));
+  border: 1px solid rgba(229,72,26,0.30);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+.aniv-aviso-ic { font-size: 16px; flex-shrink: 0; }
+.aniv-aviso-txt {
+  font-size: 12px; color: #4A0509;
+  font-weight: 600; line-height: 1.4;
+}
+
+/* Cardápio */
+.aniv-cardapio-grupo { margin-top: 12px; }
+.aniv-cardapio-grupo-titulo {
+  font-size: 11.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: #6B0E13; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.aniv-cardapio-grupo-titulo::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, #6B0E13, transparent);
+}
+.aniv-cardapio-item {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--border);
+  gap: 12px;
+}
+.aniv-cardapio-item:last-child { border-bottom: none; }
+.aniv-cardapio-item-info { flex: 1; min-width: 0; }
+.aniv-cardapio-item-nome {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  line-height: 1.3;
+}
+.aniv-cardapio-item-desc {
+  font-size: 11px; color: var(--text-muted);
+  margin-top: 2px; line-height: 1.4;
+}
+.aniv-cardapio-item-preco {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; color: var(--laranja-escuro);
+  white-space: nowrap; flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+.aniv-cardapio-combo {
+  background: linear-gradient(135deg, rgba(255,182,39,0.12), rgba(255,107,53,0.06));
+  border: 1px solid rgba(255,182,39,0.4);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-bottom: 6px;
+}
+.aniv-cardapio-combo .aniv-cardapio-item-nome { color: #6B0E13; font-weight: 800; }
+.aniv-cardapio-combo .aniv-cardapio-item-preco { color: #6B0E13; }
+.aniv-cardapio-bebidas {
+  background: linear-gradient(135deg, #6B0E13, #4A0509);
+  color: #fff; border-radius: 10px;
+  padding: 11px 13px; margin-top: 10px;
+  font-size: 12px; line-height: 1.5;
+}
+.aniv-cardapio-bebidas-label {
+  font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--dourado); margin-bottom: 4px;
+}
+.aniv-cardapio-bebidas strong { color: var(--dourado); }
+.aniv-vegano-tag {
+  display: inline-block; font-size: 9.5px;
+  background: var(--verde); color: #fff;
+  padding: 1px 6px; border-radius: 6px;
+  font-weight: 800; margin-left: 4px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+/* Responsáveis */
+.aniv-resp-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 7px;
+}
+.aniv-resp-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 11px 12px 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--laranja);
+}
+.aniv-resp-card.vinho { border-top-color: #6B0E13; }
+.aniv-resp-card.dourado { border-top-color: var(--dourado); }
+.aniv-resp-card.escuro { border-top-color: #6E5A1A; }
+.aniv-resp-nome {
+  font-size: 12.5px; font-weight: 800; color: var(--text);
+  line-height: 1.2;
+}
+.aniv-resp-cargo {
+  font-size: 10.5px; font-weight: 700; color: var(--laranja-escuro);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+.aniv-resp-card.vinho .aniv-resp-cargo { color: #6B0E13; }
+.aniv-resp-card.dourado .aniv-resp-cargo { color: #B0820A; }
+.aniv-resp-card.escuro .aniv-resp-cargo { color: #6E5A1A; }
+.aniv-resp-desc {
+  font-size: 11px; color: var(--text-muted);
+  margin-top: 5px; line-height: 1.4;
+}
+
+/* Caixas */
+.aniv-caixa-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 7px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.aniv-caixa-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+.aniv-caixa-card[data-caixa="1"]::before { background: #6B0E13; }
+.aniv-caixa-card[data-caixa="2"]::before { background: var(--dourado); }
+.aniv-caixa-card[data-caixa="3"]::before { background: #6E5A1A; }
+.aniv-caixa-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.aniv-caixa-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+  color: #fff; flex-shrink: 0;
+}
+.aniv-caixa-card[data-caixa="1"] .aniv-caixa-num { background: #6B0E13; }
+.aniv-caixa-card[data-caixa="2"] .aniv-caixa-num { background: var(--dourado); color: #4A0509; }
+.aniv-caixa-card[data-caixa="3"] .aniv-caixa-num { background: #6E5A1A; }
+.aniv-caixa-titulo { font-size: 13.5px; font-weight: 800; }
+.aniv-caixa-resp {
+  font-size: 11px; color: var(--text-muted);
+  font-style: italic; font-weight: 600;
+}
+.aniv-caixa-resp strong { color: #6B0E13; font-style: normal; }
+.aniv-caixa-lista { margin-top: 6px; }
+.aniv-caixa-lista-item {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 12px; color: var(--text);
+  padding: 2px 0;
+  line-height: 1.4;
+}
+.aniv-caixa-lista-item::before {
+  content: '•'; color: var(--laranja);
+  font-weight: 800; flex-shrink: 0;
+}
+
+.aniv-dica-sistema {
+  background: linear-gradient(135deg, rgba(255,182,39,0.20), rgba(255,107,53,0.08));
+  border: 1px solid rgba(255,182,39,0.50);
+  border-radius: 12px;
+  padding: 11px 13px;
+  margin-top: 10px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.aniv-dica-sistema-ic { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.aniv-dica-sistema-txt {
+  font-size: 12px; color: var(--text); line-height: 1.45;
+  font-weight: 500;
+}
+.aniv-dica-sistema-txt strong {
+  background: #6B0E13; color: #fff;
+  padding: 1px 6px; border-radius: 4px;
+  font-weight: 800; font-size: 11px;
+}
+
+/* Prioridades */
+.aniv-prio-card {
+  background: linear-gradient(135deg, #6B0E13 0%, #4A0509 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-md);
+  position: relative; overflow: hidden;
+  margin-top: 14px;
+}
+.aniv-prio-card::before {
+  content: ''; position: absolute; border-radius: 50%;
+  width: 200px; height: 200px;
+  background: rgba(255,182,39,0.10);
+  top: -80px; right: -80px;
+}
+.aniv-prio-card > * { position: relative; z-index: 1; }
+.aniv-prio-titulo {
+  font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--dourado); margin-bottom: 4px;
+}
+.aniv-prio-sub { font-size: 12.5px; opacity: 0.85; margin-bottom: 12px; }
+.aniv-prio-lista {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 7px;
+}
+.aniv-prio-item {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 12px; line-height: 1.4;
+}
+.aniv-prio-item::before {
+  content: '✓'; flex-shrink: 0;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--dourado); color: #4A0509;
+  font-size: 10px; font-weight: 900;
+  display: grid; place-items: center;
+  margin-top: 1px;
+}
+.aniv-prio-cta {
+  background: linear-gradient(135deg, var(--dourado), var(--laranja));
+  color: #4A0509;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-size: 12.5px; font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(255,182,39,0.30);
+}
+
+@media (max-width: 380px) {
+  .aniv-resp-grid { grid-template-columns: 1fr; }
+  .aniv-prio-lista { grid-template-columns: 1fr; }
+}
+
 /* FOOTER */
 .footer {
   text-align: center; padding: 24px 16px;
@@ -842,6 +1241,247 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   </div>
   <div id="estrat-list"></div>
 
+  <!-- ANIVERSÁRIO MERCEARIA -->
+  <div class="sec-title">
+    <h2>🎉 Aniversário · Operação</h2>
+    <span class="count">Guia da Equipe</span>
+  </div>
+
+  <section class="aniv-hero">
+    <div class="aniv-hero-confetti">🎉</div>
+    <h3>ANIVERSÁRIO</h3>
+    <p>Operação Especial</p>
+    <div class="aniv-hero-meta">📍 4 Áreas · Atendimento Simultâneo</div>
+  </section>
+
+  <div class="aniv-objetivo">
+    <span class="aniv-objetivo-ic">🎯</span>
+    <div>
+      <div class="aniv-objetivo-label">Nosso Objetivo</div>
+      <div class="aniv-objetivo-texto">Garantir um atendimento <strong>rápido</strong>, <strong>organizado</strong> e <strong>excelente experiência</strong> para os clientes — com operação simultânea em 4 áreas.</div>
+    </div>
+  </div>
+
+  <div class="aniv-areas-grid">
+    <div class="aniv-area-card" data-area="1" data-target-acc="0">
+      <div class="aniv-area-num">1</div>
+      <div class="aniv-area-icon">🏕️</div>
+      <div>
+        <div class="aniv-area-titulo">Área Externa</div>
+        <div class="aniv-area-desc">Barracas de alimentação e bebidas</div>
+      </div>
+    </div>
+    <div class="aniv-area-card" data-area="2" data-target-acc="0">
+      <div class="aniv-area-num">2</div>
+      <div class="aniv-area-icon">🍽️</div>
+      <div>
+        <div class="aniv-area-titulo">Salão 1º Piso</div>
+        <div class="aniv-area-desc">Circulação, consumo e compras</div>
+      </div>
+    </div>
+    <div class="aniv-area-card" data-area="3" data-target-acc="0">
+      <div class="aniv-area-num">3</div>
+      <div class="aniv-area-icon">🛒</div>
+      <div>
+        <div class="aniv-area-titulo">Mercearia</div>
+        <div class="aniv-area-desc">Compras normais no estabelecimento</div>
+      </div>
+    </div>
+    <div class="aniv-area-card" data-area="4" data-target-acc="1">
+      <div class="aniv-area-num">4</div>
+      <div class="aniv-area-icon">🍜</div>
+      <div>
+        <div class="aniv-area-titulo">Salão 2º Piso</div>
+        <div class="aniv-area-desc">Cardápio exclusivo da cozinha</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fluxo 1º Piso -->
+  <div class="acc-item aniv-acc" data-aniv-idx="0">
+    <button class="acc-head" type="button">
+      <div class="acc-num vinho">1º</div>
+      <div class="acc-titulo-wrap">
+        <div class="acc-titulo">1º Piso & Barracas</div>
+        <div class="aniv-acc-subtitulo">Externo + Salão térreo</div>
+      </div>
+      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <div class="aniv-fluxo-titulo">O cliente pode:</div>
+      <div class="aniv-checklist">
+        <div class="aniv-checklist-item">Comprar alimentos e bebidas nas barracas externas</div>
+        <div class="aniv-checklist-item">Consumir nas mesas externas</div>
+        <div class="aniv-checklist-item">Consumir no salão interno do 1º Piso</div>
+        <div class="aniv-checklist-item">Fazer compras normalmente na mercearia</div>
+      </div>
+      <div class="aniv-fluxo-titulo">Fluxo das Barracas:</div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">1</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pedido na Barraca</div><div class="aniv-fluxo-content-desc">Cliente escolhe e solicita o item</div></div></div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">2</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pagamento na Hora</div><div class="aniv-fluxo-content-desc">Pagamento realizado no momento da compra</div></div></div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">3</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Ficha de Retirada</div><div class="aniv-fluxo-content-desc">Cliente recebe uma ficha numerada</div></div></div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">4</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Retirada Direta</div><div class="aniv-fluxo-content-desc">Produto retirado diretamente na barraca</div></div></div>
+      <div class="aniv-aviso"><span class="aniv-aviso-ic">⚠️</span><span class="aniv-aviso-txt">Não haverá atendimento de mesa para os produtos vendidos nas barracas.</span></div>
+    </div>
+  </div>
+
+  <!-- Fluxo 2º Piso -->
+  <div class="acc-item aniv-acc" data-aniv-idx="1">
+    <button class="acc-head" type="button">
+      <div class="acc-num dourado">2º</div>
+      <div class="acc-titulo-wrap">
+        <div class="acc-titulo">2º Piso · Cozinha</div>
+        <div class="aniv-acc-subtitulo">Pratos da cozinha · Atendimento de mesa</div>
+      </div>
+      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <div class="aniv-aviso" style="margin-top:0"><span class="aniv-aviso-ic">🍜</span><span class="aniv-aviso-txt">Exclusivo para clientes que desejam consumir pratos produzidos pela cozinha.</span></div>
+      <div class="aniv-fluxo-titulo">5 Etapas do Fluxo:</div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">1</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Chegada ao Salão</div><div class="aniv-fluxo-content-desc">Cliente sobe ao 2º andar</div></div></div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">2</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Recebe Comanda</div><div class="aniv-fluxo-content-desc">Mariana entrega a comanda no início da escada</div></div></div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">3</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Escolhe a Mesa</div><div class="aniv-fluxo-content-desc">Cliente se acomoda</div></div></div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">4</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pedido pelo Tablet</div><div class="aniv-fluxo-content-desc">Itens lançados na comanda via tablet</div></div></div>
+      <div class="aniv-fluxo-etapa"><div class="aniv-fluxo-num">5</div><div class="aniv-fluxo-content"><div class="aniv-fluxo-content-titulo">Pagamento</div><div class="aniv-fluxo-content-desc">Realizado no Caixa do 2º Piso (início da escada)</div></div></div>
+    </div>
+  </div>
+
+  <!-- Cardápio Barracas -->
+  <div class="acc-item aniv-acc">
+    <button class="acc-head" type="button">
+      <div class="acc-num laranja">🏕️</div>
+      <div class="acc-titulo-wrap">
+        <div class="acc-titulo">Cardápio · Barracas Externas</div>
+        <div class="aniv-acc-subtitulo">Entradas · Combos · Bebidas</div>
+      </div>
+      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <div class="aniv-cardapio-grupo">
+        <div class="aniv-cardapio-grupo-titulo">🥢 Entradas</div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Tempurá de Legumes</div></div><div class="aniv-cardapio-item-preco">R$ 32,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Corn Dog</div></div><div class="aniv-cardapio-item-preco">R$ 24,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Onigiri de Salmão com Kewpie</div></div><div class="aniv-cardapio-item-preco">R$ 29,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Karaague + 2 un. Gyoza de Salmão (200g)</div></div><div class="aniv-cardapio-item-preco">R$ 29,90</div></div>
+      </div>
+      <div class="aniv-cardapio-grupo">
+        <div class="aniv-cardapio-grupo-titulo">🎁 Combos</div>
+        <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Busan Street Combo</div><div class="aniv-cardapio-item-desc">Karaague + 2 Korokke de Salmão + Toppoki</div></div><div class="aniv-cardapio-item-preco">R$ 39,90</div></div></div>
+        <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Alma de Seoul Combo</div><div class="aniv-cardapio-item-desc">Gohan + Kimchi + Dakgangjeong + 2 Gyozas Suínas</div></div><div class="aniv-cardapio-item-preco">R$ 45,90</div></div></div>
+        <div class="aniv-cardapio-combo"><div class="aniv-cardapio-item" style="border:none;padding:0;"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Arirang Tour Combo</div><div class="aniv-cardapio-item-desc">Karaague + 2 Korokke + 2 Gyozas Suínas + Dakgangjeong</div></div><div class="aniv-cardapio-item-preco">R$ 54,90</div></div></div>
+      </div>
+      <div class="aniv-cardapio-bebidas">
+        <div class="aniv-cardapio-bebidas-label">🍺 Bebidas</div>
+        Heineken <strong>R$ 13,90</strong> · Stella Pure Gold <strong>R$ 13,90</strong> · Caipisakês (4 sabores) · Água <strong>R$ 5,90–6,90</strong> · Refrigerante <strong>R$ 8,90</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cardápio 2º Piso -->
+  <div class="acc-item aniv-acc">
+    <button class="acc-head" type="button">
+      <div class="acc-num vinho">🍜</div>
+      <div class="acc-titulo-wrap">
+        <div class="acc-titulo">Cardápio · 2º Piso</div>
+        <div class="aniv-acc-subtitulo">Yakissoba · Ramen · Mexido Coreano</div>
+      </div>
+      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <div class="aniv-cardapio-grupo">
+        <div class="aniv-cardapio-grupo-titulo">🥢 Yakissoba Chinês</div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Misto (Filé + Frango)</div></div><div class="aniv-cardapio-item-preco">R$ 59,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Cogumelos <span class="aniv-vegano-tag">VEGANO</span></div></div><div class="aniv-cardapio-item-preco">R$ 57,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Camarão</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
+      </div>
+      <div class="aniv-cardapio-grupo">
+        <div class="aniv-cardapio-grupo-titulo">🍥 Ramen Japonês</div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Shoyu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Shoyu + Chicken Katsu</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Missô Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Missô + Chicken Katsu</div></div><div class="aniv-cardapio-item-preco">R$ 69,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Tonkotsu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Torikatsu Ramen</div></div><div class="aniv-cardapio-item-preco">R$ 79,90</div></div>
+      </div>
+      <div class="aniv-cardapio-grupo">
+        <div class="aniv-cardapio-grupo-titulo">🍲 Mexido Coreano</div>
+        <div class="aniv-cardapio-item"><div class="aniv-cardapio-item-info"><div class="aniv-cardapio-item-nome">Bibimbap</div><div class="aniv-cardapio-item-desc">Prato coreano com arroz, legumes salteados e molho especial</div></div><div class="aniv-cardapio-item-preco">R$ 59,90</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quem faz o quê -->
+  <div class="acc-item aniv-acc">
+    <button class="acc-head" type="button">
+      <div class="acc-num laranja">👥</div>
+      <div class="acc-titulo-wrap">
+        <div class="acc-titulo">Quem faz o quê</div>
+        <div class="aniv-acc-subtitulo">8 setores · Responsáveis</div>
+      </div>
+      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <div class="aniv-resp-grid" style="margin-top:10px;">
+        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Laís</div><div class="aniv-resp-cargo">Drinks Externos</div><div class="aniv-resp-desc">Carrinho de drinks externo</div></div>
+        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Tarcísio</div><div class="aniv-resp-cargo">Bar Interno</div><div class="aniv-resp-desc">Bar interno do 1º Piso</div></div>
+        <div class="aniv-resp-card dourado"><div class="aniv-resp-nome">Daiane</div><div class="aniv-resp-cargo">Caixa Entrada</div><div class="aniv-resp-desc">Mercearia, fichas, fluxo de entrada</div></div>
+        <div class="aniv-resp-card escuro"><div class="aniv-resp-nome">Mariana</div><div class="aniv-resp-cargo">2º Piso & Supervisão</div><div class="aniv-resp-desc">Comandas, caixa 2º piso, supervisão geral</div></div>
+        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Geovanni & Maycon</div><div class="aniv-resp-cargo">Salão 1º Piso</div><div class="aniv-resp-desc">Mesas, limpeza, mercearia</div></div>
+        <div class="aniv-resp-card vinho"><div class="aniv-resp-nome">Marcos, Leandro & Mayara</div><div class="aniv-resp-cargo">Barracas Externas</div><div class="aniv-resp-desc">Produção, entregas, fichas, controle</div></div>
+        <div class="aniv-resp-card dourado"><div class="aniv-resp-nome">Janaína & Valdo</div><div class="aniv-resp-cargo">Salão 2º Piso</div><div class="aniv-resp-desc">Mesas, limpeza, suporte operacional</div></div>
+        <div class="aniv-resp-card escuro"><div class="aniv-resp-nome">Gabriel</div><div class="aniv-resp-cargo">Apoio Geral · Cumim</div><div class="aniv-resp-desc">Dois andares, recolhimento, suporte emergencial</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Caixas e Recebimentos -->
+  <div class="acc-item aniv-acc">
+    <button class="acc-head" type="button">
+      <div class="acc-num dourado">💰</div>
+      <div class="acc-titulo-wrap">
+        <div class="acc-titulo">Caixas e Recebimentos</div>
+        <div class="aniv-acc-subtitulo">3 caixas · Onde pagar o quê</div>
+      </div>
+      <svg class="acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <div style="margin-top:10px;">
+        <div class="aniv-caixa-card" data-caixa="1">
+          <div class="aniv-caixa-head"><div class="aniv-caixa-num">1</div><div><div class="aniv-caixa-titulo">Caixa da Barraca</div><div class="aniv-caixa-resp">Responsável: <strong>Túlio</strong></div></div></div>
+          <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Pagamentos das barracas externas</div><div class="aniv-caixa-lista-item">Entrega de fichas de retirada</div></div>
+        </div>
+        <div class="aniv-caixa-card" data-caixa="2">
+          <div class="aniv-caixa-head"><div class="aniv-caixa-num">2</div><div><div class="aniv-caixa-titulo">Caixa da Entrada</div><div class="aniv-caixa-resp">Responsável: <strong>Daiane</strong></div></div></div>
+          <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Compras da mercearia</div><div class="aniv-caixa-lista-item">Venda de fichas do evento</div><div class="aniv-caixa-lista-item">Apoio ao fluxo geral</div></div>
+        </div>
+        <div class="aniv-caixa-card" data-caixa="3">
+          <div class="aniv-caixa-head"><div class="aniv-caixa-num">3</div><div><div class="aniv-caixa-titulo">Caixa do 2º Piso</div><div class="aniv-caixa-resp">Responsável: <strong>Mariana</strong></div></div></div>
+          <div class="aniv-caixa-lista"><div class="aniv-caixa-lista-item">Consumos via comandas</div><div class="aniv-caixa-lista-item">Fechamento de mesa do salão superior</div></div>
+        </div>
+        <div class="aniv-dica-sistema">
+          <span class="aniv-dica-sistema-ic">💡</span>
+          <div class="aniv-dica-sistema-txt">No sistema, pesquise por <strong>EVENTO</strong> para acessar os itens cadastrados para o aniversário. Em dúvidas, consultar Mariana.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prioridades -->
+  <div class="aniv-prio-card">
+    <div class="aniv-prio-titulo">🎯 Nosso compromisso</div>
+    <div class="aniv-prio-sub">Durante todo o evento</div>
+    <div class="aniv-prio-lista">
+      <div class="aniv-prio-item">Limpeza constante das mesas</div>
+      <div class="aniv-prio-item">Organização dos salões</div>
+      <div class="aniv-prio-item">Agilidade no atendimento</div>
+      <div class="aniv-prio-item">Cordialidade com os clientes</div>
+      <div class="aniv-prio-item">Reposição e organização da mercearia</div>
+      <div class="aniv-prio-item">Comunicação rápida entre setores</div>
+      <div class="aniv-prio-item">Conferência dos pedidos antes da entrega</div>
+      <div class="aniv-prio-item">Manutenção da boa experiência</div>
+    </div>
+    <div class="aniv-prio-cta">🎉 Juntos vamos garantir uma experiência incrível!</div>
+  </div>
+
   <!-- REGRAS -->
   <div class="sec-title">
     <h2>📖 Como funciona</h2>
@@ -853,7 +1493,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Programa Plus Liberdade · Mercearia · Q Food Group</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.9 · 03/06/2026 · FIX: separador de milhar PT-BR (1.506 = 1506)</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v2.0 · 11/06/2026 · + Seção Aniversário (guia da equipe)</div>
   </div>
 </main>
 
@@ -2008,6 +2648,29 @@ const APP = (() => {
       localStorage.removeItem('plus_liberdade_cache_v1');
       localStorage.removeItem('plus_liberdade_snapshot_v1');
     } catch(e){}
+
+    // Wire dos accordions da seção Aniversário (são HTML estáticos no DOM)
+    document.querySelectorAll('.aniv-acc').forEach(item => {
+      const head = item.querySelector('.acc-head');
+      if (!head) return;
+      head.addEventListener('click', () => {
+        const open = item.getAttribute('data-open') === '1';
+        item.setAttribute('data-open', open ? '0' : '1');
+      });
+    });
+
+    // Cards das 4 áreas: tocar abre o accordion de fluxo correspondente e rola até ele
+    document.querySelectorAll('.aniv-area-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.getAttribute('data-target-acc') || '0', 10);
+        const accs = document.querySelectorAll('.aniv-acc[data-aniv-idx]');
+        const target = accs[idx];
+        if (target) {
+          target.setAttribute('data-open', '1');
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
 
     // Eventos
     document.getElementById('btn-refresh').addEventListener('click', () => {
