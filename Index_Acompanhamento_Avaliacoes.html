@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FF6B35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FF6B35'/%3E%3Cpath d='M14 48 L14 24 Q14 16 22 16 Q30 16 30 24 L30 48 M30 24 Q30 16 38 16 Q46 16 46 24 L46 48' stroke='white' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='46' r='4' fill='white'/%3E%3C/svg%3E">
+<title>Ouvidoria • Liberdade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   OUVIDORIA · LIBERDADE
+   Painel de Acompanhamento de Avaliações · MVP v1.0
+   Q Food Group · Ago 2026
+   ============================================================ */
+
+:root {
+  --laranja: #FF6B35;
+  --laranja-claro: #FF8F5C;
+  --laranja-escuro: #E5481A;
+  --dourado: #FFB627;
+  --dourado-claro: #FFCC5C;
+  --verde: #06A77D;
+  --verde-claro: #2DC09A;
+  --vermelho: #E63946;
+  --vermelho-claro: #F27584;
+  --azul: #4A90E2;
+  --amarelo: #F5B841;
+
+  --bg: #FAFAF7;
+  --surface: #FFFFFF;
+  --surface-2: #F4F2EC;
+  --text: #1A1A1A;
+  --text-muted: #6B6B6B;
+  --text-faded: #9A9A9A;
+  --border: #ECE8DF;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 30px rgba(255,107,53,0.18), 0 4px 8px rgba(0,0,0,0.06);
+
+  --radius: 14px;
+  --radius-lg: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  font-size: 15px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+/* ===== HEADER ===== */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(135deg, #FF6B35 0%, #E5481A 60%, #C73B0F 100%);
+  color: #fff;
+  padding: 14px 16px 12px;
+  box-shadow: 0 2px 12px rgba(229,72,26,0.25);
+}
+.header-row { display: flex; align-items: center; gap: 12px; }
+.logo-mark svg { width: 38px; height: 38px; display: block; }
+.header-title { flex: 1; min-width: 0; }
+.header-title h1 {
+  font-size: 16px; font-weight: 800; letter-spacing: -0.01em;
+  text-transform: uppercase; line-height: 1.1;
+}
+.header-title .sub { font-size: 11px; opacity: 0.9; font-weight: 500; margin-top: 2px; }
+.header-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: rgba(255,255,255,0.18);
+  color: #fff; font-size: 16px;
+  display: grid; place-items: center;
+  transition: background .15s, transform .15s;
+}
+.icon-btn:active { background: rgba(255,255,255,0.30); transform: scale(0.94); }
+.icon-btn[data-active="1"] { background: rgba(255,255,255,0.35); }
+
+/* ===== LOADING ===== */
+.loading-shade {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--bg);
+  display: grid; place-items: center;
+  transition: opacity .4s;
+}
+.loading-shade.gone { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 4px solid var(--surface-2);
+  border-top-color: var(--laranja);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== MAIN ===== */
+.main { padding: 12px 12px 40px; max-width: 780px; margin: 0 auto; }
+
+/* ===== CARD DE ATENÇÃO (KPI operacional principal) ===== */
+.atencao {
+  background: linear-gradient(140deg, #FF6B35 0%, #FF8F5C 50%, #FFB627 100%);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px 20px;
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.atencao::before, .atencao::after {
+  content: ''; position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+}
+.atencao::before { width: 200px; height: 200px; top: -70px; right: -70px; }
+.atencao::after { width: 140px; height: 140px; bottom: -60px; left: -50px; }
+.atencao > * { position: relative; z-index: 1; }
+.atencao-titulo {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  opacity: 0.92; font-weight: 700; margin-bottom: 4px;
+}
+.atencao-numero {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 12px;
+}
+.atencao-numero-big {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px; line-height: 0.95;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.atencao-numero-txt {
+  font-size: 14px; font-weight: 600; line-height: 1.2; opacity: 0.95;
+}
+.atencao-tudo-ok {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px; line-height: 1; margin: 12px 0 4px;
+}
+.atencao-tudo-ok-sub { font-size: 13px; opacity: 0.92; font-weight: 500; }
+.atencao-chips {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 8px;
+}
+.atencao-chip {
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.20);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, transform .15s;
+  text-align: left; width: 100%;
+  color: #fff; font-family: inherit;
+}
+.atencao-chip:active { transform: scale(0.96); background: rgba(255,255,255,0.28); }
+.atencao-chip[data-active="1"] { background: rgba(255,255,255,0.32); border-color: rgba(255,255,255,0.45); }
+.atencao-chip-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; line-height: 1;
+}
+.atencao-chip-label { flex: 1; }
+
+/* ===== KPI SECUNDÁRIO (nota / total / resolvidos) ===== */
+.kpi-line {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-around;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  font-size: 12px; color: var(--text-muted);
+  text-align: center;
+}
+.kpi-item { flex: 1; }
+.kpi-item .v {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; line-height: 1;
+  color: var(--laranja-escuro);
+  display: block;
+}
+.kpi-item .l {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.06em; font-weight: 700;
+  margin-top: 2px;
+}
+.kpi-item + .kpi-item { border-left: 1px solid var(--border); }
+
+/* ===== FILTROS (chips) ===== */
+.filtros {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: none;
+}
+.filtros.on { display: block; }
+.filtros-body { padding: 12px 14px; }
+.filtros-grupo { margin-bottom: 10px; }
+.filtros-grupo:last-child { margin-bottom: 0; }
+.filtros-label {
+  font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); margin-bottom: 6px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 5px 12px; border-radius: 999px;
+  background: var(--surface-2); color: var(--text-muted);
+  font-size: 12px; font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer; transition: all .15s;
+  font-family: inherit;
+}
+.chip:active { transform: scale(0.96); }
+.chip[data-active="1"] {
+  background: linear-gradient(135deg, var(--laranja), var(--dourado));
+  color: #fff; border-color: transparent;
+  box-shadow: 0 2px 6px rgba(255,107,53,0.25);
+}
+.filtros-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 0;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  cursor: pointer;
+}
+.filtros-toggle input { accent-color: var(--laranja); width: 18px; height: 18px; }
+.filtros-limpar {
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  cursor: pointer; font-family: inherit;
+}
+
+/* ===== SEC TITLE ===== */
+.sec-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 14px 4px 8px;
+}
+.sec-title h2 {
+  font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.sec-title .count { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+/* ===== INBOX (feed de feedbacks) ===== */
+.inbox { display: flex; flex-direction: column; gap: 8px; }
+.inbox-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-faded);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+}
+.inbox-empty .em { font-size: 40px; margin-bottom: 6px; }
+.inbox-empty .msg { font-size: 13px; font-weight: 600; }
+
+/* Card de feedback */
+.fb {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+}
+.fb:active { transform: scale(0.995); }
+.fb::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--text-faded);
+}
+.fb[data-cat="Reclamação"]::before { background: var(--vermelho); }
+.fb[data-cat="Elogio"]::before { background: var(--verde); }
+.fb[data-cat="Sugestão"]::before { background: var(--dourado); }
+.fb[data-cat="Dúvida"]::before { background: var(--azul); }
+.fb[data-vencido="1"]::before {
+  background: var(--vermelho);
+  box-shadow: 0 0 12px rgba(230,57,70,0.5);
+}
+.fb-head {
+  padding: 10px 14px 6px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.fb-id {
+  font-weight: 800;
+  color: var(--text);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 0.02em;
+}
+.fb-dias { margin-left: auto; font-weight: 700; }
+.fb-dias.vencido { color: var(--vermelho); }
+.fb-body { padding: 0 14px 10px; }
+.fb-line1 {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.fb-plat {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-weight: 700;
+}
+.fb-nota { color: var(--dourado); font-weight: 800; }
+.fb-produto {
+  color: var(--text); font-weight: 700;
+}
+.fb-desc {
+  font-size: 13.5px; color: var(--text);
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  margin: 4px 0 8px;
+}
+.fb[data-open="1"] .fb-desc {
+  -webkit-line-clamp: unset; display: block;
+}
+.fb-foot {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.badge-cat[data-cat="Reclamação"] { background: rgba(230,57,70,0.13); color: var(--vermelho); }
+.badge-cat[data-cat="Elogio"]     { background: rgba(6,167,125,0.13); color: var(--verde); }
+.badge-cat[data-cat="Sugestão"]   { background: rgba(255,182,39,0.18); color: #B0820A; }
+.badge-cat[data-cat="Dúvida"]     { background: rgba(74,144,226,0.13); color: var(--azul); }
+.badge-status[data-st="Novo"]         { background: rgba(255,107,53,0.13); color: var(--laranja-escuro); }
+.badge-status[data-st="Em Andamento"] { background: rgba(245,184,65,0.18); color: #B0820A; }
+.badge-status[data-st="Aguardando"]   { background: rgba(245,184,65,0.13); color: #8B6900; }
+.badge-status[data-st="Concluído"]    { background: rgba(6,167,125,0.13); color: var(--verde); }
+.badge-status[data-st="Cancelado"]    { background: var(--surface-2); color: var(--text-faded); }
+
+.fb-resp {
+  margin-left: auto;
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+}
+
+/* Detalhe expandido */
+.fb-detail {
+  max-height: 0; overflow: hidden;
+  transition: max-height .3s ease-out;
+  padding: 0 14px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-top-color: transparent;
+}
+.fb[data-open="1"] .fb-detail {
+  max-height: 1000px;
+  padding: 12px 14px 14px;
+  border-top-color: var(--border);
+}
+.fb-detail-row {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.fb-detail-row:last-child { border-bottom: none; }
+.fb-detail-label {
+  font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--laranja-escuro); margin-bottom: 2px;
+}
+.fb-detail-val { color: var(--text); font-weight: 500; line-height: 1.4; font-size: 13px; }
+.fb-detail-val.empty { color: var(--text-faded); font-style: italic; font-weight: 400; }
+
+/* ===== RANKING DE MOTIVOS ===== */
+.motivos {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.motivos-empty {
+  text-align: center; padding: 12px;
+  color: var(--text-faded); font-size: 13px;
+}
+.motivo-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.motivo-nome { min-width: 100px; font-weight: 700; color: var(--text); }
+.motivo-bar {
+  flex: 1; height: 10px;
+  background: var(--surface-2); border-radius: 999px;
+  overflow: hidden;
+}
+.motivo-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--laranja), var(--dourado));
+  border-radius: 999px;
+  transition: width .8s cubic-bezier(.2,.7,.2,1);
+  box-shadow: 0 0 6px rgba(255,107,53,0.35);
+}
+.motivo-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; color: var(--laranja-escuro);
+  min-width: 30px; text-align: right;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center; padding: 20px 12px;
+  font-size: 11px; color: var(--text-faded);
+}
+.footer .ts { font-weight: 600; color: var(--text-muted); }
+
+/* ===== RESPONSIVE ===== */
+@media (min-width: 700px) {
+  .main { padding: 16px; }
+  .atencao-chips { grid-template-columns: repeat(4, 1fr); }
+  .inbox { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+}
+@media (min-width: 1024px) {
+  .main { max-width: 900px; }
+}
+
+/* OFFLINE BADGE */
+.offline-pill {
+  display: none; align-items: center; gap: 6px;
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+  background: var(--text); color: #fff;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  z-index: 50; box-shadow: var(--shadow-md);
+}
+.offline-pill.on { display: inline-flex; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-shade" id="loading">
+  <div class="spinner"></div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-row">
+    <div class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="mGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFB627"/>
+            <stop offset="50%" stop-color="#FF6B35"/>
+            <stop offset="100%" stop-color="#E5481A"/>
+          </linearGradient>
+        </defs>
+        <path d="M4 44 L4 16 Q4 6 14 6 Q24 6 24 16 L24 44 M24 16 Q24 6 34 6 Q44 6 44 16 L44 44" stroke="url(#mGrad)" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="54" cy="42" r="5" fill="url(#mGrad)"/>
+      </svg>
+    </div>
+    <div class="header-title">
+      <h1>Ouvidoria · Liberdade</h1>
+      <div class="sub" id="ref-mes">Q Food Group · carregando…</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-filtros" title="Filtros" aria-label="Filtros">🔍</button>
+      <button class="icon-btn" id="btn-refresh" title="Atualizar" aria-label="Atualizar">↻</button>
+    </div>
+  </div>
+</header>
+
+<div class="offline-pill" id="offline-pill">
+  <span>●</span> Modo offline · dados em cache
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- KPI DE ATENÇÃO (principal, operacional) -->
+  <section class="atencao" id="atencao">
+    <div class="atencao-titulo">🚨 Precisam de atenção</div>
+    <div id="atencao-conteudo">
+      <div class="atencao-numero">
+        <span class="atencao-numero-big" id="atencao-total">0</span>
+        <span class="atencao-numero-txt">feedbacks abertos<br>agora mesmo</span>
+      </div>
+      <div class="atencao-chips">
+        <button class="atencao-chip" data-filtro="vencidos">
+          <span class="atencao-chip-num" id="chip-vencidos">0</span>
+          <span class="atencao-chip-label">🔴 Vencidos</span>
+        </button>
+        <button class="atencao-chip" data-filtro="novos">
+          <span class="atencao-chip-num" id="chip-novos">0</span>
+          <span class="atencao-chip-label">🟠 Novos</span>
+        </button>
+        <button class="atencao-chip" data-filtro="aguardando">
+          <span class="atencao-chip-num" id="chip-aguardando">0</span>
+          <span class="atencao-chip-label">🟡 Aguardando</span>
+        </button>
+        <button class="atencao-chip" data-filtro="reclamacoes">
+          <span class="atencao-chip-num" id="chip-reclamacoes">0</span>
+          <span class="atencao-chip-label">💢 Reclamações</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPI secundário (nota / total / resolvidos do mês) -->
+  <div class="kpi-line">
+    <div class="kpi-item">
+      <span class="v" id="kpi-nota">—</span>
+      <div class="l">Nota mês</div>
+    </div>
+    <div class="kpi-item">
+      <span class="v" id="kpi-total">0</span>
+      <div class="l">Feedbacks</div>
+    </div>
+    <div class="kpi-item">
+      <span class="v" id="kpi-resolvidos">0%</span>
+      <div class="l">Resolvidos</div>
+    </div>
+  </div>
+
+  <!-- FILTROS (escondidos por padrão) -->
+  <div class="filtros" id="filtros">
+    <div class="filtros-body">
+      <div class="filtros-grupo">
+        <div class="filtros-label">Categoria</div>
+        <div class="chips" id="filtro-cat"></div>
+      </div>
+      <div class="filtros-grupo">
+        <div class="filtros-label">Plataforma</div>
+        <div class="chips" id="filtro-plat"></div>
+      </div>
+      <div class="filtros-grupo">
+        <div class="filtros-label">Status</div>
+        <div class="chips" id="filtro-status"></div>
+      </div>
+      <div class="filtros-grupo">
+        <div class="filtros-label">Responsável</div>
+        <div class="chips" id="filtro-resp"></div>
+      </div>
+      <div class="filtros-grupo">
+        <div class="filtros-label">Motivo</div>
+        <div class="chips" id="filtro-motivo"></div>
+      </div>
+      <div class="filtros-grupo">
+        <label class="filtros-toggle">
+          <input type="checkbox" id="filtro-abertos" checked>
+          <span>Mostrar apenas abertos</span>
+        </label>
+      </div>
+      <button class="filtros-limpar" id="btn-limpar-filtros">Limpar filtros</button>
+    </div>
+  </div>
+
+  <!-- INBOX -->
+  <div class="sec-title">
+    <h2>📥 Inbox</h2>
+    <span class="count" id="inbox-count">—</span>
+  </div>
+  <div class="inbox" id="inbox"></div>
+
+  <!-- MOTIVOS -->
+  <div class="sec-title">
+    <h2>🎯 Motivos mais frequentes (mês)</h2>
+    <span class="count" id="motivos-count">—</span>
+  </div>
+  <div class="motivos" id="motivos"></div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="ts">Atualizado em <span id="last-update">—</span></div>
+    <div style="margin-top:6px">Ouvidoria · Q Food Group · Mercearia Liberdade</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.0 · MVP operacional</div>
+  </div>
+</main>
+
+<script>
+/* ============================================================
+   MÓDULOS
+   CONFIG → DataService → Normalizer → FeedbackModel
+   → SLAService → MetricsService → FilterService → UI → App
+   ============================================================ */
+
+// ============================================================
+// CONFIG
+// ============================================================
+const CONFIG = {
+  CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRYlNWhQDwwkhp9dw_h3Df0K6IQD05XvWumUhc0TJcpAIC58YH4yVPMiajVwdg252HHwXYXsIgkByiU/pub?gid=661262288&single=true&output=csv',
+  CACHE_KEY: 'acomp_avaliacoes_cache_v1',
+  CACHE_TTL_MS: 5 * 60 * 1000,   // 5 min pra auto-refresh
+  SLA_DIAS_VENCIDO: 5,           // > X dias em aberto = vencido
+  INBOX_LIMITE: 50,              // carrega os 50 mais relevantes
+  MES_REF: null,                 // null = mês corrente
+};
+
+// ============================================================
+// DataService — fetch CSV + cache localStorage
+// ============================================================
+const DataService = (() => {
+  // Parser CSV RFC 4180
+  function parseCSV(text) {
+    if (!text) return [];
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i], n = text[i+1];
+      if (inQuotes) {
+        if (c === '"' && n === '"') { field += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { field += c; }
+      } else {
+        if (c === '"') { inQuotes = true; }
+        else if (c === ',') { row.push(field); field = ''; }
+        else if (c === '\r') { /* skip */ }
+        else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+        else { field += c; }
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(c => (c||'').trim() !== ''));
+  }
+
+  // Fetch com headers HTTP no-cache (respeitado pelo CDN Google)
+  async function fetchCSV(timeoutMs = 12000) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const r = await fetch(CONFIG.CSV_URL, {
+        signal: ctrl.signal,
+        cache: 'reload',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return parseCSV(await r.text());
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  async function loadAll(forceFresh = false) {
+    if (!forceFresh) {
+      try {
+        const raw = localStorage.getItem(CONFIG.CACHE_KEY);
+        if (raw) {
+          const cached = JSON.parse(raw);
+          if (cached.ts && Date.now() - cached.ts < CONFIG.CACHE_TTL_MS) {
+            return { rows: cached.rows, ts: cached.ts, fromCache: true };
+          }
+        }
+      } catch(e){}
+    }
+    try {
+      const rows = await fetchCSV();
+      const payload = { ts: Date.now(), rows };
+      try { localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(payload)); } catch(e){}
+      return { rows, ts: payload.ts, fromCache: false };
+    } catch (err) {
+      // fallback: cache antigo
+      try {
+        const raw = localStorage.getItem(CONFIG.CACHE_KEY);
+        if (raw) {
+          const cached = JSON.parse(raw);
+          return { rows: cached.rows, ts: cached.ts, fromCache: true, offline: true };
+        }
+      } catch(e){}
+      throw err;
+    }
+  }
+
+  return { loadAll };
+})();
+
+// ============================================================
+// Normalizer — parseia rows do CSV em objetos Feedback
+// ============================================================
+const Normalizer = (() => {
+  function findCol(headers, ...names) {
+    const lower = headers.map(h => (h||'').toLowerCase().trim());
+    for (const name of names) {
+      const t = name.toLowerCase();
+      let idx = lower.findIndex(h => h === t);
+      if (idx >= 0) return idx;
+      idx = lower.findIndex(h => h.includes(t));
+      if (idx >= 0) return idx;
+    }
+    return -1;
+  }
+
+  function parseDataBR(s) {
+    // Aceita dd/mm/yyyy ou dd/mm/yy
+    if (!s) return null;
+    const str = String(s).trim();
+    const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (!m) return null;
+    let [_, d, mo, y] = m;
+    if (y.length === 2) y = '20' + y;
+    const dt = new Date(parseInt(y), parseInt(mo)-1, parseInt(d));
+    return isNaN(dt) ? null : dt;
+  }
+
+  function toNumber(v) {
+    if (v == null) return 0;
+    if (typeof v === 'number') return v;
+    let s = String(v).trim();
+    if (!s || s === '-' || s === '#N/A' || s === 'N/A') return 0;
+    s = s.replace(/R\$/gi, '').replace(/\s/g, '').replace(/%$/, '');
+    if (!s) return 0;
+    const hasComma = s.indexOf(',') >= 0, hasDot = s.indexOf('.') >= 0;
+    if (hasComma && hasDot) s = s.replace(/\./g, '').replace(',', '.');
+    else if (hasComma) s = s.replace(',', '.');
+    else if (hasDot) {
+      const partes = s.split('.');
+      if (partes.length > 2 || partes[partes.length - 1].length === 3) s = s.replace(/\./g, '');
+    }
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  }
+
+  // Normaliza categoria (corrige typos residuais que escaparam do Apps Script)
+  function normCategoria(s) {
+    const t = String(s || '').trim().toLowerCase();
+    const mapa = {
+      'reclamacao': 'Reclamação', 'reclamacáo': 'Reclamação', 'reclamação': 'Reclamação',
+      'elogio': 'Elogio',
+      'sugestao': 'Sugestão', 'sugestão': 'Sugestão',
+      'duvida': 'Dúvida', 'dúvida': 'Dúvida'
+    };
+    return mapa[t] || (s || '').trim();
+  }
+
+  function normStatus(s) {
+    const t = String(s || '').trim();
+    if (!t) return 'Novo';
+    // Aceita "Concluído" ou "Concluido" indistintamente
+    if (/conclu/i.test(t)) return 'Concluído';
+    if (/cancel/i.test(t)) return 'Cancelado';
+    if (/aguard/i.test(t)) return 'Aguardando';
+    if (/andament/i.test(t)) return 'Em Andamento';
+    if (/novo/i.test(t)) return 'Novo';
+    return t;
+  }
+
+  function normalize(rows) {
+    if (!rows || rows.length < 2) return [];
+    const h = rows[0];
+    const iData    = findCol(h, 'Data');
+    const iPlat    = findCol(h, 'Plataforma');
+    const iCli     = findCol(h, 'Cliente');
+    const iNota    = findCol(h, 'Nota (1 a 5)', 'Nota');
+    const iCat     = findCol(h, 'Categoria');
+    const iProd    = findCol(h, 'Produto/Prato', 'Produto');
+    const iDesc    = findCol(h, 'Descrição do Feedback', 'Descrição', 'Descricao');
+    const iAcao    = findCol(h, 'Ação Tomada / Resposta', 'Ação Tomada', 'Acao Tomada');
+    const iStatus  = findCol(h, 'Status');
+    const iResp    = findCol(h, 'Responsável', 'Responsavel');
+    const iObs     = findCol(h, 'OBSERVACAO', 'Observação', 'Observacao');
+    const iID      = findCol(h, 'Feedback_ID');
+    const iMotivo  = findCol(h, 'Motivo');
+    const iAguard  = findCol(h, 'Aguardando');
+    const iDataC   = findCol(h, 'Data Conclusão', 'Data Conclusao');
+    const iDias    = findCol(h, 'Dias em Aberto');
+
+    const out = [];
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      const data = parseDataBR(row[iData]);
+      // Se linha não tem Data nem descrição, ignora (linha vazia)
+      const desc = (iDesc >= 0 ? row[iDesc] : '') || '';
+      if (!data && !desc.trim()) continue;
+
+      const notaRaw = iNota >= 0 ? String(row[iNota] || '').trim() : '';
+      const notaNum = /^[1-5]$/.test(notaRaw) ? parseInt(notaRaw, 10) : null;
+
+      out.push({
+        id:        iID >= 0 ? (row[iID] || '').trim() : '',
+        data:      data,
+        plataforma:(row[iPlat] || '').trim(),
+        cliente:   (row[iCli]  || '').trim(),
+        notaTxt:   notaRaw,             // "N/A" ou "1".."5"
+        nota:      notaNum,             // null se N/A
+        categoria: normCategoria(row[iCat]),
+        produto:   (row[iProd] || '').trim(),
+        descricao: desc.trim(),
+        acao:      iAcao   >= 0 ? (row[iAcao]   || '').trim() : '',
+        status:    normStatus(row[iStatus]),
+        responsavel:iResp  >= 0 ? (row[iResp]   || '').trim() : '',
+        obs:       iObs    >= 0 ? (row[iObs]    || '').trim() : '',
+        motivo:    iMotivo >= 0 ? (row[iMotivo] || '').trim() : '',
+        aguardando:iAguard >= 0 ? (row[iAguard] || '').trim() : '',
+        dataConclusao: iDataC >= 0 ? parseDataBR(row[iDataC]) : null,
+        diasEmAberto: iDias >= 0 ? toNumber(row[iDias]) : null,
+      });
+    }
+    return out;
+  }
+
+  return { normalize };
+})();
+
+// ============================================================
+// FeedbackModel — helpers de entidade
+// ============================================================
+const FeedbackModel = (() => {
+  function isAberto(fb) {
+    return fb.status !== 'Concluído' && fb.status !== 'Cancelado';
+  }
+  function isVencido(fb) {
+    return isAberto(fb) && (fb.diasEmAberto || 0) > CONFIG.SLA_DIAS_VENCIDO;
+  }
+  function noMes(fb, mesRef) {
+    if (!fb.data) return false;
+    const d = mesRef || new Date();
+    return fb.data.getMonth() === d.getMonth() && fb.data.getFullYear() === d.getFullYear();
+  }
+  function calcDias(fb) {
+    // Se planilha não trouxe (linha nova sem fórmula ainda), calcula na hora
+    if (fb.diasEmAberto != null && fb.diasEmAberto > 0) return fb.diasEmAberto;
+    if (!fb.data) return 0;
+    if (!isAberto(fb)) return 0;
+    const hoje = new Date();
+    return Math.max(0, Math.floor((hoje - fb.data) / (1000*60*60*24)));
+  }
+  return { isAberto, isVencido, noMes, calcDias };
+})();
+
+// ============================================================
+// SLAService — vencidos, dias em aberto
+// ============================================================
+const SLAService = (() => {
+  function contarVencidos(feedbacks) {
+    return feedbacks.filter(FeedbackModel.isVencido).length;
+  }
+  return { contarVencidos };
+})();
+
+// ============================================================
+// MetricsService — KPIs e agregações
+// ============================================================
+const MetricsService = (() => {
+  function kpiAtencao(feedbacks) {
+    const abertos     = feedbacks.filter(FeedbackModel.isAberto);
+    const vencidos    = abertos.filter(FeedbackModel.isVencido);
+    const novos       = abertos.filter(f => f.status === 'Novo');
+    const aguardando  = abertos.filter(f => f.status === 'Aguardando');
+    const reclamacoes = abertos.filter(f => f.categoria === 'Reclamação');
+    return {
+      total: abertos.length,
+      vencidos: vencidos.length,
+      novos: novos.length,
+      aguardando: aguardando.length,
+      reclamacoes: reclamacoes.length,
+    };
+  }
+  function kpiMes(feedbacks) {
+    const doMes = feedbacks.filter(f => FeedbackModel.noMes(f));
+    const total = doMes.length;
+    if (total === 0) return { nota: null, total: 0, pctResolvidos: 0 };
+    const comNota = doMes.filter(f => f.nota != null);
+    const notaMedia = comNota.length > 0
+      ? comNota.reduce((s,f) => s + f.nota, 0) / comNota.length
+      : null;
+    const resolvidos = doMes.filter(f => f.status === 'Concluído').length;
+    return {
+      nota: notaMedia,
+      total,
+      pctResolvidos: Math.round((resolvidos / total) * 100)
+    };
+  }
+  function rankingMotivos(feedbacks) {
+    // Top motivos no mês (só reclamações + sugestões, faz mais sentido)
+    const doMes = feedbacks.filter(f => FeedbackModel.noMes(f) && f.motivo);
+    const contagem = {};
+    doMes.forEach(f => {
+      contagem[f.motivo] = (contagem[f.motivo] || 0) + 1;
+    });
+    return Object.entries(contagem)
+      .map(([nome, count]) => ({ nome, count }))
+      .sort((a,b) => b.count - a.count)
+      .slice(0, 5);
+  }
+  function opcoesUnicas(feedbacks, campo) {
+    const set = new Set();
+    feedbacks.forEach(f => { if (f[campo]) set.add(f[campo]); });
+    return Array.from(set).sort();
+  }
+  return { kpiAtencao, kpiMes, rankingMotivos, opcoesUnicas };
+})();
+
+// ============================================================
+// FilterService — estado dos filtros ativos
+// ============================================================
+const FilterService = (() => {
+  const state = {
+    cat: null, plat: null, status: null, resp: null, motivo: null,
+    somenteAbertos: true,
+    atencaoRapido: null,  // 'vencidos' | 'novos' | 'aguardando' | 'reclamacoes' | null
+  };
+  function apply(feedbacks) {
+    return feedbacks.filter(f => {
+      if (state.somenteAbertos && !FeedbackModel.isAberto(f)) return false;
+      if (state.cat    && f.categoria   !== state.cat) return false;
+      if (state.plat   && f.plataforma  !== state.plat) return false;
+      if (state.status && f.status      !== state.status) return false;
+      if (state.resp   && f.responsavel !== state.resp) return false;
+      if (state.motivo && f.motivo      !== state.motivo) return false;
+      if (state.atencaoRapido === 'vencidos'    && !FeedbackModel.isVencido(f)) return false;
+      if (state.atencaoRapido === 'novos'       && f.status !== 'Novo') return false;
+      if (state.atencaoRapido === 'aguardando'  && f.status !== 'Aguardando') return false;
+      if (state.atencaoRapido === 'reclamacoes' && (f.categoria !== 'Reclamação' || !FeedbackModel.isAberto(f))) return false;
+      return true;
+    });
+  }
+  function reset() {
+    state.cat = state.plat = state.status = state.resp = state.motivo = null;
+    state.atencaoRapido = null;
+    state.somenteAbertos = true;
+  }
+  function toggleChip(campo, valor) {
+    if (state[campo] === valor) state[campo] = null;
+    else state[campo] = valor;
+  }
+  function set(campo, valor) { state[campo] = valor; }
+  function get(campo) { return state[campo]; }
+  return { apply, reset, toggleChip, set, get, state };
+})();
+
+// ============================================================
+// UI — renderização
+// ============================================================
+const UI = (() => {
+  const $ = id => document.getElementById(id);
+  const fmtInt = n => Math.round(n || 0).toLocaleString('pt-BR');
+  function fmtDate(d) {
+    if (!d) return '—';
+    return d.toLocaleDateString('pt-BR');
+  }
+  function fmtDateTime(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return d.toLocaleDateString('pt-BR') + ' às ' +
+           d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+  function nomeMesPT(d) {
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    return meses[(d || new Date()).getMonth()] + ' ' + (d || new Date()).getFullYear();
+  }
+  function emojiPlataforma(plat) {
+    const map = { 'iFood': '🛵', 'Google': '🌐', 'Instagram': '📷', 'NPS': '📊', 'WhatsApp': '💬' };
+    return map[plat] || '📱';
+  }
+  function estrelas(nota) {
+    if (nota == null) return '—';
+    return '⭐'.repeat(nota) + '☆'.repeat(5 - nota);
+  }
+  function estrelasCurtas(nota) {
+    if (nota == null) return 'N/A';
+    return nota + '★';
+  }
+
+  function renderHeader() {
+    $('ref-mes').textContent = 'Q Food Group · ' + nomeMesPT();
+  }
+
+  function renderAtencao(kpi) {
+    $('atencao-total').textContent = kpi.total;
+    $('chip-vencidos').textContent    = kpi.vencidos;
+    $('chip-novos').textContent       = kpi.novos;
+    $('chip-aguardando').textContent  = kpi.aguardando;
+    $('chip-reclamacoes').textContent = kpi.reclamacoes;
+
+    // Se zerou tudo, mostra mensagem positiva
+    const container = $('atencao-conteudo');
+    if (kpi.total === 0) {
+      container.innerHTML = `
+        <div class="atencao-tudo-ok">✨ TUDO EM DIA!</div>
+        <div class="atencao-tudo-ok-sub">Nenhum feedback aberto no momento. Continue assim! 🎉</div>
+      `;
+    }
+  }
+
+  function renderKPILine(kpi) {
+    $('kpi-nota').textContent = kpi.nota != null ? kpi.nota.toFixed(1).replace('.',',') + '★' : '—';
+    $('kpi-total').textContent = kpi.total;
+    $('kpi-resolvidos').textContent = kpi.pctResolvidos + '%';
+  }
+
+  function renderFiltros(feedbacks) {
+    const build = (containerId, campo, opcoes) => {
+      const el = $(containerId);
+      el.innerHTML = '';
+      opcoes.forEach(op => {
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.type = 'button';
+        btn.textContent = op;
+        btn.dataset.value = op;
+        if (FilterService.get(campo) === op) btn.dataset.active = '1';
+        btn.addEventListener('click', () => {
+          FilterService.toggleChip(campo, op);
+          App.rerender();
+        });
+        el.appendChild(btn);
+      });
+    };
+    build('filtro-cat',    'cat',    ['Reclamação', 'Elogio', 'Sugestão', 'Dúvida']);
+    build('filtro-plat',   'plat',   ['iFood', 'Google', 'Instagram', 'NPS', 'WhatsApp']);
+    build('filtro-status', 'status', ['Novo', 'Em Andamento', 'Aguardando', 'Concluído', 'Cancelado']);
+    build('filtro-resp',   'resp',   MetricsService.opcoesUnicas(feedbacks, 'responsavel'));
+    build('filtro-motivo', 'motivo', MetricsService.opcoesUnicas(feedbacks, 'motivo'));
+
+    $('filtro-abertos').checked = FilterService.get('somenteAbertos');
+  }
+
+  // Score de prioridade pra ordenação da Inbox
+  function priorityScore(f) {
+    let s = 0;
+    if (FeedbackModel.isVencido(f)) s += 1000;
+    if (f.categoria === 'Reclamação' && FeedbackModel.isAberto(f)) s += 500;
+    if (f.status === 'Novo') s += 300;
+    if (f.status === 'Em Andamento') s += 200;
+    if (f.status === 'Aguardando') s += 100;
+    if (f.status === 'Concluído') s -= 500;
+    if (f.status === 'Cancelado') s -= 1000;
+    s += FeedbackModel.calcDias(f);
+    return s;
+  }
+
+  function renderInbox(feedbacks) {
+    const filtrados = FilterService.apply(feedbacks);
+    const ordenados = [...filtrados].sort((a,b) => priorityScore(b) - priorityScore(a));
+    const exibidos = ordenados.slice(0, CONFIG.INBOX_LIMITE);
+
+    $('inbox-count').textContent = filtrados.length > CONFIG.INBOX_LIMITE
+      ? `mostrando ${CONFIG.INBOX_LIMITE} de ${filtrados.length}`
+      : `${filtrados.length} feedback${filtrados.length !== 1 ? 's' : ''}`;
+
+    const inbox = $('inbox');
+    if (exibidos.length === 0) {
+      inbox.innerHTML = `
+        <div class="inbox-empty">
+          <div class="em">🔍</div>
+          <div class="msg">Nenhum feedback encontrado com os filtros ativos.</div>
+        </div>`;
+      return;
+    }
+
+    inbox.innerHTML = '';
+    exibidos.forEach(f => {
+      const vencido = FeedbackModel.isVencido(f);
+      const dias = FeedbackModel.calcDias(f);
+      const diasTxt = FeedbackModel.isAberto(f)
+        ? (dias === 0 ? 'hoje' : dias === 1 ? 'há 1 dia' : `há ${dias} dias`)
+        : (f.dataConclusao ? 'concluído em ' + fmtDate(f.dataConclusao) : 'concluído');
+
+      const clienteCurto = (f.cliente || '').split(' ')[0] || '—';
+      const descCurta = f.descricao || '(sem descrição)';
+
+      const card = document.createElement('div');
+      card.className = 'fb';
+      card.setAttribute('data-cat', f.categoria);
+      card.setAttribute('data-vencido', vencido ? '1' : '0');
+      card.innerHTML = `
+        <div class="fb-head">
+          <span class="fb-id">${f.id || '—'}</span>
+          <span>· ${fmtDate(f.data)}</span>
+          <span class="fb-dias ${vencido ? 'vencido' : ''}">${diasTxt}</span>
+        </div>
+        <div class="fb-body">
+          <div class="fb-line1">
+            <span class="fb-plat">${emojiPlataforma(f.plataforma)} ${f.plataforma}</span>
+            <span class="fb-nota">${estrelasCurtas(f.nota)}</span>
+            <span>·</span>
+            <span class="fb-produto">${f.produto || '—'}</span>
+          </div>
+          <div class="fb-desc">${descCurta}</div>
+          <div class="fb-foot">
+            <span class="badge badge-cat" data-cat="${f.categoria}">${f.categoria || '—'}</span>
+            <span class="badge badge-status" data-st="${f.status}">${f.status || '—'}</span>
+            <span class="fb-resp">👤 ${f.responsavel || '—'}</span>
+          </div>
+        </div>
+        <div class="fb-detail">
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">Cliente</div>
+            <div class="fb-detail-val">${f.cliente || '—'}</div>
+          </div>
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">Nota</div>
+            <div class="fb-detail-val">${estrelas(f.nota)} ${f.nota != null ? '(' + f.nota + '/5)' : ''}</div>
+          </div>
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">Motivo</div>
+            <div class="fb-detail-val ${f.motivo ? '' : 'empty'}">${f.motivo || 'não classificado'}</div>
+          </div>
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">Descrição completa</div>
+            <div class="fb-detail-val">${f.descricao || '—'}</div>
+          </div>
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">Ação tomada / Resposta</div>
+            <div class="fb-detail-val ${f.acao ? '' : 'empty'}">${f.acao || 'ainda sem ação registrada'}</div>
+          </div>
+          ${f.status === 'Aguardando' && f.aguardando ? `
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">🎯 Aguardando</div>
+            <div class="fb-detail-val">${f.aguardando}</div>
+          </div>` : ''}
+          ${f.obs ? `
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">📌 Observação interna</div>
+            <div class="fb-detail-val">${f.obs}</div>
+          </div>` : ''}
+          ${f.dataConclusao ? `
+          <div class="fb-detail-row">
+            <div class="fb-detail-label">Data conclusão</div>
+            <div class="fb-detail-val">${fmtDate(f.dataConclusao)}</div>
+          </div>` : ''}
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        const open = card.getAttribute('data-open') === '1';
+        card.setAttribute('data-open', open ? '0' : '1');
+      });
+      inbox.appendChild(card);
+    });
+  }
+
+  function renderMotivos(motivos) {
+    const el = $('motivos');
+    $('motivos-count').textContent = motivos.length > 0
+      ? `top ${motivos.length}`
+      : 'sem dados';
+
+    if (motivos.length === 0) {
+      el.innerHTML = `<div class="motivos-empty">Nenhum motivo classificado no mês ainda.</div>`;
+      return;
+    }
+    const maxCount = Math.max(...motivos.map(m => m.count));
+    el.innerHTML = motivos.map(m => `
+      <div class="motivo-row">
+        <div class="motivo-nome">${m.nome}</div>
+        <div class="motivo-bar"><div class="motivo-bar-fill" style="width:${(m.count/maxCount)*100}%"></div></div>
+        <div class="motivo-count">${m.count}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderAtencaoChipsAtivos() {
+    const rapido = FilterService.get('atencaoRapido');
+    document.querySelectorAll('.atencao-chip').forEach(btn => {
+      btn.dataset.active = (btn.dataset.filtro === rapido) ? '1' : '0';
+    });
+  }
+
+  function toggleFiltros() {
+    const el = $('filtros');
+    const btn = $('btn-filtros');
+    const on = el.classList.toggle('on');
+    btn.dataset.active = on ? '1' : '0';
+  }
+
+  return {
+    renderHeader, renderAtencao, renderKPILine, renderFiltros,
+    renderInbox, renderMotivos, renderAtencaoChipsAtivos,
+    toggleFiltros, fmtDateTime
+  };
+})();
+
+// ============================================================
+// App — orquestração
+// ============================================================
+const App = (() => {
+  let feedbacksAll = [];
+  let ultimoTs = null;
+  let refreshTimer = null;
+
+  async function load(forceFresh = false) {
+    try {
+      const { rows, ts, offline } = await DataService.loadAll(forceFresh);
+      feedbacksAll = Normalizer.normalize(rows);
+      ultimoTs = ts;
+      if (offline) document.getElementById('offline-pill').classList.add('on');
+      rerender();
+      document.getElementById('loading').classList.add('gone');
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+      document.getElementById('loading').innerHTML = `
+        <div style="text-align:center;padding:20px;max-width:320px;">
+          <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+          <h3 style="margin-bottom:8px;color:#E5481A">Não consegui carregar os dados</h3>
+          <p style="font-size:13px;color:#6B6B6B;margin-bottom:16px">Verifique sua conexão e tente novamente.</p>
+          <button onclick="App.reload()" style="padding:10px 20px;background:#FF6B35;color:#fff;border-radius:10px;font-weight:700;cursor:pointer;border:none;font-family:inherit;">Tentar de novo</button>
+        </div>`;
+      document.getElementById('loading').classList.remove('gone');
+    }
+  }
+
+  function rerender() {
+    const kpiAtn = MetricsService.kpiAtencao(feedbacksAll);
+    const kpiMes = MetricsService.kpiMes(feedbacksAll);
+    const motivos = MetricsService.rankingMotivos(feedbacksAll);
+
+    UI.renderHeader();
+    UI.renderAtencao(kpiAtn);
+    UI.renderKPILine(kpiMes);
+    UI.renderFiltros(feedbacksAll);
+    UI.renderAtencaoChipsAtivos();
+    UI.renderInbox(feedbacksAll);
+    UI.renderMotivos(motivos);
+    document.getElementById('last-update').textContent = UI.fmtDateTime(ultimoTs);
+  }
+
+  function reload() {
+    document.getElementById('loading').innerHTML = '<div class="spinner"></div>';
+    document.getElementById('loading').classList.remove('gone');
+    load(true);
+  }
+
+  function startAutoRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(() => {
+      if (!document.hidden) load(true).catch(()=>{});
+    }, CONFIG.CACHE_TTL_MS);
+  }
+
+  function init() {
+    // Limpeza automática de caches antigos (se houver)
+    try { localStorage.removeItem('acomp_avaliacoes_cache_v0'); } catch(e){}
+
+    // Botão refresh (limpa cache antes)
+    document.getElementById('btn-refresh').addEventListener('click', () => {
+      const btn = document.getElementById('btn-refresh');
+      btn.style.transform = 'rotate(360deg)';
+      btn.style.transition = 'transform .6s';
+      try { localStorage.removeItem(CONFIG.CACHE_KEY); } catch(e){}
+      load(true).then(() => {
+        setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 700);
+      });
+    });
+
+    // Botão filtros
+    document.getElementById('btn-filtros').addEventListener('click', UI.toggleFiltros);
+
+    // Chips do card de atenção (filtro rápido)
+    document.querySelectorAll('.atencao-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const f = btn.dataset.filtro;
+        const atual = FilterService.get('atencaoRapido');
+        FilterService.set('atencaoRapido', atual === f ? null : f);
+        rerender();
+      });
+    });
+
+    // Toggle "somente abertos"
+    document.getElementById('filtro-abertos').addEventListener('change', (e) => {
+      FilterService.set('somenteAbertos', e.target.checked);
+      rerender();
+    });
+
+    // Limpar filtros
+    document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
+      FilterService.reset();
+      rerender();
+    });
+
+    // Refresh ao voltar pra aba (se cache expirado)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && ultimoTs) {
+        const age = Date.now() - ultimoTs;
+        if (age > CONFIG.CACHE_TTL_MS) load(true).catch(()=>{});
+      }
+    });
+
+    window.addEventListener('online', () => {
+      document.getElementById('offline-pill').classList.remove('on');
+      load(true);
+    });
+    window.addEventListener('offline', () => {
+      document.getElementById('offline-pill').classList.add('on');
+    });
+
+    // Primeira carga: SEMPRE fresh (padrão que definimos no Plus v1.8)
+    load(true).then(() => startAutoRefresh());
+  }
+
+  return { init, reload, rerender };
+})();
+
+// BOOT
+document.addEventListener('DOMContentLoaded', App.init);
+</script>
+</body>
+</html>
