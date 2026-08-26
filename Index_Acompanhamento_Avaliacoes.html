@@ -469,84 +469,155 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .periodo-custom label { font-weight: 700; color: var(--text-muted); }
 
-/* ===== VELOCÍMETROS VERTICAIS (análise) ===== */
-.analise-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  margin-bottom: 12px;
+/* ===== DONUTS DE ANÁLISE (velocímetros redondos) ===== */
+/* Layout fluido: no desktop grande vira sidebar direita, no mobile vira grid */
+.donuts-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
 }
-@media (min-width: 700px) {
-  .analise-grid { grid-template-columns: repeat(4, 1fr); }
+@media (min-width: 700px) and (max-width: 1199px) {
+  .donuts-wrap { grid-template-columns: repeat(4, 1fr); }
 }
-.velocimetro {
+@media (min-width: 1200px) {
+  /* Sidebar fixa à direita — só em telas largas */
+  .donuts-wrap {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 240px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding: 4px;
+    z-index: 5;
+  }
+  .donuts-wrap::-webkit-scrollbar { width: 4px; }
+  .donuts-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  /* Reserva espaço à direita no main pra sidebar não sobrepor */
+  .main { padding-right: 280px !important; }
+}
+.donut-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 12px 12px 14px;
   box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
-.velocimetro-titulo {
-  font-size: 10px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.08em;
+.donut-titulo {
+  font-size: 10.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--laranja-escuro);
-  margin-bottom: 10px;
-  display: flex; align-items: center; justify-content: space-between;
+  text-align: center;
+  width: 100%;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
 }
-.velocimetro-titulo .total {
-  color: var(--text-faded); font-size: 10px;
-}
-.velocimetro-empty {
-  padding: 12px 4px; text-align: center;
-  font-size: 11px; color: var(--text-faded);
-}
-.vel-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 3px 0;
-  font-size: 12px;
-}
-.vel-nome {
-  min-width: 88px; max-width: 88px;
-  font-weight: 700; color: var(--text);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.vel-bar {
-  flex: 1; height: 8px;
-  background: var(--surface-2); border-radius: 999px;
-  overflow: hidden;
+.donut-svg-wrap {
   position: relative;
+  width: 120px; height: 120px;
 }
-.vel-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width .8s cubic-bezier(.2,.7,.2,1);
+.donut-svg {
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
 }
-.vel-count {
+.donut-svg circle.bg {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 12;
+}
+.donut-svg circle.seg {
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: butt;
+  transition: stroke-dashoffset .8s cubic-bezier(.2,.7,.2,1);
+}
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid; place-items: center;
+  text-align: center;
+}
+.donut-num {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 16px; color: var(--text);
-  min-width: 26px; text-align: right;
+  font-size: 32px; line-height: 1;
+  color: var(--text);
   letter-spacing: 0.02em;
 }
-/* Cores dos velocímetros por categoria semântica */
-.vel-plat  .vel-bar-fill { background: linear-gradient(90deg, var(--laranja), var(--dourado)); }
-.vel-cat   .vel-bar-fill { background: linear-gradient(90deg, var(--laranja), var(--laranja-escuro)); }
-.vel-prod  .vel-bar-fill { background: linear-gradient(90deg, var(--dourado), var(--laranja)); }
-.vel-stat  .vel-bar-fill { background: linear-gradient(90deg, var(--laranja-escuro), var(--vermelho)); }
-
-/* ===== BOTÃO EDITAR NO CARD ===== */
-.fb-edit-btn {
-  position: absolute; top: 8px; right: 46px;
-  width: 28px; height: 28px; border-radius: 8px;
-  background: rgba(0,0,0,0.05); color: var(--text-muted);
-  font-size: 13px; display: none;
-  place-items: center; cursor: pointer;
-  font-family: inherit; z-index: 2;
+.donut-sub {
+  font-size: 9.5px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-top: 2px;
 }
-.fb[data-open="1"] .fb-edit-btn { display: grid; }
-.fb-edit-btn:hover { background: var(--laranja); color: #fff; }
-
-/* Modo edição no header do modal */
-.modal-header.editando {
-  background: linear-gradient(135deg, var(--dourado), var(--laranja));
+.donut-legenda {
+  width: 100%;
+  display: flex; flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
 }
+.leg-item {
+  display: flex; align-items: center; gap: 6px;
+}
+.leg-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.leg-nome {
+  flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.leg-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; color: var(--text);
+  letter-spacing: 0.02em;
+}
+.donut-empty {
+  padding: 20px 8px; text-align: center;
+  color: var(--text-faded); font-size: 12px;
+  min-height: 120px;
+  display: grid; place-items: center;
+}
+
+/* ===== BOTÕES DE AÇÃO NO CARD (Editar + PDF) ===== */
+/* Nova versão: aparecem GRANDES no fim do card expandido, não no topo */
+.fb-actions {
+  display: none;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.fb[data-open="1"] .fb-actions { display: flex; }
+.fb-action-btn {
+  flex: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px; font-weight: 800;
+  font-family: inherit; cursor: pointer;
+  transition: transform .12s;
+}
+.fb-action-btn:active { transform: scale(0.97); }
+.fb-action-btn.edit {
+  background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(229,72,26,0.30);
+}
+.fb-action-btn.pdf {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.fb-action-btn.pdf:hover { background: var(--surface-2); }
 
 /* ===== BOTÕES PDF ===== */
 .pdf-bar {
@@ -579,19 +650,40 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .fb[data-open="1"] .fb-pdf-btn { display: grid; }
 .fb-pdf-btn:hover { background: var(--vermelho); color: #fff; }
 
+/* Esconde o botão antigo (agora usamos .fb-actions no fim do card) */
+.fb-pdf-btn { display: none !important; }
+
+/* Modo edição no header do modal */
+.modal-header.editando {
+  background: linear-gradient(135deg, var(--dourado), var(--laranja));
+}
+
 /* ===== BOTÃO FLUTUANTE + MODAL DE NOVO FEEDBACK ===== */
 .fab {
   position: fixed; bottom: 20px; right: 20px;
-  width: 60px; height: 60px; border-radius: 50%;
+  width: 76px; height: 76px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
-  color: #fff; font-size: 30px; font-weight: 300;
-  display: grid; place-items: center;
+  color: #fff;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px; line-height: 1;
   box-shadow: 0 8px 24px rgba(229,72,26,0.40);
   cursor: pointer; z-index: 90;
   transition: transform .15s;
   font-family: inherit;
+  padding: 8px 4px 10px;
 }
-.fab:active { transform: scale(0.92); }
+.fab:active { transform: scale(0.94); }
+.fab-plus {
+  font-size: 30px; font-weight: 300; line-height: 1;
+  margin-bottom: -2px;
+}
+.fab-txt {
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
 .modal-overlay {
   position: fixed; inset: 0; z-index: 500;
   background: rgba(0,0,0,0.55);
@@ -838,39 +930,27 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     </span>
   </div>
 
-  <!-- ANÁLISE (4 velocímetros verticais) -->
-  <div class="sec-title">
+  <!-- ANÁLISE (4 velocímetros redondos / donuts) -->
+  <div class="sec-title" id="sec-analise">
     <h2>📊 Análise</h2>
     <span class="count">período selecionado</span>
   </div>
-  <div class="analise-grid">
-    <div class="velocimetro vel-plat">
-      <div class="velocimetro-titulo">
-        <span>📱 Plataforma</span>
-        <span class="total" id="vel-plat-total">0</span>
-      </div>
-      <div id="vel-plat"></div>
+  <div class="donuts-wrap" id="donuts-wrap">
+    <div class="donut-card" id="donut-plat">
+      <div class="donut-titulo">📱 Plataforma</div>
+      <div class="donut-empty">carregando…</div>
     </div>
-    <div class="velocimetro vel-cat">
-      <div class="velocimetro-titulo">
-        <span>🏷️ Categoria</span>
-        <span class="total" id="vel-cat-total">0</span>
-      </div>
-      <div id="vel-cat"></div>
+    <div class="donut-card" id="donut-cat">
+      <div class="donut-titulo">🏷️ Categoria</div>
+      <div class="donut-empty">carregando…</div>
     </div>
-    <div class="velocimetro vel-prod">
-      <div class="velocimetro-titulo">
-        <span>🍽️ Produto/Prato</span>
-        <span class="total" id="vel-prod-total">0</span>
-      </div>
-      <div id="vel-prod"></div>
+    <div class="donut-card" id="donut-prod">
+      <div class="donut-titulo">🍽️ Produto/Prato</div>
+      <div class="donut-empty">carregando…</div>
     </div>
-    <div class="velocimetro vel-stat">
-      <div class="velocimetro-titulo">
-        <span>⚙️ Status</span>
-        <span class="total" id="vel-stat-total">0</span>
-      </div>
-      <div id="vel-stat"></div>
+    <div class="donut-card" id="donut-stat">
+      <div class="donut-titulo">⚙️ Status</div>
+      <div class="donut-empty">carregando…</div>
     </div>
   </div>
 
@@ -892,10 +972,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Ouvidoria · Q Food Group · Mercearia Liberdade</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.3 · +4 velocímetros de análise +edição de feedback</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.4 · velocímetros donut + botões ação no fim do card + FAB vertical</div>
   </div>
   <!-- BOTÃO FLUTUANTE (Novo Feedback) -->
-  <button class="fab" id="btn-novo" title="Novo feedback">+</button>
+  <button class="fab" id="btn-novo" title="Adicionar feedback">
+    <span class="fab-plus">+</span>
+    <span class="fab-txt">Adicionar</span>
+  </button>
 </main>
 
 <!-- MODAL NOVO FEEDBACK -->
@@ -1582,6 +1665,14 @@ const UI = (() => {
             <div class="fb-detail-label">Data conclusão</div>
             <div class="fb-detail-val">${fmtDate(f.dataConclusao)}</div>
           </div>` : ''}
+          <div class="fb-actions">
+            <button class="fb-action-btn edit" onclick="event.stopPropagation(); App.abrirEdicao('${f.id}')">
+              ✏️ Editar
+            </button>
+            <button class="fb-action-btn pdf" onclick="event.stopPropagation(); App.exportarFeedback('${f.id}')">
+              🖨️ PDF
+            </button>
+          </div>
         </div>
       `;
       card.addEventListener('click', () => {
@@ -1592,31 +1683,84 @@ const UI = (() => {
     });
   }
 
-  function renderVelocimetros(feedbacks) {
+  // Paleta de cores rotativa para os segmentos dos donuts
+  const CORES_DONUT = ['#FF6B35','#FFB627','#E63946','#06A77D','#4A90E2','#8B5CF6','#9A9A9A'];
+
+  function renderDonuts(feedbacks) {
     const filtrados = FilterService.apply(feedbacks);
     const total = filtrados.length;
 
-    const build = (containerId, totalId, dados) => {
-      const el = $(containerId);
-      $(totalId).textContent = 'total ' + total;
-      if (dados.length === 0) {
-        el.innerHTML = '<div class="velocimetro-empty">sem dados</div>';
+    const build = (cardId, dados) => {
+      const card = document.getElementById(cardId);
+      // Preserva o título (primeiro filho) e substitui o resto
+      const titulo = card.querySelector('.donut-titulo');
+      card.innerHTML = '';
+      card.appendChild(titulo);
+
+      if (total === 0 || dados.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'donut-empty';
+        empty.textContent = 'sem dados no período';
+        card.appendChild(empty);
         return;
       }
-      const max = Math.max(...dados.map(d => d.count));
-      el.innerHTML = dados.slice(0, 6).map(d => `
-        <div class="vel-row" title="${d.nome}: ${d.count}">
-          <div class="vel-nome">${d.nome}</div>
-          <div class="vel-bar"><div class="vel-bar-fill" style="width:${(d.count/max)*100}%"></div></div>
-          <div class="vel-count">${d.count}</div>
+
+      // Cria SVG donut segmentado
+      const wrap = document.createElement('div');
+      wrap.className = 'donut-svg-wrap';
+
+      const R = 40;                         // raio
+      const CIRC = 2 * Math.PI * R;         // circunferência
+      let offsetAcum = 0;
+
+      let svgSegs = '';
+      const topDados = dados.slice(0, 7);   // no máx 7 segmentos
+      topDados.forEach((d, idx) => {
+        const frac = d.count / total;
+        const len = CIRC * frac;
+        const cor = CORES_DONUT[idx % CORES_DONUT.length];
+        svgSegs += `<circle class="seg" cx="50" cy="50" r="${R}"
+          stroke="${cor}"
+          stroke-dasharray="${len} ${CIRC - len}"
+          stroke-dashoffset="${-offsetAcum}"/>`;
+        offsetAcum += len;
+      });
+
+      wrap.innerHTML = `
+        <svg class="donut-svg" viewBox="0 0 100 100">
+          <circle class="bg" cx="50" cy="50" r="${R}"/>
+          ${svgSegs}
+        </svg>
+        <div class="donut-center">
+          <div>
+            <div class="donut-num">${total}</div>
+            <div class="donut-sub">Total</div>
+          </div>
         </div>
-      `).join('');
+      `;
+      card.appendChild(wrap);
+
+      // Legenda
+      const legenda = document.createElement('div');
+      legenda.className = 'donut-legenda';
+      topDados.forEach((d, idx) => {
+        const cor = CORES_DONUT[idx % CORES_DONUT.length];
+        const item = document.createElement('div');
+        item.className = 'leg-item';
+        item.innerHTML = `
+          <span class="leg-dot" style="background:${cor}"></span>
+          <span class="leg-nome" title="${d.nome}">${d.nome}</span>
+          <span class="leg-num">${d.count}</span>
+        `;
+        legenda.appendChild(item);
+      });
+      card.appendChild(legenda);
     };
 
-    build('vel-plat', 'vel-plat-total', MetricsService.contarPor(filtrados, 'plataforma'));
-    build('vel-cat',  'vel-cat-total',  MetricsService.contarPor(filtrados, 'categoria'));
-    build('vel-prod', 'vel-prod-total', MetricsService.contarPor(filtrados, 'produto'));
-    build('vel-stat', 'vel-stat-total', MetricsService.contarPor(filtrados, 'status'));
+    build('donut-plat', MetricsService.contarPor(filtrados, 'plataforma'));
+    build('donut-cat',  MetricsService.contarPor(filtrados, 'categoria'));
+    build('donut-prod', MetricsService.contarPor(filtrados, 'produto'));
+    build('donut-stat', MetricsService.contarPor(filtrados, 'status'));
   }
 
   function renderMotivos(motivos) {
@@ -1655,7 +1799,7 @@ const UI = (() => {
 
   return {
     renderHeader, renderAtencao, renderKPILine, renderFiltros,
-    renderInbox, renderMotivos, renderVelocimetros, renderAtencaoChipsAtivos,
+    renderInbox, renderMotivos, renderDonuts, renderAtencaoChipsAtivos,
     toggleFiltros, fmtDateTime
   };
 })();
@@ -1700,7 +1844,7 @@ const App = (() => {
     UI.renderKPILine(kpiMes);
     UI.renderFiltros(feedbacksAll);
     UI.renderAtencaoChipsAtivos();
-    UI.renderVelocimetros(feedbacksAll);
+    UI.renderDonuts(feedbacksAll);
     UI.renderInbox(feedbacksAll);
     UI.renderMotivos(motivos);
     document.getElementById('last-update').textContent = UI.fmtDateTime(ultimoTs);
