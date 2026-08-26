@@ -503,14 +503,24 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* ===== BOTÃO FLUTUANTE + MODAL DE NOVO FEEDBACK ===== */
 .fab {
   position: fixed; bottom: 20px; right: 20px;
-  width: 60px; height: 60px; border-radius: 50%;
+  height: 56px; padding: 0 22px 0 18px;
+  border-radius: 999px;
   background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
-  color: #fff; font-size: 30px; font-weight: 300;
-  display: grid; place-items: center;
+  color: #fff;
+  display: inline-flex; align-items: center; gap: 8px;
   box-shadow: 0 8px 24px rgba(229,72,26,0.40);
   cursor: pointer; z-index: 90;
   transition: transform .15s;
   font-family: inherit;
+}
+.fab:active { transform: scale(0.94); }
+.fab-plus {
+  font-size: 28px; font-weight: 300; line-height: 1;
+  display: inline-block; margin-top: -2px;
+}
+.fab-txt {
+  font-size: 15px; font-weight: 800;
+  letter-spacing: 0.02em;
 }
 .fab:active { transform: scale(0.92); }
 .modal-overlay {
@@ -752,10 +762,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   <!-- BARRA DE EXPORTAÇÃO PDF -->
   <div class="pdf-bar">
-    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 Relatório completo</button>
-    <button class="pdf-btn" onclick="App.exportarInbox()">📋 Inbox filtrada</button>
+    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 PDF · Relatório completo</button>
+    <button class="pdf-btn" onclick="App.exportarInbox()">📋 PDF · Inbox filtrada</button>
     <span style="font-size:11px;color:var(--text-faded);align-self:center;margin-left:auto;">
-      💡 Pra 1 feedback: expande o card e clica em 🖨️
+      💡 PDF de 1 feedback: expande o card e clica em 🖨️
     </span>
   </div>
 
@@ -777,10 +787,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Ouvidoria · Q Food Group · Mercearia Liberdade</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.1 · +formulário +período +PDF</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.2 · UX polida (aguardando condicional + botões renomeados)</div>
   </div>
   <!-- BOTÃO FLUTUANTE (Novo Feedback) -->
-  <button class="fab" id="btn-novo" title="Novo feedback">+</button>
+  <button class="fab" id="btn-novo" title="Adicionar feedback">
+    <span class="fab-plus">+</span>
+    <span class="fab-txt">Adicionar</span>
+  </button>
 </main>
 
 <!-- MODAL NOVO FEEDBACK -->
@@ -855,7 +868,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
         <label class="form-label">Ação Tomada / Resposta</label>
         <textarea class="form-textarea" id="f-acao" placeholder="O que foi feito ou será feito?"></textarea>
       </div>
-      <div class="form-row-3">
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Status</label>
           <select class="form-select" id="f-status">
@@ -870,10 +883,11 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
             <option>Bárbara</option><option>Lelis</option><option>Gerência</option>
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">Aguardando</label>
-          <input type="text" class="form-input" id="f-aguardando" placeholder="(se status = Aguardando)">
-        </div>
+      </div>
+      <!-- Aparece só quando Status = "Aguardando" -->
+      <div class="form-group" id="grupo-aguardando" style="display:none;">
+        <label class="form-label">Aguardando o quê? <span class="req">*</span></label>
+        <input type="text" class="form-input" id="f-aguardando" placeholder="Ex: resposta do fornecedor, foto do cliente, retorno da cozinha…">
       </div>
       <div class="form-group">
         <label class="form-label">Observação interna</label>
@@ -1578,6 +1592,7 @@ const App = (() => {
      'f-descricao','f-acao','f-responsavel','f-aguardando','f-observacao']
       .forEach(id => document.getElementById(id).value = '');
     document.getElementById('f-status').value = 'Novo';
+    document.getElementById('grupo-aguardando').style.display = 'none';
   }
 
   async function enviarNovoFeedback() {
@@ -1903,6 +1918,18 @@ const App = (() => {
 
     // Botão flutuante: novo feedback
     document.getElementById('btn-novo').addEventListener('click', abrirModal);
+        // Mostrar/esconder campo "Aguardando" conforme o Status
+    document.getElementById('f-status').addEventListener('change', (e) => {
+      const grupoAg = document.getElementById('grupo-aguardando');
+      const inputAg = document.getElementById('f-aguardando');
+      if (e.target.value === 'Aguardando') {
+        grupoAg.style.display = 'block';
+        inputAg.focus();
+      } else {
+        grupoAg.style.display = 'none';
+        inputAg.value = '';
+      }
+    });
 
     // Fecha modal ao clicar no fundo
     document.getElementById('modal-novo').addEventListener('click', (e) => {
