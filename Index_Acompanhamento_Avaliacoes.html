@@ -16,6 +16,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- jsPDF (biblioteca de PDF) + autotable (tabelas) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 /* ============================================================
    OUVIDORIA · LIBERDADE
@@ -428,6 +431,162 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   min-width: 30px; text-align: right;
 }
 
+/* ===== CHIPS DE PERÍODO ===== */
+.periodo-bar {
+  display: flex; gap: 6px; overflow-x: auto;
+  padding: 4px 0 8px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+.periodo-bar::-webkit-scrollbar { display: none; }
+.periodo-chip {
+  flex-shrink: 0;
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--surface); color: var(--text-muted);
+  font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border);
+  cursor: pointer; transition: all .15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.periodo-chip:active { transform: scale(0.96); }
+.periodo-chip[data-active="1"] {
+  background: var(--text); color: #fff; border-color: var(--text);
+}
+.periodo-custom {
+  display: none; align-items: center; gap: 8px;
+  padding: 8px 10px; margin-top: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.periodo-custom.on { display: flex; }
+.periodo-custom input[type="date"] {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; font-family: inherit; font-size: 12px;
+  color: var(--text);
+}
+.periodo-custom label { font-weight: 700; color: var(--text-muted); }
+
+/* ===== BOTÕES PDF ===== */
+.pdf-bar {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin: 10px 0;
+}
+.pdf-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all .15s;
+}
+.pdf-btn:hover { background: var(--surface-2); }
+.pdf-btn:active { transform: scale(0.96); }
+.pdf-btn.primary {
+  background: linear-gradient(135deg, var(--vermelho), #C1272D);
+  color: #fff; border-color: transparent;
+}
+.fb-pdf-btn {
+  position: absolute; top: 8px; right: 10px;
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(0,0,0,0.05); color: var(--text-muted);
+  font-size: 13px; display: none;
+  place-items: center; cursor: pointer;
+  font-family: inherit; z-index: 2;
+}
+.fb[data-open="1"] .fb-pdf-btn { display: grid; }
+.fb-pdf-btn:hover { background: var(--vermelho); color: #fff; }
+
+/* ===== BOTÃO FLUTUANTE + MODAL DE NOVO FEEDBACK ===== */
+.fab {
+  position: fixed; bottom: 20px; right: 20px;
+  width: 60px; height: 60px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
+  color: #fff; font-size: 30px; font-weight: 300;
+  display: grid; place-items: center;
+  box-shadow: 0 8px 24px rgba(229,72,26,0.40);
+  cursor: pointer; z-index: 90;
+  transition: transform .15s;
+  font-family: inherit;
+}
+.fab:active { transform: scale(0.92); }
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  display: none;
+  align-items: flex-end; justify-content: center;
+  padding: 0;
+}
+.modal-overlay.on { display: flex; }
+.modal {
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 720px;
+  max-height: 92vh; overflow-y: auto;
+  animation: slideUp .35s cubic-bezier(.2,.9,.2,1);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-header {
+  position: sticky; top: 0; z-index: 5;
+  background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
+  color: #fff;
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 10px;
+  border-radius: 20px 20px 0 0;
+}
+.modal-header h2 { flex: 1; font-size: 16px; font-weight: 800; }
+.modal-close {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: rgba(255,255,255,0.20); color: #fff;
+  font-size: 18px; display: grid; place-items: center;
+  font-family: inherit; cursor: pointer;
+}
+.modal-body { padding: 16px 18px 20px; }
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block; font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); margin-bottom: 6px;
+}
+.form-label .req { color: var(--vermelho); }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); color: var(--text);
+  font-size: 14px; font-family: inherit;
+  transition: border-color .15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none; border-color: var(--laranja);
+}
+.form-textarea { min-height: 80px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) {
+  .form-row-3 { grid-template-columns: 1fr; }
+}
+.form-submit {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
+  color: #fff; font-weight: 800; font-size: 15px;
+  border-radius: 12px; cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 14px rgba(229,72,26,0.35);
+  transition: transform .15s, opacity .15s;
+}
+.form-submit:active { transform: scale(0.98); }
+.form-submit:disabled { opacity: 0.6; cursor: wait; }
+.form-msg {
+  margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600;
+  display: none;
+}
+.form-msg.ok { display: block; background: rgba(6,167,125,0.12); color: var(--verde); }
+.form-msg.err { display: block; background: rgba(230,57,70,0.12); color: var(--vermelho); }
+
 /* ===== FOOTER ===== */
 .footer {
   text-align: center; padding: 20px 12px;
@@ -576,6 +735,30 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     </div>
   </div>
 
+  <!-- PERÍODO -->
+  <div class="periodo-bar" id="periodo-bar">
+    <button class="periodo-chip" data-periodo="hoje">Hoje</button>
+    <button class="periodo-chip" data-periodo="7d">Últimos 7 dias</button>
+    <button class="periodo-chip" data-periodo="30d" data-active="1">Últimos 30 dias</button>
+    <button class="periodo-chip" data-periodo="mes">Mês corrente</button>
+    <button class="periodo-chip" data-periodo="tudo">Tudo</button>
+    <button class="periodo-chip" data-periodo="custom">📅 Personalizado</button>
+  </div>
+  <div class="periodo-custom" id="periodo-custom">
+    <label>De: <input type="date" id="periodo-de"></label>
+    <label>Até: <input type="date" id="periodo-ate"></label>
+    <button class="chip" onclick="App.aplicarPeriodoCustom()" style="background:var(--laranja);color:#fff;">Aplicar</button>
+  </div>
+
+  <!-- BARRA DE EXPORTAÇÃO PDF -->
+  <div class="pdf-bar">
+    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 Relatório completo</button>
+    <button class="pdf-btn" onclick="App.exportarInbox()">📋 Inbox filtrada</button>
+    <span style="font-size:11px;color:var(--text-faded);align-self:center;margin-left:auto;">
+      💡 Pra 1 feedback: expande o card e clica em 🖨️
+    </span>
+  </div>
+
   <!-- INBOX -->
   <div class="sec-title">
     <h2>📥 Inbox</h2>
@@ -594,9 +777,115 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Ouvidoria · Q Food Group · Mercearia Liberdade</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.0 · MVP operacional</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.1 · +formulário +período +PDF</div>
   </div>
+  <!-- BOTÃO FLUTUANTE (Novo Feedback) -->
+  <button class="fab" id="btn-novo" title="Novo feedback">+</button>
 </main>
+
+<!-- MODAL NOVO FEEDBACK -->
+<div class="modal-overlay" id="modal-novo">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>➕ Novo Feedback</h2>
+      <button class="modal-close" onclick="App.fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data <span class="req">*</span></label>
+          <input type="date" class="form-input" id="f-data" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Plataforma <span class="req">*</span></label>
+          <select class="form-select" id="f-plataforma" required>
+            <option value="">Selecione…</option>
+            <option>iFood</option><option>Google</option><option>Instagram</option>
+            <option>NPS</option><option>WhatsApp</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <input type="text" class="form-input" id="f-cliente" placeholder="Ex: Carlos S.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nota</label>
+          <select class="form-select" id="f-nota">
+            <option value="">—</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>N/A</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Categoria <span class="req">*</span></label>
+          <select class="form-select" id="f-categoria" required>
+            <option value="">Selecione…</option>
+            <option>Reclamação</option><option>Elogio</option>
+            <option>Sugestão</option><option>Dúvida</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Motivo</label>
+          <select class="form-select" id="f-motivo">
+            <option value="">—</option>
+            <option>Produto</option><option>Atendimento</option><option>Entrega</option>
+            <option>Embalagem</option><option>Tempo</option>
+            <option>Ambiente</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Produto</label>
+          <select class="form-select" id="f-produto">
+            <option value="">—</option>
+            <option>Tonkotsu Aka</option><option>Bento Box</option><option>Geral</option>
+            <option>Frango Coreano</option><option>Teishoku</option><option>Sushi</option>
+            <option>Lámen Tradicional</option><option>Produtos da Mercearia</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição do Feedback <span class="req">*</span></label>
+        <textarea class="form-textarea" id="f-descricao" required placeholder="O que o cliente disse?"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ação Tomada / Resposta</label>
+        <textarea class="form-textarea" id="f-acao" placeholder="O que foi feito ou será feito?"></textarea>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="f-status">
+            <option>Novo</option><option>Em Andamento</option>
+            <option>Aguardando</option><option>Concluído</option><option>Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsável</label>
+          <select class="form-select" id="f-responsavel">
+            <option value="">—</option>
+            <option>Bárbara</option><option>Lelis</option><option>Gerência</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aguardando</label>
+          <input type="text" class="form-input" id="f-aguardando" placeholder="(se status = Aguardando)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observação interna</label>
+        <textarea class="form-textarea" id="f-observacao" placeholder="Notas internas"></textarea>
+      </div>
+      <button class="form-submit" id="btn-submit" onclick="App.enviarNovoFeedback()">
+        ✅ Registrar feedback
+      </button>
+      <div class="form-msg" id="form-msg"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ============================================================
@@ -610,6 +899,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 // ============================================================
 const CONFIG = {
   CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRYlNWhQDwwkhp9dw_h3Df0K6IQD05XvWumUhc0TJcpAIC58YH4yVPMiajVwdg252HHwXYXsIgkByiU/pub?gid=661262288&single=true&output=csv',
+  WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbx2nWJmY48EZD5-3hsGpWYDTzxX_0oLyWq5myiuNcm4Jdd4cAISE-4llwAoibGPlulwvw/exec',
   CACHE_KEY: 'acomp_avaliacoes_cache_v1',
   CACHE_TTL_MS: 5 * 60 * 1000,   // 5 min pra auto-refresh
   SLA_DIAS_VENCIDO: 5,           // > X dias em aberto = vencido
@@ -920,10 +1210,31 @@ const FilterService = (() => {
   const state = {
     cat: null, plat: null, status: null, resp: null, motivo: null,
     somenteAbertos: true,
-    atencaoRapido: null,  // 'vencidos' | 'novos' | 'aguardando' | 'reclamacoes' | null
+    atencaoRapido: null,
+    periodo: '30d',       // 'hoje' | '7d' | '30d' | 'mes' | 'tudo' | 'custom'
+    periodoDe: null,
+    periodoAte: null,
   };
   function apply(feedbacks) {
     return feedbacks.filter(f => {
+      // Filtro de período
+      if (state.periodo !== 'tudo' && f.data) {
+        const hoje = new Date(); hoje.setHours(23,59,59,999);
+        let ini = null;
+        if (state.periodo === 'hoje') { ini = new Date(); ini.setHours(0,0,0,0); }
+        else if (state.periodo === '7d')  { ini = new Date(); ini.setDate(ini.getDate() - 7); ini.setHours(0,0,0,0); }
+        else if (state.periodo === '30d') { ini = new Date(); ini.setDate(ini.getDate() - 30); ini.setHours(0,0,0,0); }
+        else if (state.periodo === 'mes') { ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1, 0,0,0,0); }
+        else if (state.periodo === 'custom') {
+          if (state.periodoDe && f.data < state.periodoDe) return false;
+          if (state.periodoAte) {
+            const fim = new Date(state.periodoAte); fim.setHours(23,59,59,999);
+            if (f.data > fim) return false;
+          }
+        }
+        if (ini && f.data < ini) return false;
+      }
+
       if (state.somenteAbertos && !FeedbackModel.isAberto(f)) return false;
       if (state.cat    && f.categoria   !== state.cat) return false;
       if (state.plat   && f.plataforma  !== state.plat) return false;
@@ -941,6 +1252,8 @@ const FilterService = (() => {
     state.cat = state.plat = state.status = state.resp = state.motivo = null;
     state.atencaoRapido = null;
     state.somenteAbertos = true;
+    state.periodo = '30d';
+    state.periodoDe = state.periodoAte = null;
   }
   function toggleChip(campo, valor) {
     if (state[campo] === valor) state[campo] = null;
@@ -1087,6 +1400,7 @@ const UI = (() => {
       card.setAttribute('data-cat', f.categoria);
       card.setAttribute('data-vencido', vencido ? '1' : '0');
       card.innerHTML = `
+        <button class="fb-pdf-btn" onclick="event.stopPropagation(); App.exportarFeedback('${f.id}')" title="Exportar este feedback em PDF">🖨️</button>
         <div class="fb-head">
           <span class="fb-id">${f.id || '—'}</span>
           <span>· ${fmtDate(f.data)}</span>
@@ -1243,6 +1557,309 @@ const App = (() => {
     load(true);
   }
 
+  // ===== MODAL DE NOVO FEEDBACK =====
+  function abrirModal() {
+    // Preenche a data com hoje
+    const hoje = new Date();
+    document.getElementById('f-data').value = hoje.toISOString().slice(0,10);
+    document.getElementById('modal-novo').classList.add('on');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('form-msg').className = 'form-msg';
+    document.getElementById('form-msg').textContent = '';
+  }
+
+  function fecharModal() {
+    document.getElementById('modal-novo').classList.remove('on');
+    document.body.style.overflow = '';
+  }
+
+  function limparFormulario() {
+    ['f-cliente','f-nota','f-plataforma','f-categoria','f-motivo','f-produto',
+     'f-descricao','f-acao','f-responsavel','f-aguardando','f-observacao']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-status').value = 'Novo';
+  }
+
+  async function enviarNovoFeedback() {
+    const dataInput = document.getElementById('f-data').value;
+    const plataforma = document.getElementById('f-plataforma').value;
+    const categoria = document.getElementById('f-categoria').value;
+    const descricao = document.getElementById('f-descricao').value.trim();
+    const msgEl = document.getElementById('form-msg');
+    const btn = document.getElementById('btn-submit');
+
+    if (!dataInput || !plataforma || !categoria || !descricao) {
+      msgEl.className = 'form-msg err';
+      msgEl.textContent = '⚠️ Preencha os campos obrigatórios (marcados com *)';
+      return;
+    }
+    if (!CONFIG.WEBAPP_URL || CONFIG.WEBAPP_URL.includes('COLE_AQUI')) {
+      msgEl.className = 'form-msg err';
+      msgEl.textContent = '⚠️ URL do Web App não configurada no código.';
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    msgEl.className = 'form-msg';
+
+    const [ano, mes, dia] = dataInput.split('-');
+    const dataBR = `${dia}/${mes}/${ano}`;
+
+    const payload = {
+      data: dataBR,
+      plataforma,
+      cliente: document.getElementById('f-cliente').value.trim(),
+      nota: document.getElementById('f-nota').value,
+      categoria,
+      motivo: document.getElementById('f-motivo').value,
+      produto: document.getElementById('f-produto').value,
+      descricao,
+      acao: document.getElementById('f-acao').value.trim(),
+      status: document.getElementById('f-status').value,
+      responsavel: document.getElementById('f-responsavel').value,
+      aguardando: document.getElementById('f-aguardando').value.trim(),
+      observacao: document.getElementById('f-observacao').value.trim()
+    };
+
+    try {
+      const r = await fetch(CONFIG.WEBAPP_URL, {
+        method: 'POST',
+        // sem headers Content-Type pra evitar preflight CORS
+        body: JSON.stringify(payload)
+      });
+      const resp = await r.json();
+      if (resp.ok) {
+        msgEl.className = 'form-msg ok';
+        msgEl.textContent = `✅ Registrado com sucesso! ID: ${resp.id || '—'}`;
+        limparFormulario();
+        setTimeout(() => {
+          fecharModal();
+          reload();
+        }, 1500);
+      } else {
+        throw new Error(resp.erro || 'Falha ao registrar');
+      }
+    } catch (err) {
+      msgEl.className = 'form-msg err';
+      msgEl.textContent = '❌ Erro: ' + err.message + '. Tenta de novo em alguns segundos.';
+    } finally {
+      btn.disabled = false; btn.textContent = '✅ Registrar feedback';
+    }
+  }
+
+  // ===== EXPORTAÇÃO EM PDF =====
+  function _preparaPDF() {
+    if (typeof window.jspdf === 'undefined') {
+      alert('Biblioteca de PDF ainda não carregou. Aguarde alguns segundos e tenta de novo.');
+      return null;
+    }
+    const { jsPDF } = window.jspdf;
+    return new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  }
+
+  function _headerPDF(doc, titulo) {
+    doc.setFillColor(255, 107, 53);
+    doc.rect(0, 0, 210, 22, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+    doc.text('OUVIDORIA · LIBERDADE', 14, 10);
+    doc.setFontSize(9); doc.setFont(undefined, 'normal');
+    doc.text('Q Food Group · Mercearia Liberdade', 14, 16);
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.text(titulo, 14, 32);
+    doc.setFontSize(8); doc.setFont(undefined, 'normal');
+    doc.setTextColor(120, 120, 120);
+    doc.text('Gerado em ' + new Date().toLocaleString('pt-BR'), 14, 37);
+    doc.setTextColor(50, 50, 50);
+    return 45;
+  }
+
+  function _footerPDF(doc) {
+    const total = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= total; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Página ${i} de ${total}`, 105, 290, { align: 'center' });
+      doc.text('Ouvidoria · Liberdade · v1.1', 14, 290);
+    }
+  }
+
+  function _dataArq() {
+    const d = new Date();
+    return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function exportarRelatorio() {
+    const doc = _preparaPDF(); if (!doc) return;
+    const filtrados = FilterService.apply(feedbacksAll);
+    const kpiAtn = MetricsService.kpiAtencao(feedbacksAll);
+    const kpiMes = MetricsService.kpiMes(feedbacksAll);
+    const motivos = MetricsService.rankingMotivos(feedbacksAll);
+
+    let y = _headerPDF(doc, 'Relatório Completo');
+
+    doc.setFillColor(255, 245, 230);
+    doc.rect(14, y, 182, 30, 'F');
+    doc.setFontSize(9); doc.setFont(undefined, 'bold');
+    doc.text('SITUAÇÃO ATUAL', 18, y + 6);
+    doc.setFontSize(20); doc.setTextColor(229, 72, 26);
+    doc.text(String(kpiAtn.total), 18, y + 18);
+    doc.setFontSize(8); doc.setTextColor(80, 80, 80); doc.setFont(undefined, 'normal');
+    doc.text('feedbacks abertos', 18, y + 24);
+
+    doc.setFontSize(9); doc.setFont(undefined, 'bold'); doc.setTextColor(50, 50, 50);
+    doc.text(`Vencidos: ${kpiAtn.vencidos}`, 70, y + 10);
+    doc.text(`Novos: ${kpiAtn.novos}`, 70, y + 18);
+    doc.text(`Aguardando: ${kpiAtn.aguardando}`, 130, y + 10);
+    doc.text(`Reclamacoes: ${kpiAtn.reclamacoes}`, 130, y + 18);
+    y += 38;
+
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.text('KPIs do Mes', 14, y); y += 6;
+    doc.setFontSize(10); doc.setFont(undefined, 'normal');
+    doc.text(`Nota media: ${kpiMes.nota ? kpiMes.nota.toFixed(1).replace('.',',') + ' estrelas' : 'N/A'}`, 14, y);
+    doc.text(`Total: ${kpiMes.total}`, 80, y);
+    doc.text(`Resolvidos: ${kpiMes.pctResolvidos}%`, 130, y);
+    y += 10;
+
+    if (motivos.length > 0) {
+      doc.setFontSize(11); doc.setFont(undefined, 'bold');
+      doc.text('Motivos mais frequentes', 14, y); y += 3;
+      doc.autoTable({
+        startY: y,
+        head: [['Motivo', 'Qtd']],
+        body: motivos.map(m => [m.nome, m.count]),
+        theme: 'grid',
+        headStyles: { fillColor: [255, 107, 53], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 9 },
+        margin: { left: 14, right: 14 }
+      });
+      y = doc.lastAutoTable.finalY + 8;
+    }
+
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.text(`Feedbacks (${filtrados.length})`, 14, y); y += 3;
+    doc.autoTable({
+      startY: y,
+      head: [['ID', 'Data', 'Plat.', 'Nota', 'Categoria', 'Produto', 'Status', 'Resp.']],
+      body: filtrados.map(f => [
+        f.id || '-',
+        f.data ? f.data.toLocaleDateString('pt-BR') : '-',
+        f.plataforma || '-',
+        f.nota != null ? f.nota : 'N/A',
+        f.categoria || '-',
+        f.produto || '-',
+        f.status || '-',
+        f.responsavel || '-'
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [255, 107, 53], textColor: 255, fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      margin: { left: 14, right: 14 }
+    });
+
+    _footerPDF(doc);
+    doc.save(`Ouvidoria_Relatorio_${_dataArq()}.pdf`);
+  }
+
+  function exportarInbox() {
+    const doc = _preparaPDF(); if (!doc) return;
+    const filtrados = FilterService.apply(feedbacksAll);
+    let y = _headerPDF(doc, `Inbox - ${filtrados.length} feedback(s)`);
+
+    doc.autoTable({
+      startY: y,
+      head: [['ID', 'Data', 'Plataforma', 'Nota', 'Categoria', 'Produto', 'Descricao', 'Status', 'Resp.']],
+      body: filtrados.map(f => [
+        f.id || '-',
+        f.data ? f.data.toLocaleDateString('pt-BR') : '-',
+        f.plataforma || '-',
+        f.nota != null ? f.nota : 'N/A',
+        f.categoria || '-',
+        f.produto || '-',
+        (f.descricao || '').substring(0, 60) + (f.descricao && f.descricao.length > 60 ? '...' : ''),
+        f.status || '-',
+        f.responsavel || '-'
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [255, 107, 53], textColor: 255, fontSize: 7 },
+      bodyStyles: { fontSize: 7 },
+      margin: { left: 14, right: 14 },
+      columnStyles: { 6: { cellWidth: 45 } }
+    });
+
+    _footerPDF(doc);
+    doc.save(`Ouvidoria_Inbox_${_dataArq()}.pdf`);
+  }
+
+  function exportarFeedback(id) {
+    const f = feedbacksAll.find(x => x.id === id);
+    if (!f) return alert('Feedback nao encontrado.');
+    const doc = _preparaPDF(); if (!doc) return;
+    let y = _headerPDF(doc, `Feedback ${f.id || ''}`);
+
+    const linhas = [
+      ['ID', f.id || '-'],
+      ['Data', f.data ? f.data.toLocaleDateString('pt-BR') : '-'],
+      ['Plataforma', f.plataforma || '-'],
+      ['Cliente', f.cliente || '-'],
+      ['Nota', f.nota != null ? `${f.nota}/5` : 'N/A'],
+      ['Categoria', f.categoria || '-'],
+      ['Motivo', f.motivo || '-'],
+      ['Produto', f.produto || '-'],
+      ['Status', f.status || '-'],
+      ['Responsavel', f.responsavel || '-'],
+      ['Dias em Aberto', FeedbackModel.isAberto(f) ? FeedbackModel.calcDias(f) : '-'],
+      ['Data Conclusao', f.dataConclusao ? f.dataConclusao.toLocaleDateString('pt-BR') : '-']
+    ];
+
+    doc.autoTable({
+      startY: y,
+      body: linhas,
+      theme: 'plain',
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 40, textColor: [100,100,100] },
+        1: { textColor: [30,30,30] }
+      },
+      margin: { left: 14, right: 14 }
+    });
+    y = doc.lastAutoTable.finalY + 6;
+
+    const blocos = [
+      { label: 'DESCRICAO DO FEEDBACK', texto: f.descricao || '-' },
+      { label: 'ACAO TOMADA / RESPOSTA', texto: f.acao || '-' },
+    ];
+    if (f.aguardando) blocos.push({ label: 'AGUARDANDO', texto: f.aguardando });
+    if (f.obs)        blocos.push({ label: 'OBSERVACAO INTERNA', texto: f.obs });
+
+    blocos.forEach(b => {
+      doc.setFontSize(9); doc.setFont(undefined, 'bold');
+      doc.setTextColor(229, 72, 26);
+      doc.text(b.label, 14, y); y += 5;
+      doc.setFontSize(10); doc.setFont(undefined, 'normal');
+      doc.setTextColor(30, 30, 30);
+      const linhasTexto = doc.splitTextToSize(b.texto, 182);
+      doc.text(linhasTexto, 14, y);
+      y += linhasTexto.length * 5 + 6;
+      if (y > 260) { doc.addPage(); y = 20; }
+    });
+
+    _footerPDF(doc);
+    doc.save(`Ouvidoria_${(f.id || 'feedback').replace(/[^\w-]/g,'_')}.pdf`);
+  }
+
+  function aplicarPeriodoCustom() {
+    const de  = document.getElementById('periodo-de').value;
+    const ate = document.getElementById('periodo-ate').value;
+    FilterService.set('periodoDe',  de  ? new Date(de + 'T00:00:00')  : null);
+    FilterService.set('periodoAte', ate ? new Date(ate + 'T23:59:59') : null);
+    FilterService.set('periodo', 'custom');
+    rerender();
+  }
+
   function startAutoRefresh() {
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(() => {
@@ -1284,6 +1901,35 @@ const App = (() => {
       rerender();
     });
 
+    // Botão flutuante: novo feedback
+    document.getElementById('btn-novo').addEventListener('click', abrirModal);
+
+    // Fecha modal ao clicar no fundo
+    document.getElementById('modal-novo').addEventListener('click', (e) => {
+      if (e.target.id === 'modal-novo') fecharModal();
+    });
+
+    // ESC fecha modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('modal-novo').classList.contains('on')) {
+        fecharModal();
+      }
+    });
+
+    // Chips de período
+    document.querySelectorAll('.periodo-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = btn.dataset.periodo;
+        document.querySelectorAll('.periodo-chip').forEach(b => b.dataset.active = '0');
+        btn.dataset.active = '1';
+        document.getElementById('periodo-custom').classList.toggle('on', p === 'custom');
+        if (p !== 'custom') {
+          FilterService.set('periodo', p);
+          rerender();
+        }
+      });
+    });
+
     // Limpar filtros
     document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
       FilterService.reset();
@@ -1310,7 +1956,12 @@ const App = (() => {
     load(true).then(() => startAutoRefresh());
   }
 
-  return { init, reload, rerender };
+  return {
+    init, reload, rerender,
+    abrirModal, fecharModal, enviarNovoFeedback,
+    exportarRelatorio, exportarInbox, exportarFeedback,
+    aplicarPeriodoCustom
+  };
 })();
 
 // BOOT
