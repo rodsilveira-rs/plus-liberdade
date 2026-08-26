@@ -660,7 +660,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 /* ===== BOTÃO FLUTUANTE + MODAL DE NOVO FEEDBACK ===== */
 .fab {
-  position: fixed; bottom: 20px; right: 20px;
+  position: fixed; bottom: 24px;
+  right: 300px;              /* fica entre a inbox e a sidebar de donuts */
   width: 76px; height: 76px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
@@ -669,10 +670,25 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   align-items: center; justify-content: center;
   gap: 2px; line-height: 1;
   box-shadow: 0 8px 24px rgba(229,72,26,0.40);
-  cursor: pointer; z-index: 90;
+  cursor: pointer; z-index: 91;
   transition: transform .15s;
   font-family: inherit;
   padding: 8px 4px 10px;
+}
+.fab:active { transform: scale(0.94); }
+.fab-plus {
+  font-size: 30px; font-weight: 300; line-height: 1;
+  margin-bottom: -2px;
+}
+.fab-txt {
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Em telas médias e pequenas (sem a sidebar de donuts), volta pro canto */
+@media (max-width: 1199px) {
+  .fab { right: 20px; }
 }
 .fab:active { transform: scale(0.94); }
 .fab-plus {
@@ -923,10 +939,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   <!-- BARRA DE EXPORTAÇÃO PDF -->
   <div class="pdf-bar">
-    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 Relatório completo</button>
-    <button class="pdf-btn" onclick="App.exportarInbox()">📋 Inbox filtrada</button>
+    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 PDF · Relatório completo</button>
+    <button class="pdf-btn" onclick="App.exportarInbox()">📋 PDF · Inbox filtrada</button>
     <span style="font-size:11px;color:var(--text-faded);align-self:center;margin-left:auto;">
-      💡 Pra 1 feedback: expande o card e clica em 🖨️
+      💡 PDF de 1 feedback: expande o card e clica em 🖨️ PDF no rodapé
     </span>
   </div>
 
@@ -972,7 +988,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Ouvidoria · Q Food Group · Mercearia Liberdade</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.4 · velocímetros donut + botões ação no fim do card + FAB vertical</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.5 · FAB reposicionado + botões PDF renomeados</div>
   </div>
   <!-- BOTÃO FLUTUANTE (Novo Feedback) -->
   <button class="fab" id="btn-novo" title="Adicionar feedback">
