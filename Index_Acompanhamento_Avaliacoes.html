@@ -469,6 +469,85 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .periodo-custom label { font-weight: 700; color: var(--text-muted); }
 
+/* ===== VELOCÍMETROS VERTICAIS (análise) ===== */
+.analise-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 12px;
+}
+@media (min-width: 700px) {
+  .analise-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.velocimetro {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+}
+.velocimetro-titulo {
+  font-size: 10px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--laranja-escuro);
+  margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.velocimetro-titulo .total {
+  color: var(--text-faded); font-size: 10px;
+}
+.velocimetro-empty {
+  padding: 12px 4px; text-align: center;
+  font-size: 11px; color: var(--text-faded);
+}
+.vel-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+.vel-nome {
+  min-width: 88px; max-width: 88px;
+  font-weight: 700; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.vel-bar {
+  flex: 1; height: 8px;
+  background: var(--surface-2); border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.vel-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .8s cubic-bezier(.2,.7,.2,1);
+}
+.vel-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; color: var(--text);
+  min-width: 26px; text-align: right;
+  letter-spacing: 0.02em;
+}
+/* Cores dos velocímetros por categoria semântica */
+.vel-plat  .vel-bar-fill { background: linear-gradient(90deg, var(--laranja), var(--dourado)); }
+.vel-cat   .vel-bar-fill { background: linear-gradient(90deg, var(--laranja), var(--laranja-escuro)); }
+.vel-prod  .vel-bar-fill { background: linear-gradient(90deg, var(--dourado), var(--laranja)); }
+.vel-stat  .vel-bar-fill { background: linear-gradient(90deg, var(--laranja-escuro), var(--vermelho)); }
+
+/* ===== BOTÃO EDITAR NO CARD ===== */
+.fb-edit-btn {
+  position: absolute; top: 8px; right: 46px;
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(0,0,0,0.05); color: var(--text-muted);
+  font-size: 13px; display: none;
+  place-items: center; cursor: pointer;
+  font-family: inherit; z-index: 2;
+}
+.fb[data-open="1"] .fb-edit-btn { display: grid; }
+.fb-edit-btn:hover { background: var(--laranja); color: #fff; }
+
+/* Modo edição no header do modal */
+.modal-header.editando {
+  background: linear-gradient(135deg, var(--dourado), var(--laranja));
+}
+
 /* ===== BOTÕES PDF ===== */
 .pdf-bar {
   display: flex; gap: 6px; flex-wrap: wrap;
@@ -503,24 +582,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* ===== BOTÃO FLUTUANTE + MODAL DE NOVO FEEDBACK ===== */
 .fab {
   position: fixed; bottom: 20px; right: 20px;
-  height: 56px; padding: 0 22px 0 18px;
-  border-radius: 999px;
+  width: 60px; height: 60px; border-radius: 50%;
   background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
-  color: #fff;
-  display: inline-flex; align-items: center; gap: 8px;
+  color: #fff; font-size: 30px; font-weight: 300;
+  display: grid; place-items: center;
   box-shadow: 0 8px 24px rgba(229,72,26,0.40);
   cursor: pointer; z-index: 90;
   transition: transform .15s;
   font-family: inherit;
-}
-.fab:active { transform: scale(0.94); }
-.fab-plus {
-  font-size: 28px; font-weight: 300; line-height: 1;
-  display: inline-block; margin-top: -2px;
-}
-.fab-txt {
-  font-size: 15px; font-weight: 800;
-  letter-spacing: 0.02em;
 }
 .fab:active { transform: scale(0.92); }
 .modal-overlay {
@@ -762,11 +831,47 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   <!-- BARRA DE EXPORTAÇÃO PDF -->
   <div class="pdf-bar">
-    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 PDF · Relatório completo</button>
-    <button class="pdf-btn" onclick="App.exportarInbox()">📋 PDF · Inbox filtrada</button>
+    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 Relatório completo</button>
+    <button class="pdf-btn" onclick="App.exportarInbox()">📋 Inbox filtrada</button>
     <span style="font-size:11px;color:var(--text-faded);align-self:center;margin-left:auto;">
-      💡 PDF de 1 feedback: expande o card e clica em 🖨️
+      💡 Pra 1 feedback: expande o card e clica em 🖨️
     </span>
+  </div>
+
+  <!-- ANÁLISE (4 velocímetros verticais) -->
+  <div class="sec-title">
+    <h2>📊 Análise</h2>
+    <span class="count">período selecionado</span>
+  </div>
+  <div class="analise-grid">
+    <div class="velocimetro vel-plat">
+      <div class="velocimetro-titulo">
+        <span>📱 Plataforma</span>
+        <span class="total" id="vel-plat-total">0</span>
+      </div>
+      <div id="vel-plat"></div>
+    </div>
+    <div class="velocimetro vel-cat">
+      <div class="velocimetro-titulo">
+        <span>🏷️ Categoria</span>
+        <span class="total" id="vel-cat-total">0</span>
+      </div>
+      <div id="vel-cat"></div>
+    </div>
+    <div class="velocimetro vel-prod">
+      <div class="velocimetro-titulo">
+        <span>🍽️ Produto/Prato</span>
+        <span class="total" id="vel-prod-total">0</span>
+      </div>
+      <div id="vel-prod"></div>
+    </div>
+    <div class="velocimetro vel-stat">
+      <div class="velocimetro-titulo">
+        <span>⚙️ Status</span>
+        <span class="total" id="vel-stat-total">0</span>
+      </div>
+      <div id="vel-stat"></div>
+    </div>
   </div>
 
   <!-- INBOX -->
@@ -787,13 +892,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Ouvidoria · Q Food Group · Mercearia Liberdade</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.2 · UX polida (aguardando condicional + botões renomeados)</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.3 · +4 velocímetros de análise +edição de feedback</div>
   </div>
   <!-- BOTÃO FLUTUANTE (Novo Feedback) -->
-  <button class="fab" id="btn-novo" title="Adicionar feedback">
-    <span class="fab-plus">+</span>
-    <span class="fab-txt">Adicionar</span>
-  </button>
+  <button class="fab" id="btn-novo" title="Novo feedback">+</button>
 </main>
 
 <!-- MODAL NOVO FEEDBACK -->
@@ -868,7 +970,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
         <label class="form-label">Ação Tomada / Resposta</label>
         <textarea class="form-textarea" id="f-acao" placeholder="O que foi feito ou será feito?"></textarea>
       </div>
-      <div class="form-row">
+      <div class="form-row-3">
         <div class="form-group">
           <label class="form-label">Status</label>
           <select class="form-select" id="f-status">
@@ -883,11 +985,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
             <option>Bárbara</option><option>Lelis</option><option>Gerência</option>
           </select>
         </div>
-      </div>
-      <!-- Aparece só quando Status = "Aguardando" -->
-      <div class="form-group" id="grupo-aguardando" style="display:none;">
-        <label class="form-label">Aguardando o quê? <span class="req">*</span></label>
-        <input type="text" class="form-input" id="f-aguardando" placeholder="Ex: resposta do fornecedor, foto do cliente, retorno da cozinha…">
+        <div class="form-group">
+          <label class="form-label">Aguardando</label>
+          <input type="text" class="form-input" id="f-aguardando" placeholder="(se status = Aguardando)">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Observação interna</label>
@@ -1214,7 +1315,17 @@ const MetricsService = (() => {
     feedbacks.forEach(f => { if (f[campo]) set.add(f[campo]); });
     return Array.from(set).sort();
   }
-  return { kpiAtencao, kpiMes, rankingMotivos, opcoesUnicas };
+  function contarPor(feedbacks, campo) {
+    const contagem = {};
+    feedbacks.forEach(f => {
+      const v = f[campo] || '(sem)';
+      contagem[v] = (contagem[v] || 0) + 1;
+    });
+    return Object.entries(contagem)
+      .map(([nome, count]) => ({ nome, count }))
+      .sort((a,b) => b.count - a.count);
+  }
+  return { kpiAtencao, kpiMes, rankingMotivos, opcoesUnicas, contarPor };
 })();
 
 // ============================================================
@@ -1415,6 +1526,7 @@ const UI = (() => {
       card.setAttribute('data-vencido', vencido ? '1' : '0');
       card.innerHTML = `
         <button class="fb-pdf-btn" onclick="event.stopPropagation(); App.exportarFeedback('${f.id}')" title="Exportar este feedback em PDF">🖨️</button>
+        <button class="fb-edit-btn" onclick="event.stopPropagation(); App.abrirEdicao('${f.id}')" title="Editar este feedback">✏️</button>
         <div class="fb-head">
           <span class="fb-id">${f.id || '—'}</span>
           <span>· ${fmtDate(f.data)}</span>
@@ -1480,6 +1592,33 @@ const UI = (() => {
     });
   }
 
+  function renderVelocimetros(feedbacks) {
+    const filtrados = FilterService.apply(feedbacks);
+    const total = filtrados.length;
+
+    const build = (containerId, totalId, dados) => {
+      const el = $(containerId);
+      $(totalId).textContent = 'total ' + total;
+      if (dados.length === 0) {
+        el.innerHTML = '<div class="velocimetro-empty">sem dados</div>';
+        return;
+      }
+      const max = Math.max(...dados.map(d => d.count));
+      el.innerHTML = dados.slice(0, 6).map(d => `
+        <div class="vel-row" title="${d.nome}: ${d.count}">
+          <div class="vel-nome">${d.nome}</div>
+          <div class="vel-bar"><div class="vel-bar-fill" style="width:${(d.count/max)*100}%"></div></div>
+          <div class="vel-count">${d.count}</div>
+        </div>
+      `).join('');
+    };
+
+    build('vel-plat', 'vel-plat-total', MetricsService.contarPor(filtrados, 'plataforma'));
+    build('vel-cat',  'vel-cat-total',  MetricsService.contarPor(filtrados, 'categoria'));
+    build('vel-prod', 'vel-prod-total', MetricsService.contarPor(filtrados, 'produto'));
+    build('vel-stat', 'vel-stat-total', MetricsService.contarPor(filtrados, 'status'));
+  }
+
   function renderMotivos(motivos) {
     const el = $('motivos');
     $('motivos-count').textContent = motivos.length > 0
@@ -1516,7 +1655,7 @@ const UI = (() => {
 
   return {
     renderHeader, renderAtencao, renderKPILine, renderFiltros,
-    renderInbox, renderMotivos, renderAtencaoChipsAtivos,
+    renderInbox, renderMotivos, renderVelocimetros, renderAtencaoChipsAtivos,
     toggleFiltros, fmtDateTime
   };
 })();
@@ -1528,6 +1667,7 @@ const App = (() => {
   let feedbacksAll = [];
   let ultimoTs = null;
   let refreshTimer = null;
+  let editandoId = null;  // ID do feedback em edição (null = novo)
 
   async function load(forceFresh = false) {
     try {
@@ -1560,6 +1700,7 @@ const App = (() => {
     UI.renderKPILine(kpiMes);
     UI.renderFiltros(feedbacksAll);
     UI.renderAtencaoChipsAtivos();
+    UI.renderVelocimetros(feedbacksAll);
     UI.renderInbox(feedbacksAll);
     UI.renderMotivos(motivos);
     document.getElementById('last-update').textContent = UI.fmtDateTime(ultimoTs);
@@ -1571,11 +1712,46 @@ const App = (() => {
     load(true);
   }
 
-  // ===== MODAL DE NOVO FEEDBACK =====
+  // ===== MODAL DE NOVO/EDITAR FEEDBACK =====
   function abrirModal() {
-    // Preenche a data com hoje
+    editandoId = null;
+    limparFormulario();
     const hoje = new Date();
     document.getElementById('f-data').value = hoje.toISOString().slice(0,10);
+    document.querySelector('.modal-header').classList.remove('editando');
+    document.querySelector('.modal-header h2').textContent = '➕ Novo Feedback';
+    document.getElementById('btn-submit').textContent = '✅ Registrar feedback';
+    document.getElementById('modal-novo').classList.add('on');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('form-msg').className = 'form-msg';
+    document.getElementById('form-msg').textContent = '';
+  }
+
+  function abrirEdicao(id) {
+    const f = feedbacksAll.find(x => x.id === id);
+    if (!f) return alert('Feedback não encontrado');
+    editandoId = id;
+    limparFormulario();
+
+    // Preenche todos os campos com os dados atuais
+    if (f.data) document.getElementById('f-data').value = f.data.toISOString().slice(0,10);
+    document.getElementById('f-plataforma').value  = f.plataforma || '';
+    document.getElementById('f-cliente').value     = f.cliente || '';
+    document.getElementById('f-nota').value        = f.notaTxt || '';
+    document.getElementById('f-categoria').value   = f.categoria || '';
+    document.getElementById('f-motivo').value      = f.motivo || '';
+    document.getElementById('f-produto').value     = f.produto || '';
+    document.getElementById('f-descricao').value   = f.descricao || '';
+    document.getElementById('f-acao').value        = f.acao || '';
+    document.getElementById('f-status').value      = f.status || 'Novo';
+    document.getElementById('f-responsavel').value = f.responsavel || '';
+    document.getElementById('f-aguardando').value  = f.aguardando || '';
+    document.getElementById('f-observacao').value  = f.obs || '';
+
+    // Muda o visual do modal pra modo edição
+    document.querySelector('.modal-header').classList.add('editando');
+    document.querySelector('.modal-header h2').textContent = `✏️ Editando ${f.id}`;
+    document.getElementById('btn-submit').textContent = '💾 Salvar alterações';
     document.getElementById('modal-novo').classList.add('on');
     document.body.style.overflow = 'hidden';
     document.getElementById('form-msg').className = 'form-msg';
@@ -1592,7 +1768,6 @@ const App = (() => {
      'f-descricao','f-acao','f-responsavel','f-aguardando','f-observacao']
       .forEach(id => document.getElementById(id).value = '');
     document.getElementById('f-status').value = 'Novo';
-    document.getElementById('grupo-aguardando').style.display = 'none';
   }
 
   async function enviarNovoFeedback() {
@@ -1602,6 +1777,7 @@ const App = (() => {
     const descricao = document.getElementById('f-descricao').value.trim();
     const msgEl = document.getElementById('form-msg');
     const btn = document.getElementById('btn-submit');
+    const modoEdicao = editandoId != null;
 
     if (!dataInput || !plataforma || !categoria || !descricao) {
       msgEl.className = 'form-msg err';
@@ -1614,13 +1790,14 @@ const App = (() => {
       return;
     }
 
-    btn.disabled = true; btn.textContent = 'Enviando…';
+    btn.disabled = true;
+    btn.textContent = modoEdicao ? 'Salvando…' : 'Enviando…';
     msgEl.className = 'form-msg';
 
     const [ano, mes, dia] = dataInput.split('-');
     const dataBR = `${dia}/${mes}/${ano}`;
 
-    const payload = {
+    const dadosPayload = {
       data: dataBR,
       plataforma,
       cliente: document.getElementById('f-cliente').value.trim(),
@@ -1636,6 +1813,14 @@ const App = (() => {
       observacao: document.getElementById('f-observacao').value.trim()
     };
 
+    // Se edição, inclui o ID no payload
+    if (modoEdicao) dadosPayload.id = editandoId;
+
+    const payload = {
+      acao: modoEdicao ? 'atualizar' : 'inserir',
+      dados: dadosPayload
+    };
+
     try {
       const r = await fetch(CONFIG.WEBAPP_URL, {
         method: 'POST',
@@ -1645,20 +1830,23 @@ const App = (() => {
       const resp = await r.json();
       if (resp.ok) {
         msgEl.className = 'form-msg ok';
-        msgEl.textContent = `✅ Registrado com sucesso! ID: ${resp.id || '—'}`;
+        msgEl.textContent = modoEdicao
+          ? `✅ ${resp.id || editandoId} atualizado com sucesso!`
+          : `✅ Registrado com sucesso! ID: ${resp.id || '—'}`;
         limparFormulario();
         setTimeout(() => {
           fecharModal();
           reload();
         }, 1500);
       } else {
-        throw new Error(resp.erro || 'Falha ao registrar');
+        throw new Error(resp.erro || 'Falha ao processar');
       }
     } catch (err) {
       msgEl.className = 'form-msg err';
       msgEl.textContent = '❌ Erro: ' + err.message + '. Tenta de novo em alguns segundos.';
     } finally {
-      btn.disabled = false; btn.textContent = '✅ Registrar feedback';
+      btn.disabled = false;
+      btn.textContent = modoEdicao ? '💾 Salvar alterações' : '✅ Registrar feedback';
     }
   }
 
@@ -1918,18 +2106,6 @@ const App = (() => {
 
     // Botão flutuante: novo feedback
     document.getElementById('btn-novo').addEventListener('click', abrirModal);
-        // Mostrar/esconder campo "Aguardando" conforme o Status
-    document.getElementById('f-status').addEventListener('change', (e) => {
-      const grupoAg = document.getElementById('grupo-aguardando');
-      const inputAg = document.getElementById('f-aguardando');
-      if (e.target.value === 'Aguardando') {
-        grupoAg.style.display = 'block';
-        inputAg.focus();
-      } else {
-        grupoAg.style.display = 'none';
-        inputAg.value = '';
-      }
-    });
 
     // Fecha modal ao clicar no fundo
     document.getElementById('modal-novo').addEventListener('click', (e) => {
@@ -1985,7 +2161,7 @@ const App = (() => {
 
   return {
     init, reload, rerender,
-    abrirModal, fecharModal, enviarNovoFeedback,
+    abrirModal, abrirEdicao, fecharModal, enviarNovoFeedback,
     exportarRelatorio, exportarInbox, exportarFeedback,
     aplicarPeriodoCustom
   };
