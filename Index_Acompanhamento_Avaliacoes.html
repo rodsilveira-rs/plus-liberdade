@@ -73,6 +73,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   padding: 14px 16px 12px;
   box-shadow: 0 2px 12px rgba(229,72,26,0.25);
 }
+@media (min-width: 1200px) {
+  .header {
+    margin-left: -280px;
+    margin-right: -280px;
+    padding-left: 296px;
+    padding-right: 296px;
+  }
+}
 .header-row { display: flex; align-items: center; gap: 12px; }
 .logo-mark svg { width: 38px; height: 38px; display: block; }
 .header-title { flex: 1; min-width: 0; }
@@ -110,6 +118,11 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 /* ===== MAIN ===== */
 .main { padding: 12px 12px 40px; max-width: 780px; margin: 0 auto; }
+@media (min-width: 1200px) {
+  /* Reserva espaço lateral pra sidebar de filtros (esquerda) e donuts (direita) */
+  body { padding-left: 280px; padding-right: 280px; }
+  .main { max-width: 900px; }
+}
 
 /* ===== CARD DE ATENÇÃO (KPI operacional principal) ===== */
 .atencao {
@@ -201,7 +214,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .kpi-item + .kpi-item { border-left: 1px solid var(--border); }
 
-/* ===== FILTROS (chips) ===== */
+/* ===== FILTROS (menu lateral esquerdo em desktop) ===== */
 .filtros {
   background: var(--surface);
   border-radius: var(--radius);
@@ -209,9 +222,17 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   margin-bottom: 12px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  display: none;
+  /* Sempre visível — não é mais toggled */
 }
-.filtros.on { display: block; }
+.filtros-titulo {
+  display: none;   /* aparece só em desktop, na sidebar */
+  padding: 12px 14px 8px;
+  font-size: 11px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.10em;
+  color: var(--laranja-escuro);
+  border-bottom: 1px dashed var(--border);
+  align-items: center; gap: 6px;
+}
 .filtros-body { padding: 12px 14px; }
 .filtros-grupo { margin-bottom: 10px; }
 .filtros-grupo:last-child { margin-bottom: 0; }
@@ -249,6 +270,23 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border-radius: 8px;
   font-size: 12px; font-weight: 700; color: var(--text-muted);
   cursor: pointer; font-family: inherit;
+  width: 100%;
+}
+/* Sidebar fixa em desktop grande */
+@media (min-width: 1200px) {
+  .filtros {
+    position: fixed;
+    left: 20px;
+    top: 80px;
+    width: 240px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    margin-bottom: 0;
+    z-index: 5;
+  }
+  .filtros::-webkit-scrollbar { width: 4px; }
+  .filtros::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .filtros-titulo { display: flex; }
 }
 
 /* ===== SEC TITLE ===== */
@@ -497,7 +535,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .donuts-wrap::-webkit-scrollbar { width: 4px; }
   .donuts-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   /* Reserva espaço à direita no main pra sidebar não sobrepor */
-  .main { padding-right: 280px !important; }
+  /* (padding-right já está no body pra desktop grande, então não precisa mais aqui) */
 }
 .donut-card {
   background: var(--surface);
@@ -661,7 +699,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* ===== BOTÃO FLUTUANTE + MODAL DE NOVO FEEDBACK ===== */
 .fab {
   position: fixed; bottom: 24px;
-  right: 300px;              /* fica entre a inbox e a sidebar de donuts */
+  right: 20px;
   width: 76px; height: 76px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
@@ -685,20 +723,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
-
-/* Em telas médias e pequenas (sem a sidebar de donuts), volta pro canto */
-@media (max-width: 1199px) {
-  .fab { right: 20px; }
-}
-.fab:active { transform: scale(0.94); }
-.fab-plus {
-  font-size: 30px; font-weight: 300; line-height: 1;
-  margin-bottom: -2px;
-}
-.fab-txt {
-  font-size: 10.5px; font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+/* Em desktop grande, FAB fica dentro do espaço do main (entre as duas sidebars) */
+@media (min-width: 1200px) {
+  .fab { right: 300px; }
 }
 .modal-overlay {
   position: fixed; inset: 0; z-index: 500;
@@ -831,7 +858,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
       <div class="sub" id="ref-mes">Q Food Group · carregando…</div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="btn-filtros" title="Filtros" aria-label="Filtros">🔍</button>
       <button class="icon-btn" id="btn-refresh" title="Atualizar" aria-label="Atualizar">↻</button>
     </div>
   </div>
@@ -889,8 +915,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     </div>
   </div>
 
-  <!-- FILTROS (escondidos por padrão) -->
+  <!-- FILTROS -->
   <div class="filtros" id="filtros">
+    <div class="filtros-titulo">🎯 Filtros</div>
     <div class="filtros-body">
       <div class="filtros-grupo">
         <div class="filtros-label">Categoria</div>
@@ -939,10 +966,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   <!-- BARRA DE EXPORTAÇÃO PDF -->
   <div class="pdf-bar">
-    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 PDF · Relatório completo</button>
-    <button class="pdf-btn" onclick="App.exportarInbox()">📋 PDF · Inbox filtrada</button>
+    <button class="pdf-btn primary" onclick="App.exportarRelatorio()">📄 Relatório completo</button>
+    <button class="pdf-btn" onclick="App.exportarInbox()">📋 Inbox filtrada</button>
     <span style="font-size:11px;color:var(--text-faded);align-self:center;margin-left:auto;">
-      💡 PDF de 1 feedback: expande o card e clica em 🖨️ PDF no rodapé
+      💡 Pra 1 feedback: expande o card e clica em 🖨️
     </span>
   </div>
 
@@ -961,7 +988,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
       <div class="donut-empty">carregando…</div>
     </div>
     <div class="donut-card" id="donut-prod">
-      <div class="donut-titulo">🍽️ Produto/Prato</div>
+      <div class="donut-titulo">🍽️ Produto e Serviços</div>
       <div class="donut-empty">carregando…</div>
     </div>
     <div class="donut-card" id="donut-stat">
@@ -988,7 +1015,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   <div class="footer">
     <div class="ts">Atualizado em <span id="last-update">—</span></div>
     <div style="margin-top:6px">Ouvidoria · Q Food Group · Mercearia Liberdade</div>
-    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.5 · FAB reposicionado + botões PDF renomeados</div>
+    <div style="margin-top:4px;font-size:10px;opacity:0.6">v1.6 · menu lateral fixo + Produto e Serviços</div>
   </div>
   <!-- BOTÃO FLUTUANTE (Novo Feedback) -->
   <button class="fab" id="btn-novo" title="Adicionar feedback">
@@ -1052,12 +1079,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Produto</label>
+          <label class="form-label">Produto e Serviços</label>
           <select class="form-select" id="f-produto">
             <option value="">—</option>
-            <option>Tonkotsu Aka</option><option>Bento Box</option><option>Geral</option>
-            <option>Frango Coreano</option><option>Teishoku</option><option>Sushi</option>
-            <option>Lámen Tradicional</option><option>Produtos da Mercearia</option>
+            <option>Pratos</option>
+            <option>Drinks</option>
+            <option>Atendimento</option>
+            <option>Ambiente</option>
           </select>
         </div>
       </div>
@@ -1279,7 +1307,7 @@ const Normalizer = (() => {
     const iCli     = findCol(h, 'Cliente');
     const iNota    = findCol(h, 'Nota (1 a 5)', 'Nota');
     const iCat     = findCol(h, 'Categoria');
-    const iProd    = findCol(h, 'Produto/Prato', 'Produto');
+    const iProd    = findCol(h, 'Produto e Serviços', 'Produto/Prato', 'Produto e Servicos', 'Produto');
     const iDesc    = findCol(h, 'Descrição do Feedback', 'Descrição', 'Descricao');
     const iAcao    = findCol(h, 'Ação Tomada / Resposta', 'Ação Tomada', 'Acao Tomada');
     const iStatus  = findCol(h, 'Status');
@@ -1807,10 +1835,9 @@ const UI = (() => {
   }
 
   function toggleFiltros() {
+    // Mantida por compatibilidade, mas em v1.6 filtros são sempre visíveis
     const el = $('filtros');
-    const btn = $('btn-filtros');
-    const on = el.classList.toggle('on');
-    btn.dataset.active = on ? '1' : '0';
+    if (el) el.classList.toggle('on');
   }
 
   return {
@@ -2106,7 +2133,7 @@ const App = (() => {
     doc.text(`Feedbacks (${filtrados.length})`, 14, y); y += 3;
     doc.autoTable({
       startY: y,
-      head: [['ID', 'Data', 'Plat.', 'Nota', 'Categoria', 'Produto', 'Status', 'Resp.']],
+      head: [['ID', 'Data', 'Plat.', 'Nota', 'Categoria', 'Prod./Serv.', 'Status', 'Resp.']],
       body: filtrados.map(f => [
         f.id || '-',
         f.data ? f.data.toLocaleDateString('pt-BR') : '-',
@@ -2134,7 +2161,7 @@ const App = (() => {
 
     doc.autoTable({
       startY: y,
-      head: [['ID', 'Data', 'Plataforma', 'Nota', 'Categoria', 'Produto', 'Descricao', 'Status', 'Resp.']],
+      head: [['ID', 'Data', 'Plataforma', 'Nota', 'Categoria', 'Prod./Serv.', 'Descricao', 'Status', 'Resp.']],
       body: filtrados.map(f => [
         f.id || '-',
         f.data ? f.data.toLocaleDateString('pt-BR') : '-',
@@ -2171,7 +2198,7 @@ const App = (() => {
       ['Nota', f.nota != null ? `${f.nota}/5` : 'N/A'],
       ['Categoria', f.categoria || '-'],
       ['Motivo', f.motivo || '-'],
-      ['Produto', f.produto || '-'],
+      ['Produto e Serviços', f.produto || '-'],
       ['Status', f.status || '-'],
       ['Responsavel', f.responsavel || '-'],
       ['Dias em Aberto', FeedbackModel.isAberto(f) ? FeedbackModel.calcDias(f) : '-'],
@@ -2245,8 +2272,7 @@ const App = (() => {
       });
     });
 
-    // Botão filtros
-    document.getElementById('btn-filtros').addEventListener('click', UI.toggleFiltros);
+    // Botão filtros: removido em v1.6 — filtros agora ficam sempre visíveis
 
     // Chips do card de atenção (filtro rápido)
     document.querySelectorAll('.atencao-chip').forEach(btn => {
