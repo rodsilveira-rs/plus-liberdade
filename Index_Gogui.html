@@ -340,7 +340,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 /* =====================================================================
    CONFIGURAÇÃO
    ===================================================================== */
-const API_URL = 'COLE_AQUI_A_URL_DO_EXEC';   // URL /exec da implantação do Code_Gogui.gs
+const API_URL = 'https://script.google.com/macros/s/SEU_ID_AQUI/exec';   // URL /exec da implantação do Code_Gogui.gs
 const DATA_ABERTURA = '';                      // 'AAAA-MM-DD' quando a data oficial for definida
 const LS_USUARIO = 'gogui_usuario';
 const AUTO_REFRESH_MS = 90000;
@@ -471,6 +471,7 @@ async function carregar(silencioso) {
     if (S.usuario && S.listas.usuarios.indexOf(S.usuario) < 0) sair();
     render();
   } catch (e) {
+    console.error('[Gogui] Falha na sincronização:', e && e.message ? e.message : e);
     if (!silencioso) {
       if (!S.usuario) {
         $('#listaNomes').innerHTML = '';
