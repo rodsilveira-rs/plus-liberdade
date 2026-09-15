@@ -321,7 +321,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       </button>
     </nav>
   </header>
-  <div id="avisoDemo" class="demo oculto">Modo demonstração: a URL do Apps Script ainda não foi configurada. Nada do que você mudar aqui é salvo.</div>
+  <div id="avisoDemo" class="demo oculto">Ambiente de testes: as alterações feitas aqui não são registradas.</div>
   <section id="conteudo"></section>
   <button class="fab" data-act="nova">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -470,8 +470,8 @@ async function carregar(silencioso) {
     if (!silencioso) {
       if (!S.usuario) {
         $('#listaNomes').innerHTML = '';
-        $('#loginAviso').innerHTML = 'Não foi possível carregar o checklist (' + esc(e.message) + '). <button class="chip" data-act="atualizar">Tentar de novo</button>';
-      } else toast('Não foi possível atualizar: ' + e.message, { erro: true });
+        $('#loginAviso').innerHTML = 'Não foi possível sincronizar com o servidor. Verifique a conexão e tente novamente. <button class="chip" data-act="atualizar">Tentar de novo</button>';
+      } else toast('Falha na sincronização. Tentando novamente em instantes.', { erro: true });
     }
   } finally {
     btn && btn.classList.remove('girando');
@@ -533,7 +533,7 @@ function renderLogin() {
     return '<button class="nome' + (gestor ? ' gestor' : '') + '" data-act="entrar" data-nome="' + esc(n) + '">' +
       '<span class="ini">' + esc(inicial(n)) + '</span><span><b>' + esc(n) + '</b><small>' + esc(sub) + '</small></span></button>';
   }).join('');
-  $('#listaNomes').innerHTML = html || '<p class="vazio">Nenhum responsável na aba Listas.</p>';
+  $('#listaNomes').innerHTML = html || '<p class="vazio">Nenhum usuário cadastrado.</p>';
 }
 
 function entrar(nome) {
@@ -571,7 +571,7 @@ function render() {
   document.querySelectorAll('.aba').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === S.aba));
   document.querySelector('.fab').classList.toggle('oculto', S.aba === 'painel');
 
-  if (!S.carregado) { $('#conteudo').innerHTML = '<div class="vazio"><b>Carregando o checklist</b>Buscando as pendências na planilha.</div>'; return; }
+  if (!S.carregado) { $('#conteudo').innerHTML = '<div class="vazio"><b>Carregando o checklist</b>Sincronizando as pendências.</div>'; return; }
   if (S.aba === 'painel') renderPainel();
   else renderLista();
 }
@@ -999,7 +999,7 @@ function abrirNova() {
   const opPadrao = S.filtros.op !== 'Todas' ? S.filtros.op : (L.operacao[0] || '');
   const ehResp = L.responsaveis.indexOf(S.usuario) >= 0;
   $('#folha').innerHTML =
-    '<div class="folha-cab"><div><h2>Nova pendência</h2><p>Entra direto na planilha do checklist.</p></div>' +
+    '<div class="folha-cab"><div><h2>Nova pendência</h2><p>Fica visível para toda a equipe assim que for criada.</p></div>' +
       '<button class="fechar" data-act="fechar" aria-label="Fechar">×</button></div>' +
     '<label class="rot" for="nPend">O que precisa ser feito</label><input class="campo" id="nPend" placeholder="Ex.: Instalar suporte das TVs do salão">' +
     '<div class="dupla">' +
