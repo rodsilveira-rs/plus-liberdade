@@ -194,6 +194,45 @@ select.campo{padding-right:28px}
 .feed li:first-child{border-top:0}
 .feed time{color:var(--suave);font-size:12px;display:block}
 .grade-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+/* ---------- Régua de prazos ---------- */
+.regua-cab{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.regua-kpi{display:flex;align-items:center;gap:12px;min-width:0}
+.regua-kpi .gm{width:112px;flex:none}
+.regua-kpi .gm svg{width:100%;display:block}
+.regua-kpi h2{margin:0 0 2px}
+.regua-kpi p{margin:0;color:var(--suave);font-size:13px}
+.regua-nums{display:flex;gap:8px;flex-wrap:wrap}
+.regua-nums .num{min-width:112px}
+.rg-barra{display:flex;align-items:center;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
+.rg-barra small{color:var(--suave)}
+.rg-scroll{overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:thin;scrollbar-color:var(--linha) transparent;scroll-behavior:smooth}
+.rg-trilho{position:relative}
+.rg-area{position:relative}
+.rg-passado{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(208,55,44,0),rgba(208,55,44,.10))}
+.rg-marco{position:absolute;top:0;bottom:-6px;width:0;border-left:1.5px dashed var(--ouro);z-index:1}
+.rg-marco span{position:absolute;top:0;left:0;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--ouro);color:var(--carvao)}
+.rg-marco.abertura{border-left:2px solid var(--fogo)}
+.rg-marco.abertura span{background:var(--fogo);color:#fff}
+.rg-col{position:absolute;bottom:8px;transform:translateX(-50%);display:flex;flex-direction:column-reverse;align-items:center;gap:3px;z-index:2}
+.rg-pt{width:13px;height:13px;border-radius:50%;border:0;padding:0;background:var(--c);box-shadow:0 0 0 2px var(--brasa);transition:transform .12s}
+.rg-pt:hover,.rg-pt:focus-visible{transform:scale(1.45)}
+.rg-pt.atr{box-shadow:0 0 0 2px var(--brasa),0 0 0 3.5px var(--st-blo),0 0 10px rgba(224,73,61,.75)}
+.rg-pt.ok{opacity:.45}
+.rg-mais{font-size:10.5px;color:var(--ouro-2);font-weight:700;line-height:1;margin-bottom:1px}
+.rg-eixo{position:relative;height:34px;border-top:2px solid;border-image:linear-gradient(90deg,var(--fogo),var(--ouro) 55%,var(--ouro-2)) 1}
+.rg-tick{position:absolute;top:0;width:1px;height:4px;background:var(--linha)}
+.rg-tick.seg{height:9px;background:var(--ouro)}
+.rg-tick span{position:absolute;top:12px;left:0;transform:translateX(-50%);font-size:11px;color:var(--suave);white-space:nowrap}
+.rg-tick.mes span{color:var(--ouro-2);font-weight:700}
+.rg-vazio{position:absolute;left:16px;right:16px;bottom:22px;text-align:center;color:var(--suave);font-size:13px}
+.rg-legenda{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-size:12px;color:var(--suave)}
+.rg-legenda span{display:inline-flex;align-items:center;gap:5px}
+.rg-legenda .pont.atr{background:var(--brasa);box-shadow:0 0 0 1.5px var(--st-blo),0 0 6px rgba(224,73,61,.8)}
+@media (max-width:720px){
+  .regua-nums{width:100%}
+  .regua-nums .num{flex:1 1 0;min-width:0}
+}
+
 .mt{margin-top:16px}
 
 /* ---------- Editor ---------- */
@@ -223,6 +262,10 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   background:#F1E8D8;color:var(--carvao);border-radius:12px;padding:11px 14px;display:flex;gap:14px;align-items:center;
   box-shadow:0 10px 30px rgba(0,0,0,.5);font-weight:500;max-width:calc(100vw - 32px)}
 .toast.erro{background:#F6B1AA}
+.aviso-versao{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:70;
+  display:flex;align-items:center;gap:12px;background:var(--ouro);color:var(--carvao);border-radius:12px;
+  padding:10px 10px 10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);width:max-content;max-width:calc(100vw - 24px);font-size:14px}
+.aviso-versao button{background:var(--carvao);color:var(--ouro-2);border:0;border-radius:8px;padding:8px 12px;font-weight:700;white-space:nowrap}
 .toast button{background:none;border:0;font-weight:700;color:#8A2A22;padding:0}
 
 @media (max-width:720px){
@@ -247,7 +290,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <!-- ============ LOGIN ============ -->
 <main id="telaLogin">
-  <div class="logo-grande" id="logoGrande"><img src="https://rodsilveira-rs.github.io/plus-liberdade/gogui-logo.jpg" alt="Gogui Korean BBQ" onerror="this.closest('.logo-grande').outerHTML='<div class=&quot;logo-texto&quot;>GOGUI</div>'"></div>
+  <div class="logo-grande" id="logoGrande"><img src="assets/gogui-logo.jpg" alt="Gogui Korean BBQ" onerror="this.closest('.logo-grande').outerHTML='<div class=&quot;logo-texto&quot;>GOGUI</div>'"></div>
   <p class="login-titulo">Checklist de abertura</p>
   <p class="login-sub">Toque no seu nome para entrar</p>
   <div class="nomes" id="listaNomes">
@@ -262,7 +305,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <header class="topo">
     <div class="topo-linha">
       <div class="marca">
-        <span class="ico"><img src="https://rodsilveira-rs.github.io/plus-liberdade/gogui-logo.jpg" alt="" onerror="this.parentNode.remove()"></span>
+        <span class="ico"><img src="assets/gogui-logo.jpg" alt="" onerror="this.parentNode.remove()"></span>
         <div><h1>GOGUI</h1><p>Checklist de abertura</p></div>
       </div>
       <button class="usuario" data-act="sair" title="Trocar de pessoa">
@@ -288,12 +331,16 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <dialog id="dlg"><div class="folha" id="folha"></div></dialog>
 <div id="toast" class="toast oculto" role="status"></div>
+<div id="avisoVersao" class="aviso-versao oculto" role="status">
+  <span><b>Nova versão disponível.</b> Toque para atualizar.</span>
+  <button type="button" onclick="aplicarNovaVersao()">Atualizar agora</button>
+</div>
 
 <script>
 /* =====================================================================
    CONFIGURAÇÃO
    ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbye1sZWXzhmXgzt1KwQ3F9kt8XqW86kG_zOajN9LqCE1ESEbKi4AqsVq6mxOtFHc7Gr/exec';   // URL /exec da implantação do Code_Gogui.gs
+const API_URL = 'COLE_AQUI_A_URL_DO_EXEC';   // URL /exec da implantação do Code_Gogui.gs
 const DATA_ABERTURA = '';                      // 'AAAA-MM-DD' quando a data oficial for definida
 const LS_USUARIO = 'gogui_usuario';
 const AUTO_REFRESH_MS = 90000;
@@ -319,6 +366,7 @@ const S = {
   log: [],
   aba: 'minhas',
   filtros: { op: 'Todas', status: 'abertas', prio: '', resp: '', busca: '' },
+  reguaResp: '',
   fechados: new Set(),
   salvando: 0,
   carregado: false,
@@ -349,6 +397,12 @@ function aberta(t) { return t.status !== CONCLUIDO; }
 function atrasada(t) { return aberta(t) && t.prazo && diasAte(t.prazo) < 0; }
 function pct(a, b) { return b ? Math.round(a * 100 / b) : 0; }
 function plural(n, s, p) { return n + ' ' + (n === 1 ? s : p); }
+function addDias(iso, n) {
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + n);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function vence7(t) { if (!aberta(t) || !t.prazo) return false; const d = diasAte(t.prazo); return d >= 0 && d <= 7; }
 function normTxt(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
 
 function ordenar(lista) {
@@ -536,7 +590,9 @@ function filtrar() {
     if (f.op !== 'Todas' && t.operacao !== f.op) return false;
     if (f.status === 'abertas' && !aberta(t)) return false;
     if (f.status === 'atrasadas' && !atrasada(t)) return false;
-    if (f.status && ['abertas', 'atrasadas', 'todos'].indexOf(f.status) < 0 && t.status !== f.status) return false;
+    if (f.status === 'semana' && !vence7(t)) return false;
+    if (f.status === 'semprazo' && (!aberta(t) || t.prazo)) return false;
+    if (f.status && ['abertas', 'atrasadas', 'semana', 'semprazo', 'todos'].indexOf(f.status) < 0 && t.status !== f.status) return false;
     if (f.prio && t.prioridade !== f.prio) return false;
     if (q && normTxt(t.pendencia + ' ' + t.area + ' ' + t.obs + ' ' + t.id).indexOf(q) < 0) return false;
     return true;
@@ -553,7 +609,8 @@ function renderLista() {
     '</div></div><div class="filtros">' +
     '<input class="campo busca" type="search" id="fBusca" placeholder="Buscar pendência" value="' + esc(f.busca) + '">' +
     '<select class="campo" id="fStatus" aria-label="Status">' +
-      opcao('abertas', 'Em aberto', f.status) + opcao('atrasadas', 'Atrasadas', f.status) + opcao('todos', 'Todos os status', f.status) +
+      opcao('abertas', 'Em aberto', f.status) + opcao('atrasadas', 'Atrasadas', f.status) + opcao('semana', 'Vencem em 7 dias', f.status) +
+      opcao('semprazo', 'Sem prazo definido', f.status) + opcao('todos', 'Todos os status', f.status) +
       L.status.map(s => opcao(s, s, f.status)).join('') +
     '</select>' +
     '<select class="campo" id="fPrio" aria-label="Prioridade">' + opcao('', 'Toda prioridade', f.prio) +
@@ -755,9 +812,19 @@ function renderPainel() {
       return '<li>' + txt + '<time>' + esc(l.quando) + '</time></li>';
     }).join('') + '</ul>' : '<p style="color:var(--suave);margin:0">As alterações feitas pela equipe aparecem aqui.</p>') + '</div>';
 
-  $('#conteudo').innerHTML = topo + porOp +
+  const rgAntes = $('#rgScroll');
+  const scrollAntes = rgAntes ? rgAntes.scrollLeft : null;
+  $('#conteudo').innerHTML = topo + reguaHtml(T) + porOp +
     '<div class="grade-2">' + porResp + porArea + '</div>' +
     '<div class="grade-2">' + (pontos || '<div></div>') + feed + '</div>';
+
+  const rg = $('#rgScroll');
+  if (rg) {
+    rg.style.scrollBehavior = 'auto';
+    if (scrollAntes !== null) rg.scrollLeft = scrollAntes;
+    else rg.scrollLeft = Math.max(0, rg.scrollWidth * Number(rg.dataset.hoje) / 100 - rg.clientWidth * 0.18);
+    rg.style.scrollBehavior = '';
+  }
 
   if (S.primeiraAgulha) {
     S.primeiraAgulha = false;
@@ -765,6 +832,100 @@ function renderPainel() {
       document.querySelectorAll('.gauge-principal .agulha').forEach(g => g.style.transform = 'rotate(' + g.dataset.ang + 'deg)');
     }));
   }
+}
+
+/* ---------- Régua de prazos ---------- */
+function reguaHtml(T) {
+  const L = S.listas;
+  const hoje = hojeISO();
+  const abertas = T.filter(aberta);
+  const abComPrazo = abertas.filter(t => t.prazo).length;
+  const semPrazo = abertas.length - abComPrazo;
+  const semana = T.filter(vence7).length;
+  const atras = T.filter(atrasada).length;
+  const pPrazo = pct(abComPrazo, abertas.length);
+
+  const rf = S.reguaResp;
+  const pontos = T.filter(t => t.prazo && (!rf || (rf === '__sem__' ? !t.responsavel : t.responsavel === rf)));
+
+  // intervalo da régua
+  let ini = addDias(hoje, -3), fim = addDias(hoje, 21);
+  const datas = pontos.map(t => t.prazo);
+  if (DATA_ABERTURA) datas.push(DATA_ABERTURA);
+  datas.forEach(d => { if (d < addDias(ini, 1)) ini = addDias(d, -2); if (d > addDias(fim, -2)) fim = addDias(d, 3); });
+  const N = diasAte(fim) - diasAte(ini);
+  const pos = iso => ((diasAte(iso) - diasAte(ini)) + 0.5) / (N + 1) * 100;
+
+  // agrupa por dia
+  const porDia = {};
+  pontos.forEach(t => { (porDia[t.prazo] = porDia[t.prazo] || []).push(t); });
+  let maxPilha = 1;
+  const MAX = 9;
+  const cols = Object.keys(porDia).map(dia => {
+    const itens = ordenar(porDia[dia]);
+    maxPilha = Math.max(maxPilha, Math.min(itens.length, MAX + 1));
+    const vis = itens.length > MAX + 1 ? itens.slice(0, MAX) : itens;
+    const resto = itens.length - vis.length;
+    return '<div class="rg-col" style="left:' + pos(dia).toFixed(3) + '%">' +
+      vis.map(t => {
+        const cls = atrasada(t) ? ' atr' : (!aberta(t) ? ' ok' : '');
+        const tip = t.pendencia + '\n' + (t.responsavel || 'Sem responsável') + ', ' + t.status + '\nPrazo: ' + fmtData(t.prazo);
+        return '<button class="rg-pt' + cls + '" style="--c:' + (COR_STATUS[t.status] || 'var(--st-nao)') + '" data-act="editar" data-id="' + esc(t.id) + '" title="' + esc(tip) + '" aria-label="' + esc(tip) + '"></button>';
+      }).join('') +
+      (resto ? '<span class="rg-mais" title="' + resto + ' pendências a mais neste dia">+' + resto + '</span>' : '') +
+      '</div>';
+  }).join('');
+
+  // eixo
+  const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  let ticks = '', ultimoMes = -1;
+  for (let i = 0; i <= N; i++) {
+    const iso = addDias(ini, i);
+    const d = new Date(iso + 'T12:00:00');
+    const seg = d.getDay() === 1;
+    let rot = '', mes = false;
+    if (seg) {
+      if (d.getMonth() !== ultimoMes) { rot = String(d.getDate()).padStart(2, '0') + ' ' + meses[d.getMonth()]; mes = true; ultimoMes = d.getMonth(); }
+      else rot = fmtData(iso);
+    }
+    ticks += '<div class="rg-tick' + (seg ? ' seg' : '') + (mes ? ' mes' : '') + '" style="left:' + pos(iso).toFixed(3) + '%">' + (rot ? '<span>' + rot + '</span>' : '') + '</div>';
+  }
+
+  const alturaArea = 34 + maxPilha * 16 + 10;
+  const marcos =
+    '<div class="rg-passado" style="width:' + pos(hoje).toFixed(3) + '%"></div>' +
+    '<div class="rg-marco" style="left:' + pos(hoje).toFixed(3) + '%"><span>Hoje</span></div>' +
+    (DATA_ABERTURA ? '<div class="rg-marco abertura" style="left:' + pos(DATA_ABERTURA).toFixed(3) + '%"><span>Abertura</span></div>' : '');
+
+  const opt = (v, r) => '<option value="' + esc(v) + '"' + (v === rf ? ' selected' : '') + '>' + esc(r) + '</option>';
+  const num = (v, rot, cls, filtro) => '<button class="num ' + (cls || '') + '" data-act="irFiltro" data-f="' + filtro + '"><b>' + v + '</b><span>' + rot + '</span></button>';
+
+  return '<div class="bloco mt">' +
+    '<div class="regua-cab">' +
+      '<div class="regua-kpi"><div class="gm">' + gaugeSVG(pPrazo, { pequeno: true }) + '</div>' +
+        '<div><h2>Régua de prazos</h2><p>' + abComPrazo + ' de ' + abertas.length + ' pendências em aberto já têm prazo</p></div></div>' +
+      '<div class="regua-nums">' +
+        num(semana, 'Vencem em 7 dias', '', 'semana') +
+        num(atras, 'Atrasadas', atras ? 'alerta' : '', 'atrasadas') +
+        num(semPrazo, 'Sem prazo', semPrazo ? 'alerta' : '', 'semprazo') +
+      '</div>' +
+    '</div>' +
+    '<div class="rg-barra"><select class="campo" id="fRegua" aria-label="Filtrar régua por responsável">' +
+      opt('', 'Todos os responsáveis') + opt('__sem__', 'Sem responsável') + L.responsaveis.map(r => opt(r, r)).join('') +
+      '</select><small>' + plural(pontos.length, 'ponto', 'pontos') + ' na régua. Toque num ponto para abrir.</small></div>' +
+    '<div class="rg-scroll" id="rgScroll" data-hoje="' + pos(hoje).toFixed(3) + '">' +
+      '<div class="rg-trilho" style="min-width:' + ((N + 1) * 26) + 'px">' +
+        '<div class="rg-area" style="height:' + alturaArea + 'px">' + marcos + cols +
+          (pontos.length ? '' : '<div class="rg-vazio">Nenhum prazo definido ainda. Abra uma pendência em Editar e preencha o prazo de entrega.</div>') +
+        '</div>' +
+        '<div class="rg-eixo">' + ticks + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rg-legenda">' +
+      L.status.map(st => '<span><i class="pont" style="background:' + (COR_STATUS[st] || 'var(--st-nao)') + '"></i>' + esc(st) + '</span>').join('') +
+      '<span><i class="pont atr"></i>Atrasada</span>' +
+    '</div>' +
+  '</div>';
 }
 
 function irFiltro(f) {
@@ -922,6 +1083,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'fBusca') { S.filtros.busca = e.target.value; renderLista(); }
 });
 document.addEventListener('change', e => {
+  if (e.target.id === 'fRegua') { S.reguaResp = e.target.value; renderPainel(); return; }
   const map = { fStatus: 'status', fPrio: 'prio', fResp: 'resp' };
   if (map[e.target.id]) { S.filtros[map[e.target.id]] = e.target.value; renderLista(); }
 });
@@ -986,7 +1148,7 @@ const Demo = {
         tarefas: base.map((b, i) => ({
           id: 'GOG-' + String(i + 1).padStart(4, '0'), operacao: b[0], area: b[1], pendencia: b[2], prioridade: b[3],
           status: sts[i % sts.length], responsavel: i % 6 === 5 ? '' : nomes[i % 5],
-          prazo: i % 3 === 0 ? iso((i % 7) - 3) : '', obs: i % 4 === 0 ? 'Aguardando retorno do fornecedor' : '', link: '',
+          prazo: i % 4 === 3 ? '' : iso(((i * 5) % 30) - 6), obs: i % 4 === 0 ? 'Aguardando retorno do fornecedor' : '', link: '',
           atualizadoEm: '', atualizadoPor: ''
         })),
         pontos: ['Corpo de Bombeiros', 'Finalização da obra / boqueta', 'Mesas, mobiliário e novas grelhas', 'Chopeira e máquina de gelo',
@@ -1018,6 +1180,46 @@ const Demo = {
     }, 250));
   }
 };
+
+/* =====================================================================
+   AVISO DE NOVA VERSÃO (compara o código em uso com o publicado no GitHub)
+   ===================================================================== */
+const VERSAO_CHECK_MS = 5 * 60 * 1000;
+function hashTxt(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+function assinaturaDoc(doc) {
+  const css = Array.from(doc.querySelectorAll('style')).map(x => x.textContent).join('');
+  const js = Array.from(doc.querySelectorAll('script:not([src])')).map(x => x.textContent).join('');
+  return (css.length + js.length) + ':' + hashTxt(css + js);
+}
+const ASSINATURA_ATUAL = assinaturaDoc(document);
+let avisoVersaoMostrado = false;
+
+async function checarVersao() {
+  if (avisoVersaoMostrado || location.protocol === 'file:') return;
+  try {
+    const r = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const doc = new DOMParser().parseFromString(await r.text(), 'text/html');
+    if (assinaturaDoc(doc) !== ASSINATURA_ATUAL) {
+      avisoVersaoMostrado = true;
+      $('#avisoVersao').classList.remove('oculto');
+    }
+  } catch (_) { /* sem internet: tenta na próxima */ }
+}
+
+function aplicarNovaVersao() {
+  if (S.salvando) return toast('Aguarde terminar de salvar e toque de novo.');
+  if ($('#dlg').open) $('#dlg').close();
+  location.replace(location.pathname + '?v=' + Date.now());
+}
+
+setInterval(() => { if (document.visibilityState === 'visible') checarVersao(); }, VERSAO_CHECK_MS);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checarVersao(); });
+setTimeout(checarVersao, 15000);
 
 /* =====================================================================
    INÍCIO
