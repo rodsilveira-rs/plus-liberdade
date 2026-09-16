@@ -84,6 +84,10 @@ button{cursor:pointer}
   font-family:var(--serif);font-weight:700;color:var(--ouro-2);font-size:14px}
 .usuario span{font-weight:600}
 .usuario small{color:var(--suave);font-size:12px;text-decoration:underline}
+.btn-menu{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;
+  border:1px solid var(--linha);background:var(--brasa);color:var(--suave);font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.btn-menu:hover{border-color:var(--ouro);color:var(--ouro-2)}
+.btn-menu + .usuario{margin-left:0}
 .abas{display:flex;gap:4px;margin-top:10px}
 .aba{background:none;border:0;padding:10px 12px 11px;color:var(--suave);font-weight:600;border-bottom:2px solid transparent}
 .aba[aria-selected="true"]{color:var(--texto);border-bottom-color:var(--ouro)}
@@ -308,6 +312,9 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
         <span class="ico"><img src="https://rodsilveira-rs.github.io/plus-liberdade/gogui-logo.jpg" alt="" onerror="this.parentNode.remove()"></span>
         <div><h1>GOGUI</h1><p>Checklist de abertura</p></div>
       </div>
+      <a class="btn-menu oculto" id="btnMenu" href="https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html" title="Voltar ao Menu">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Menu
+      </a>
       <button class="usuario" data-act="sair" title="Trocar de pessoa">
         <span class="ini" id="uIni"></span><span id="uNome"></span><small>trocar</small>
       </button>
@@ -1230,6 +1237,8 @@ setTimeout(checarVersao, 15000);
    INÍCIO
    ===================================================================== */
 (function iniciar() {
+  // Botão "Menu": só aparece para quem tem sessão aberta no Index_Menu (mesmo endereço github.io)
+  try { if (localStorage.getItem('qfood_session')) $('#btnMenu').classList.remove('oculto'); } catch (_) {}
   const salvo = localStorage.getItem(LS_USUARIO);
   if (salvo) { S.usuario = salvo; S.aba = salvo === 'Rodrigo' ? 'painel' : 'minhas'; }
   render();
