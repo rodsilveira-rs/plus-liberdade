@@ -315,6 +315,9 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <a class="btn-menu oculto" id="btnMenu" href="https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html" title="Voltar ao Menu">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Menu
       </a>
+      <script>
+        try { if (localStorage.getItem('qfood_session')) document.getElementById('btnMenu').classList.remove('oculto'); } catch (e) {}
+      </script>
       <button class="usuario" data-act="sair" title="Trocar de pessoa">
         <span class="ini" id="uIni"></span><span id="uNome"></span><small>trocar</small>
       </button>
