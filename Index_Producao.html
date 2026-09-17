@@ -35,6 +35,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .brand{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.02em;line-height:1.05}
 .brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;opacity:.7;letter-spacing:0;margin-top:3px}
 .top .spacer{flex:1}
+.menu-link{flex:none;display:inline-flex;align-items:center;gap:4px;color:#fff;text-decoration:none;font-weight:700;font-size:13.5px;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 12px}
+.menu-link:hover{background:rgba(255,255,255,.1)}
+.login .menu-link{align-self:flex-start;margin:-28px 0 28px}
 .who{display:flex;align-items:center;gap:10px;font-size:13px}
 .who b{display:block;font-weight:600}
 .who span{opacity:.7}
@@ -214,6 +217,7 @@ table.tb tr.click:hover td{background:#F7F9F6}
 <div id="app" class="hidden">
   <header class="top">
     <div class="top-in">
+      <a class="menu-link" href="#" data-act="menu" aria-label="Voltar ao menu">&#8592; Menu</a>
       <div class="brand">Controle de Produção<small id="brandSub">Mercearia Liberdade, Gogui e Cozinha de Produção</small></div>
       <div class="spacer"></div>
       <span class="sync" id="sync"><i></i><span class="sync-txt">Somente neste aparelho</span></span>
@@ -246,7 +250,8 @@ const CFG = {
   SESSION_HOURS: 12,
   OBS_OBRIGATORIA_REPOR: true,   // exige observação quando a contagem der "Repor"
   DIAS_SEM_CONTAGEM: 2,          // a partir de quantos dias o item entra em "sem contagem recente"
-  REFRESH_MS: 120000
+  REFRESH_MS: 120000,
+  MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dash/Index_Menu.html'
 };
 
 const UN = {
@@ -519,6 +524,7 @@ function renderLogin() {
   const ps = pessoasAtivas();
   const grupos = [['alimentador', 'Registro diário'], ['tecnico', 'Acompanhamento'], ['gestor', 'Coordenação'], ['admin', 'Administração']];
   el.innerHTML = `
+    <a class="menu-link" href="#" data-act="menu" aria-label="Voltar ao menu">&#8592; Menu</a>
     <h1>Controle de Produção</h1>
     <p class="sub">Registre o que foi produzido, o que tem disponível e o que precisa repor.</p>
     <div class="unis">${UN_IDS.map(u => `<span>${UN[u].nome}</span>`).join('')}</div>
@@ -1301,6 +1307,16 @@ function bindFoto(root) {
 }
 
 /* =========================================================
+   VOLTAR AO MENU
+   ========================================================= */
+function irParaMenu() {
+  const pend = Object.values(CONT_DRAFT).some(d => Object.values(d).some(x => x.qtd !== '' && x.qtd !== undefined));
+  if (pend && !confirm('Há uma contagem preenchida e não salva. Sair mesmo assim?')) return;
+  CONT_DRAFT = {};
+  window.location.href = CFG.MENU_URL;
+}
+
+/* =========================================================
    MODAL E EVENTOS
    ========================================================= */
 function openModal(title, html, mount) {
@@ -1346,6 +1362,7 @@ document.addEventListener('click', ev => {
   const a = el.dataset.act, id = el.dataset.id;
   switch (a) {
     case 'logout': logout(); break;
+    case 'menu': ev.preventDefault(); irParaMenu(); break;
     case 'close': closeModal(); break;
     case 'goto': VIEW = el.dataset.v; render(); window.scrollTo(0, 0); break;
     case 'nova-prod': abrirProducao(null, el.dataset.sol); break;
