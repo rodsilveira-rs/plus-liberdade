@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E2B33">
+<title>Controle de Produção</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1E2B33; --ink-2:#2C3C46; --paper:#F3F5F1; --card:#FFFFFF; --line:#DCE1DA;
+  --text:#1E2B33; --mute:#66737C;
+  --jade:#1F7A63; --jade-soft:#E0EFE9;
+  --chili:#C23A2E; --chili-soft:#FAE5E2;
+  --yuzu:#B98107; --yuzu-soft:#FAF0D4;
+  --sky:#2F6690; --sky-soft:#E3EDF5;
+  --r-lg:16px; --r:10px;
+  --display:'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --body:'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--body);background:var(--paper);color:var(--text);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- Topo ---------- */
+.top{background:var(--ink);color:#fff;position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top)}
+.top-in{max-width:1180px;margin:0 auto;padding:14px 18px 0;display:flex;align-items:center;gap:14px}
+.brand{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.02em;line-height:1.05}
+.brand small{display:block;font-family:var(--body);font-weight:500;font-size:12px;opacity:.7;letter-spacing:0;margin-top:3px}
+.top .spacer{flex:1}
+.who{display:flex;align-items:center;gap:10px;font-size:13px}
+.who b{display:block;font-weight:600}
+.who span{opacity:.7}
+.who button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:5px 12px;cursor:pointer;font-size:12.5px}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;opacity:.85;white-space:nowrap}
+.sync i{width:8px;height:8px;border-radius:50%;background:#9aa6ad;display:inline-block}
+.sync.ok i{background:#5fd3a9}.sync.err i{background:#ff8a7d}.sync.sync i{background:#ffd166;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+nav.tabs{max-width:1180px;margin:0 auto;padding:10px 10px 0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{background:none;border:0;color:rgba(255,255,255,.7);padding:10px 12px 12px;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;font-size:14.5px}
+nav.tabs button.on{color:#fff;border-bottom-color:#5fd3a9}
+@media (max-width:640px){.who .who-txt{display:none}.sync .sync-txt{display:none}.brand{font-size:19px}}
+
+main{max-width:1180px;margin:0 auto;padding:20px 18px 110px}
+h2.view{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.02em;margin:4px 0 4px}
+p.lead{color:var(--mute);margin:0 0 18px;max-width:62ch}
+h3.sec{font-family:var(--display);font-weight:700;font-size:18px;margin:26px 0 10px;display:flex;align-items:baseline;gap:8px}
+h3.sec .count{font-family:var(--body);font-size:13px;color:var(--mute);font-weight:500}
+
+/* ---------- Componentes ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--r);padding:12px 18px;background:var(--jade);color:#fff;font-weight:700;cursor:pointer;font-size:15px}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.danger{background:transparent;color:var(--chili);border:1.5px solid #eec3be}
+.btn.dark{background:var(--ink)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:8px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.pill.ok{background:var(--jade-soft);color:var(--jade)}
+.pill.warn{background:var(--yuzu-soft);color:var(--yuzu)}
+.pill.bad{background:var(--chili-soft);color:var(--chili)}
+.pill.mute{background:#ECEFEC;color:var(--mute)}
+.pill.info{background:var(--sky-soft);color:var(--sky)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:#c4cbc6}
+.dot.ok{background:var(--jade)}.dot.warn{background:var(--yuzu)}.dot.bad{background:var(--chili)}
+.empty{color:var(--mute);padding:18px;text-align:center;border:1.5px dashed var(--line);border-radius:var(--r-lg);background:rgba(255,255,255,.5)}
+.banner{background:var(--yuzu-soft);color:#6d4d05;border-radius:var(--r);padding:10px 14px;font-size:13.5px;margin-bottom:16px}
+
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:0 0 18px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld>span{font-size:13px;font-weight:600;color:var(--mute)}
+.fld.req>span::after{content:" *";color:var(--chili)}
+input[type=text],input[type=date],input[type=search],input[type=number],select,textarea{width:100%;border:1.5px solid var(--line);border-radius:var(--r);padding:10px 12px;background:#fff;min-height:44px}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--sky);outline:none}
+.fld.sm select,.fld.sm input{min-height:38px;padding:7px 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+.stack{display:flex;flex-direction:column;gap:12px}
+.hint{font-size:12.5px;color:var(--mute)}
+.err-msg{color:var(--chili);font-size:13px;font-weight:600}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.checks label{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:14px;background:#fff}
+.checks input{accent-color:var(--jade)}
+.seg{display:inline-flex;background:#E4E8E3;border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:9px;font-weight:600;cursor:pointer;color:var(--mute)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(30,43,51,.12)}
+
+/* ---------- Visão geral ---------- */
+.hero{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:14px}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.gauge{background:var(--ink);color:#fff;border-radius:22px;padding:18px 18px 16px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.gauge svg{width:100%;max-width:280px;height:auto;display:block}
+.gauge .pct{font-family:var(--display);font-weight:800;font-size:64px;line-height:.9;letter-spacing:-.04em;margin-top:-54px}
+.gauge .pct sup{font-size:26px;vertical-align:top;margin-left:2px}
+.gauge .g-lbl{font-weight:600;margin-top:8px}
+.gauge .g-sub{font-size:12.5px;opacity:.7;margin-top:2px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:560px){.tiles{grid-template-columns:1fr 1fr}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;min-height:104px;cursor:default}
+.tile[data-act]{cursor:pointer}
+.tile b{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.03em}
+.tile span{font-size:13.5px;color:var(--mute);font-weight:500}
+.tile.bad b{color:var(--chili)}.tile.warn b{color:var(--yuzu)}
+.quick{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.quick .btn{flex:1;min-width:180px;padding:14px}
+
+.list{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row-main{flex:1;min-width:0}
+.row-main b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.row-main small,.row-num small{display:block;color:var(--mute);font-size:12.5px}
+.row-num{text-align:right;white-space:nowrap}
+.row-num b{font-weight:700}
+.row .btn.sm{flex:none}
+details.more>summary{cursor:pointer;font-weight:600;color:var(--sky);padding:8px 0;list-style:none}
+details.more>summary::-webkit-details-marker{display:none}
+
+/* ---------- Produção / Observações ---------- */
+.fila{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.sol{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--chili);border-radius:var(--r-lg);padding:14px;display:flex;flex-direction:column;gap:8px}
+.sol.prog{border-left-color:var(--sky)}
+.sol .t{font-weight:700;font-size:16px}
+.sol .m{font-size:13px;color:var(--mute)}
+.sol .q{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.02em}
+.rec{display:flex;gap:12px;padding:12px 14px;border-top:1px solid var(--line);align-items:flex-start}
+.rec:first-child{border-top:0}
+.rec .qty{font-family:var(--display);font-weight:800;font-size:22px;white-space:nowrap;min-width:92px;text-align:right}
+.rec .obs{font-size:13.5px;margin-top:4px}
+.rec a{color:var(--sky)}
+.obs-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;display:flex;flex-direction:column;gap:6px}
+.obs-card.crit{border-color:#e9b3ad}
+.obs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--mute)}
+
+/* ---------- Contagem ---------- */
+.ct-head{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ct-row{display:grid;grid-template-columns:1fr 150px 108px;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+.ct-row:first-child{border-top:0}
+.ct-row.filled{background:#FAFCFA}
+.ct-row .nm b{display:block;font-weight:600}
+.ct-row .nm small{color:var(--mute);font-size:12.5px;display:block}
+.ct-in{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:var(--r);background:#fff;overflow:hidden}
+.ct-in:focus-within{border-color:var(--sky)}
+.ct-in input{border:0;min-height:44px;text-align:right;font-weight:700;font-size:17px;padding:8px 6px 8px 10px;font-variant-numeric:tabular-nums}
+.ct-in input:focus{outline:none}
+.ct-in em{font-style:normal;color:var(--mute);padding:0 10px 0 2px;font-size:13px;white-space:nowrap}
+.ct-st{text-align:right}
+.ct-obs{grid-column:1/-1}
+.ct-obs input{min-height:38px}
+.ct-row.need-obs .ct-obs input{border-color:var(--chili)}
+@media (max-width:560px){.ct-row{grid-template-columns:1fr 120px}.ct-st{grid-column:1/-1;text-align:left;margin-top:-4px}}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:rgba(243,245,241,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 18px calc(12px + env(safe-area-inset-bottom));z-index:15}
+.savebar .in{max-width:1180px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between}
+
+/* ---------- Relatórios / Cadastros ---------- */
+table.tb{width:100%;border-collapse:collapse;font-size:14px}
+.tb-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg)}
+table.tb th{text-align:left;font-size:12.5px;color:var(--mute);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.tb td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.tb tr:last-child td{border-bottom:0}
+table.tb td.r,table.tb th.r{text-align:right}
+table.tb tr.click{cursor:pointer}
+table.tb tr.click:hover td{background:#F7F9F6}
+.bar{height:8px;background:#E8ECE8;border-radius:99px;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:var(--jade);border-radius:99px}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:#E9EDE9;color:var(--ink-2)}
+
+/* ---------- Login ---------- */
+.login{min-height:100vh;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;padding:48px 18px 40px}
+.login h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,7vw,56px);letter-spacing:-.035em;line-height:.95;margin:0;text-align:center}
+.login .sub{opacity:.72;margin:12px 0 30px;text-align:center}
+.login .unis{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:34px}
+.login .unis span{border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 12px;font-size:13px}
+.login .grp{width:100%;max-width:560px;margin-bottom:22px}
+.login .grp h4{margin:0 0 10px;font-weight:600;font-size:14px;opacity:.75}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.names button{background:var(--ink-2);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:14px;padding:14px;text-align:left;cursor:pointer;font-weight:600;font-size:15.5px}
+.names button:hover{background:#34495a}
+.names button small{display:block;font-weight:400;opacity:.65;font-size:12px;margin-top:2px}
+
+/* ---------- Modal / Toast ---------- */
+.modal{position:fixed;inset:0;background:rgba(20,30,36,.55);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.open{display:flex}
+.sheet{background:var(--paper);width:100%;max-width:640px;max-height:94vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column;animation:up .22s ease-out}
+@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:20px}}
+@keyframes up{from{transform:translateY(30px);opacity:.4}}
+.sheet header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
+.sheet header h3{margin:0;font-family:var(--display);font-size:20px}
+.sheet header button{background:none;border:0;font-size:26px;line-height:1;cursor:pointer;color:var(--mute);padding:4px 8px}
+.sheet .body{padding:16px 18px calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:90vw;text-align:center}
+.toast.bad{background:var(--chili)}
+</style>
+</head>
+<body>
+
+<div id="login" class="login hidden"></div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">Controle de Produção<small id="brandSub">Mercearia Liberdade, Gogui e Cozinha de Produção</small></div>
+      <div class="spacer"></div>
+      <span class="sync" id="sync"><i></i><span class="sync-txt">Somente neste aparelho</span></span>
+      <div class="who"><div class="who-txt"><b id="whoName"></b><span id="whoRole"></span></div><button type="button" data-act="logout">Trocar</button></div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+  <main id="main"></main>
+</div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <header><h3 id="mTitle"></h3><button type="button" data-act="close" aria-label="Fechar">×</button></header>
+    <div class="body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   CONFIGURAÇÃO
+   GAS_URL: cole aqui a URL /exec da implantação do Code_Producao.gs.
+   Vazio = modo local (dados só neste aparelho, útil para teste).
+   ========================================================= */
+const CFG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
+  SESSION_KEY: 'cprod_session',
+  CACHE_KEY: 'cprod_cache_v1',
+  OUTBOX_KEY: 'cprod_outbox_v1',
+  SESSION_HOURS: 12,
+  OBS_OBRIGATORIA_REPOR: true,   // exige observação quando a contagem der "Repor"
+  DIAS_SEM_CONTAGEM: 2,          // a partir de quantos dias o item entra em "sem contagem recente"
+  REFRESH_MS: 120000
+};
+
+const UN = {
+  ML: { nome: 'Mercearia Liberdade', curto: 'Mercearia' },
+  GG: { nome: 'Gogui Korean', curto: 'Gogui' },
+  CP: { nome: 'Cozinha de Produção', curto: 'Cozinha' }
+};
+const UN_IDS = ['ML', 'GG', 'CP'];
+const MEDIDAS = ['un', 'kg', 'g', 'L', 'ml', 'porção', 'bandeja', 'pote'];
+const TIPOS_OBS = ['Falta de insumo', 'Perda', 'Qualidade', 'Equipamento', 'Equipe', 'Processo', 'Validade', 'Recebimento', 'Outro'];
+const SETORES = ['Cozinha', 'Produção', 'Salão', 'Estoque', 'Recebimento', 'Higienização', 'Estrutura', 'Outro'];
+const IMPACTOS = ['Baixo', 'Médio', 'Alto', 'Crítico'];
+const PAPEIS = { alimentador: 'Registro diário', tecnico: 'Acompanhamento técnico', gestor: 'Coordenação', admin: 'Administrador' };
+const TABS = ['produtos', 'pessoas', 'producoes', 'contagens', 'observacoes', 'solicitacoes'];
+const SIT = {
+  ok: { t: 'OK', c: 'ok' },
+  atencao: { t: 'Atenção', c: 'warn' },
+  repor: { t: 'Repor', c: 'bad' },
+  semmin: { t: 'Sem mínimo', c: 'mute' }
+};
+
+/* Base inicial — usada só no modo local. Com Apps Script, a base vem do setup(). */
+const SEED_PRODUTOS = [
+  ['Massa de Tteokbokki', 'kg'], ['Guioza de lombo', 'un'], ['Guioza de salmão', 'un'], ['Corn Dog', 'un'],
+  ['Karaage', 'kg'], ['Frango Coreano', 'kg'], ['Sushirrito', 'un'], ['Salmão Bao', 'un'],
+  ['Caldo de Porco', 'L'], ['Molho de Yakisoba', 'L'], ['Molho de Gyudon', 'L'], ['Base Shoyu', 'L'],
+  ['Base de Tonkotsu', 'L'], ['Base Missô', 'L'], ['Legumes de Yakisoba', 'kg'], ['Legumes de Bibimbap', 'kg'],
+  ['Legumes de Tteokbokki', 'kg'], ['Molho Dragão', 'L']
+].map((p, i) => ({
+  id: 'p-ml-' + String(i + 1).padStart(2, '0'), nome: p[0], medida: p[1], unidades: 'ML',
+  min_ML: '', min_GG: '', min_CP: '', margem: '20', validade: 'Sim', dias_validade: '', ficha: '', ativo: 'Sim', atualizado_em: ''
+}));
+const SEED_PESSOAS = [
+  ['Jadison Barbosa', '', 'alimentador'], ['Rozilda', '', 'alimentador'], ['Leonarda', '', 'alimentador'],
+  ['Sérgio', 'Culinária coreana', 'alimentador'], ['Patrícia', '', 'alimentador'],
+  ['Tairine', 'Validação técnica da cozinha', 'tecnico'], ['Léo (Leorick)', 'Receitas e ficha técnica', 'tecnico'],
+  ['Fabrícia', 'Rotina e Boas Práticas', 'tecnico'], ['Rodrigo', 'Coordenação', 'gestor']
+].map((p, i) => ({
+  id: 'u-' + String(i + 1).padStart(2, '0'), nome: p[0], funcao: p[1], unidades: 'ML,GG,CP', papel: p[2], ativo: 'Sim', atualizado_em: ''
+}));
+
+/* =========================================================
+   UTILITÁRIOS
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = p => p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pad = n => String(n).padStart(2, '0');
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => isoDate(new Date());
+const nowISO = () => { const d = new Date(); return `${isoDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const fmtD = s => { if (!s) return '—'; const p = String(s).slice(0, 10).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : String(s); };
+const fmtDH = s => s ? `${fmtD(s)} ${String(s).slice(11, 16)}`.trim() : '—';
+const num = v => {
+  if (v === '' || v === null || v === undefined) return NaN;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim();
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  return s === '' ? NaN : Number(s);
+};
+const fmtN = v => { const n = num(v); return isNaN(n) ? '—' : n.toLocaleString('pt-BR', { maximumFractionDigits: 3 }); };
+const addDays = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); return isoDate(new Date(y, m - 1, d + n)); };
+const daysBetween = (a, b) => Math.round((new Date(String(b).slice(0, 10) + 'T00:00') - new Date(String(a).slice(0, 10) + 'T00:00')) / 864e5);
+const byNome = (a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR');
+const split = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
+const opts = (arr, sel) => arr.map(o => { const v = typeof o === 'object' ? o.v : o; const t = typeof o === 'object' ? o.t : o; return `<option value="${esc(v)}" ${String(v) === String(sel) ? 'selected' : ''}>${esc(t)}</option>`; }).join('');
+
+function toast(msg, bad) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (bad ? ' bad' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), bad ? 4200 : 2600);
+}
+
+/* =========================================================
+   ESTADO E SINCRONIZAÇÃO
+   ========================================================= */
+let DB = {}; TABS.forEach(t => DB[t] = []);
+let OUTBOX = [];
+let USER = null;
+let VIEW = 'geral';
+const F = { un: 'todas', per: 'hoje', de: '', ate: '' };
+let CONT_UN = null, CONT_Q = '', CONT_DRAFT = {};
+let PROD_DIA = null, CAD_TAB = 'produtos';
+let SYNC = { state: 'local', msg: 'Somente neste aparelho' };
+let FOTO_BUSY = false, flushing = false;
+
+function persist() {
+  try {
+    localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(DB));
+    localStorage.setItem(CFG.OUTBOX_KEY, JSON.stringify(OUTBOX));
+  } catch (e) { console.warn('Falha ao salvar localmente', e); }
+}
+function restore() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CFG.CACHE_KEY) || 'null');
+    if (c) TABS.forEach(t => { DB[t] = Array.isArray(c[t]) ? c[t] : []; });
+    OUTBOX = JSON.parse(localStorage.getItem(CFG.OUTBOX_KEY) || '[]');
+  } catch (e) { OUTBOX = []; }
+  if (!CFG.GAS_URL) {
+    if (!DB.produtos.length) DB.produtos = SEED_PRODUTOS.map(p => ({ ...p }));
+    if (!DB.pessoas.length) DB.pessoas = SEED_PESSOAS.map(p => ({ ...p }));
+    persist();
+  }
+}
+function upsertLocal(tab, row) {
+  const arr = DB[tab];
+  const i = arr.findIndex(r => r.id === row.id);
+  if (i >= 0) arr[i] = { ...arr[i], ...row }; else arr.push({ ...row });
+  return i >= 0 ? arr[i] : arr[arr.length - 1];
+}
+function save(tab, row, silent) {
+  row.atualizado_em = nowISO();
+  const merged = upsertLocal(tab, row);
+  OUTBOX.push({ tab, row: { ...merged } });
+  persist();
+  if (!silent) render();
+  flush();
+  return merged;
+}
+function setSync(state, msg) { SYNC = { state, msg }; updSync(); }
+function updSync() {
+  const el = $('#sync'); if (!el) return;
+  if (!CFG.GAS_URL) { el.className = 'sync'; $('.sync-txt', el).textContent = 'Somente neste aparelho'; return; }
+  el.className = 'sync ' + SYNC.state;
+  $('.sync-txt', el).textContent = SYNC.msg + (OUTBOX.length && SYNC.state !== 'sync' ? ` (${OUTBOX.length} pendente${OUTBOX.length > 1 ? 's' : ''})` : '');
+}
+async function api(body) {
+  const res = await fetch(CFG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  return res.json();
+}
+async function flush() {
+  if (!CFG.GAS_URL || flushing || !OUTBOX.length) { updSync(); return; }
+  flushing = true;
+  setSync('sync', 'Enviando…');
+  const batch = OUTBOX.slice(0, 40);
+  let ok = false;
+  try {
+    const r = await api({ action: 'upsert', items: batch });
+    if (!r || !r.ok) throw new Error((r && r.error) || 'Falha no envio');
+    OUTBOX.splice(0, batch.length);
+    persist();
+    ok = true;
+    setSync('ok', 'Sincronizado ' + nowISO().slice(11, 16));
+  } catch (e) {
+    console.warn(e);
+    setSync('err', 'Sem conexão');
+  } finally { flushing = false; }
+  if (ok && OUTBOX.length) flush();
+}
+const isTyping = () => { const a = document.activeElement; return a && ['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName); };
+async function load() {
+  if (!CFG.GAS_URL) return;
+  setSync('sync', 'Atualizando…');
+  try {
+    const res = await fetch(CFG.GAS_URL + '?action=load&t=' + Date.now());
+    const j = await res.json();
+    if (!j.ok) throw new Error(j.error || 'Falha na leitura');
+    TABS.forEach(t => { DB[t] = Array.isArray(j.data[t]) ? j.data[t] : []; });
+    OUTBOX.forEach(({ tab, row }) => upsertLocal(tab, row));
+    persist();
+    setSync('ok', 'Sincronizado ' + nowISO().slice(11, 16));
+    if (!$('#modal').classList.contains('open') && !isTyping()) render();
+    flush();
+  } catch (e) {
+    console.warn(e);
+    setSync('err', 'Sem conexão, usando dados deste aparelho');
+  }
+}
+
+/* =========================================================
+   REGRAS
+   ========================================================= */
+const pessoasAtivas = () => DB.pessoas.filter(p => p.ativo !== 'Não').sort(byNome);
+const isManager = () => !!USER && ['tecnico', 'gestor', 'admin'].includes(USER.papel);
+const isGestor = () => !!USER && ['gestor', 'admin'].includes(USER.papel);
+const myUnits = () => {
+  if (!USER) return [];
+  if (isManager()) return UN_IDS;
+  const u = split(USER.unidades).filter(x => UN_IDS.includes(x));
+  return u.length ? u : UN_IDS;
+};
+const ativos = () => DB.produtos.filter(p => p.ativo !== 'Não').sort(byNome);
+const prodById = id => DB.produtos.find(p => p.id === id);
+const prodsDaUnidade = u => ativos().filter(p => split(p.unidades).includes(u));
+const minOf = (p, u) => num(p['min_' + u]);
+const margemOf = p => { const m = num(p.margem); return isNaN(m) ? 20 : m; };
+const usaValidade = p => p && p.validade !== 'Não';
+
+function situacao(p, u, qtd) {
+  const q = num(qtd);
+  if (isNaN(q)) return null;
+  const min = minOf(p, u);
+  if (isNaN(min)) return 'semmin';
+  if (q < min) return 'repor';
+  if (q <= min * (1 + margemOf(p) / 100)) return 'atencao';
+  return 'ok';
+}
+function ultimasContagens() {
+  const m = {};
+  DB.contagens.forEach(c => {
+    if (c.status === 'cancelado') return;
+    const k = c.unidade + '|' + c.produto_id;
+    if (!m[k] || String(c.data_hora) > String(m[k].data_hora)) m[k] = c;
+  });
+  return m;
+}
+function estoqueAtual(units) {
+  const last = ultimasContagens();
+  const out = [];
+  units.forEach(u => prodsDaUnidade(u).forEach(p => {
+    const c = last[u + '|' + p.id];
+    out.push({ p, u, c, sit: c ? situacao(p, u, c.qtd) : null, dias: c ? daysBetween(c.data_hora, today()) : null });
+  }));
+  return out;
+}
+const solAbertas = () => DB.solicitacoes.filter(s => s.status === 'Aberta' || s.status === 'Em produção');
+const solAbertaDe = (u, pid) => solAbertas().find(s => s.unidade === u && s.produto_id === pid);
+const solNum = s => s.numero || ('SP-' + String(s.id).slice(-5).toUpperCase());
+
+function periodo() {
+  const t = today();
+  if (F.per === 'hoje') return [t, t];
+  if (F.per === 'semana') return [addDays(t, -6), t];
+  if (F.per === 'mes') return [t.slice(0, 8) + '01', t];
+  const a = F.de || t, b = F.ate || t;
+  return a <= b ? [a, b] : [b, a];
+}
+const inPer = (d, per) => { const x = String(d || '').slice(0, 10); return x >= per[0] && x <= per[1]; };
+const unOk = u => F.un === 'todas' || F.un === u;
+const podeEditar = r => isManager() || (r.criado_por === USER.nome && String(r.criado_em || '').slice(0, 10) === today());
+
+function sugestao(p, u, saldo) {
+  const min = minOf(p, u), s = num(saldo);
+  if (isNaN(min)) return '';
+  return Math.max(+(min - (isNaN(s) ? 0 : s)).toFixed(3), 0);
+}
+function criarSolicitacao(p, u, saldo, extra = {}) {
+  if (solAbertaDe(u, p.id)) return null;
+  const min = minOf(p, u);
+  const d = new Date();
+  const row = {
+    id: uid('sp'),
+    numero: `SP-${String(d.getFullYear()).slice(2)}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`,
+    data_hora: nowISO(), unidade: u, produto_id: p.id, produto_nome: p.nome,
+    saldo: isNaN(num(saldo)) ? '' : num(saldo), minimo: isNaN(min) ? '' : min,
+    qtd_sugerida: extra.qtd !== undefined ? extra.qtd : sugestao(p, u, saldo),
+    medida: p.medida, prioridade: extra.prioridade || 'Normal', status: 'Aberta',
+    solicitante: USER.nome, obs: extra.obs || '', producao_id: '', atendida_em: '', criado_em: nowISO()
+  };
+  return save('solicitacoes', row, extra.silent);
+}
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+function getSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(CFG.SESSION_KEY) || 'null');
+    if (!s || Date.now() - s.ts > CFG.SESSION_HOURS * 3600e3) return null;
+    return s;
+  } catch (e) { return null; }
+}
+function renderLogin() {
+  $('#app').classList.add('hidden');
+  const el = $('#login');
+  el.classList.remove('hidden');
+  const ps = pessoasAtivas();
+  const grupos = [['alimentador', 'Registro diário'], ['tecnico', 'Acompanhamento'], ['gestor', 'Coordenação'], ['admin', 'Administração']];
+  el.innerHTML = `
+    <h1>Controle de Produção</h1>
+    <p class="sub">Registre o que foi produzido, o que tem disponível e o que precisa repor.</p>
+    <div class="unis">${UN_IDS.map(u => `<span>${UN[u].nome}</span>`).join('')}</div>
+    ${ps.length ? grupos.map(([k, t]) => {
+      const g = ps.filter(p => (p.papel || 'alimentador') === k);
+      return g.length ? `<div class="grp"><h4>${t}</h4><div class="names">${g.map(p => `<button type="button" data-login="${esc(p.id)}">${esc(p.nome)}${p.funcao ? `<small>${esc(p.funcao)}</small>` : ''}</button>`).join('')}</div></div>` : '';
+    }).join('') : `<div class="grp"><p>${CFG.GAS_URL ? 'Carregando a lista de pessoas…' : 'Nenhuma pessoa cadastrada.'}</p></div>`}
+    ${CFG.GAS_URL ? '' : '<p class="sub" style="font-size:13px">Modo de teste: os dados ficam salvos só neste aparelho.</p>'}`;
+}
+function login(id) {
+  const p = DB.pessoas.find(x => x.id === id);
+  if (!p) return;
+  localStorage.setItem(CFG.SESSION_KEY, JSON.stringify({ id: p.id, ts: Date.now() }));
+  USER = p;
+  VIEW = p.papel === 'alimentador' ? 'producao' : 'geral';
+  F.un = 'todas';
+  $('#login').classList.add('hidden');
+  render();
+}
+function logout() {
+  localStorage.removeItem(CFG.SESSION_KEY);
+  USER = null;
+  CONT_DRAFT = {};
+  renderLogin();
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+   ========================================================= */
+function navItems() {
+  const it = [['geral', 'Visão geral'], ['producao', 'Produção'], ['contagem', 'Contagem'], ['observacoes', 'Observações']];
+  if (isManager()) it.push(['relatorios', 'Relatórios'], ['cadastros', 'Cadastros']);
+  return it;
+}
+function render() {
+  if (!USER) { renderLogin(); return; }
+  const fresh = DB.pessoas.find(p => p.id === USER.id);
+  if (fresh) USER = fresh;
+  $('#app').classList.remove('hidden');
+  $('#whoName').textContent = USER.nome;
+  $('#whoRole').textContent = PAPEIS[USER.papel] || '';
+  const items = navItems();
+  if (!items.some(i => i[0] === VIEW)) VIEW = 'geral';
+  $('#tabs').innerHTML = items.map(([k, t]) => `<button type="button" class="${VIEW === k ? 'on' : ''}" data-view="${k}">${t}</button>`).join('');
+  if (F.un !== 'todas' && !myUnits().includes(F.un)) F.un = 'todas';
+  const html = VIEWS[VIEW]();
+  const banner = !CFG.GAS_URL ? '<div class="banner">Modo de teste: os registros ficam só neste aparelho. Para usar com a equipe, configure o GAS_URL.</div>' : '';
+  $('#main').innerHTML = banner + html;
+  if (AFTER[VIEW]) AFTER[VIEW]();
+  updSync();
+}
+function filtros(withPer = true) {
+  const us = myUnits();
+  return `<div class="filters">
+    <label class="fld sm"><span>Unidade</span><select data-f="un"><option value="todas">Todas as unidades</option>${us.map(u => `<option value="${u}" ${F.un === u ? 'selected' : ''}>${UN[u].nome}</option>`).join('')}</select></label>
+    ${withPer ? `<label class="fld sm"><span>Período</span><select data-f="per">${opts([{ v: 'hoje', t: 'Hoje' }, { v: 'semana', t: 'Últimos 7 dias' }, { v: 'mes', t: 'Este mês' }, { v: 'custom', t: 'Personalizado' }], F.per)}</select></label>
+    ${F.per === 'custom' ? `<label class="fld sm"><span>De</span><input type="date" data-f="de" value="${F.de || today()}"></label><label class="fld sm"><span>Até</span><input type="date" data-f="ate" value="${F.ate || today()}"></label>` : ''}` : ''}
+  </div>`;
+}
+
+/* =========================================================
+   VISÃO GERAL
+   ========================================================= */
+function gaugeSVG(pct) {
+  const p = pct === null ? 0 : Math.max(0, Math.min(100, pct));
+  const cor = pct === null ? '#5b6a73' : p < 60 ? '#ff7a6b' : p < 85 ? '#f2b632' : '#5fd3a9';
+  const r = 100, cx = 120, cy = 120;
+  const ang = Math.PI * (1 - p / 100);
+  const x = cx + r * Math.cos(ang), y = cy - r * Math.sin(ang);
+  const arc = p > 0 ? `<path d="M20 120 A100 100 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)}" fill="none" stroke="${cor}" stroke-width="22" stroke-linecap="round"/>` : '';
+  const ticks = [0, 25, 50, 75, 100].map(t => {
+    const a = Math.PI * (1 - t / 100);
+    return `<line x1="${cx + 118 * Math.cos(a)}" y1="${cy - 118 * Math.sin(a)}" x2="${cx + 126 * Math.cos(a)}" y2="${cy - 126 * Math.sin(a)}" stroke="rgba(255,255,255,.35)" stroke-width="2"/>`;
+  }).join('');
+  const needle = `<line x1="${cx}" y1="${cy}" x2="${(cx + 74 * Math.cos(ang)).toFixed(2)}" y2="${(cy - 74 * Math.sin(ang)).toFixed(2)}" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/><circle cx="${cx}" cy="${cy}" r="6" fill="#fff" opacity=".55"/>`;
+  return `<svg viewBox="0 0 240 132" aria-hidden="true"><path d="M20 120 A100 100 0 0 1 220 120" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="22" stroke-linecap="round"/>${arc}${ticks}${pct === null ? '' : needle}</svg>`;
+}
+function linhaEstoque(e) {
+  const min = minOf(e.p, e.u);
+  const sol = solAbertaDe(e.u, e.p.id);
+  return `<div class="row">
+    <span class="dot ${SIT[e.sit].c}"></span>
+    <div class="row-main"><b>${esc(e.p.nome)}</b><small>${UN[e.u].curto}, contado em ${fmtDH(e.c.data_hora)}</small></div>
+    <div class="row-num num"><b>${fmtN(e.c.qtd)} ${esc(e.p.medida)}</b><small>mínimo ${fmtN(min)}</small></div>
+    ${sol ? `<span class="pill info">${esc(sol.status)}</span>` : `<button type="button" class="btn sm" data-act="solicitar" data-u="${e.u}" data-p="${esc(e.p.id)}">Solicitar</button>`}
+  </div>`;
+}
+function vGeral() {
+  const per = periodo();
+  const us = myUnits().filter(unOk);
+  const est = estoqueAtual(us);
+  const prods = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && inPer(r.data, per));
+  const repor = est.filter(e => e.sit === 'repor');
+  const aten = est.filter(e => e.sit === 'atencao');
+  const semCont = est.filter(e => !e.c || e.dias >= CFG.DIAS_SEM_CONTAGEM);
+  const semMin = est.filter(e => isNaN(minOf(e.p, e.u)));
+  const contPer = DB.contagens.filter(c => c.status !== 'cancelado' && us.includes(c.unidade) && inPer(c.data_hora, per));
+  const avaliados = est.filter(e => e.sit === 'ok' || e.sit === 'atencao' || e.sit === 'repor');
+  const pct = avaliados.length ? Math.round(avaliados.filter(e => e.sit !== 'repor').length / avaliados.length * 100) : null;
+  const sols = solAbertas().filter(s => us.includes(s.unidade)).sort((a, b) => String(a.data_hora).localeCompare(String(b.data_hora)));
+  const solPer = DB.solicitacoes.filter(s => us.includes(s.unidade) && inPer(s.data_hora, per) && s.status !== 'Cancelada');
+  const solAtend = solPer.filter(s => s.status === 'Atendida').length;
+  const obsImp = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && inPer(o.data_hora, per) && (o.impacto === 'Alto' || o.impacto === 'Crítico'))
+    .sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora)));
+  const perTxt = { hoje: 'hoje', semana: 'nos últimos 7 dias', mes: 'neste mês', custom: 'no período' }[F.per];
+
+  return `
+  <h2 class="view">Visão geral</h2>
+  <p class="lead">${fmtD(today())}. O que pede atenção agora e o resumo ${perTxt}.</p>
+  ${filtros(true)}
+  <div class="hero">
+    <div class="gauge">
+      ${gaugeSVG(pct)}
+      <div class="pct num">${pct === null ? '—' : pct}<sup>${pct === null ? '' : '%'}</sup></div>
+      <div class="g-lbl">Itens acima do mínimo</div>
+      <div class="g-sub">${avaliados.length ? `${avaliados.length - repor.length} de ${avaliados.length} itens com mínimo e contagem` : 'Defina mínimos e faça contagens para medir'}</div>
+    </div>
+    <div>
+      <div class="tiles">
+        <div class="tile ${repor.length ? 'bad' : ''}"><b class="num">${repor.length}</b><span>Repor agora</span></div>
+        <div class="tile ${aten.length ? 'warn' : ''}"><b class="num">${aten.length}</b><span>Em atenção</span></div>
+        <div class="tile" data-act="goto" data-v="producao"><b class="num">${sols.length}</b><span>Pedidos de produção abertos</span></div>
+        <div class="tile" data-act="goto" data-v="producao"><b class="num">${prods.length}</b><span>Produções registradas ${perTxt}</span></div>
+        <div class="tile" data-act="goto" data-v="contagem"><b class="num">${contPer.length}</b><span>Itens contados ${perTxt}</span></div>
+        <div class="tile ${semCont.length ? 'warn' : ''}" data-act="goto" data-v="contagem"><b class="num">${semCont.length}</b><span>Sem contagem há ${CFG.DIAS_SEM_CONTAGEM}+ dias</span></div>
+      </div>
+      <div class="quick">
+        <button type="button" class="btn" data-act="nova-prod">Registrar produção</button>
+        <button type="button" class="btn dark" data-act="goto" data-v="contagem">Fazer contagem</button>
+        <button type="button" class="btn ghost" data-act="nova-obs">Registrar observação</button>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sec">Precisa de atenção <span class="count">${repor.length + aten.length} ${repor.length + aten.length === 1 ? 'item' : 'itens'}</span></h3>
+  ${repor.length + aten.length ? `<div class="list">${repor.concat(aten).map(linhaEstoque).join('')}</div>` : '<div class="empty">Nenhum item abaixo ou perto do mínimo na última contagem.</div>'}
+
+  <h3 class="sec">Fila de produção <span class="count">${sols.length} ${sols.length === 1 ? 'pedido aberto' : 'pedidos abertos'}${solPer.length ? `, ${solAtend} de ${solPer.length} atendidos ${perTxt}` : ''}</span></h3>
+  ${sols.length ? `<div class="fila">${sols.map(cardSol).join('')}</div>` : '<div class="empty">Nenhum pedido de produção aberto.</div>'}
+
+  <h3 class="sec">Observações de impacto alto ou crítico <span class="count">${obsImp.length}</span></h3>
+  ${obsImp.length ? `<div class="obs-grid">${obsImp.slice(0, 6).map(cardObs).join('')}</div>` : `<div class="empty">Nenhuma observação de impacto alto ou crítico ${perTxt}.</div>`}
+
+  ${semCont.length ? `<details class="more"><summary>Ver ${semCont.length} ${semCont.length === 1 ? 'item' : 'itens'} sem contagem recente</summary>
+    <div class="list">${semCont.map(e => `<div class="row"><span class="dot"></span><div class="row-main"><b>${esc(e.p.nome)}</b><small>${UN[e.u].curto}</small></div><div class="row-num"><small>${e.c ? `última há ${e.dias} dia${e.dias === 1 ? '' : 's'}` : 'nunca contado'}</small></div></div>`).join('')}</div></details>` : ''}
+  ${isManager() && semMin.length ? `<details class="more"><summary>Ver ${semMin.length} ${semMin.length === 1 ? 'item' : 'itens'} sem estoque mínimo definido</summary>
+    <div class="list">${semMin.map(e => `<div class="row"><span class="dot"></span><div class="row-main"><b>${esc(e.p.nome)}</b><small>${UN[e.u].curto}</small></div><button type="button" class="btn sm ghost" data-act="edit-prod-cad" data-id="${esc(e.p.id)}">Definir mínimo</button></div>`).join('')}</div></details>` : ''}
+  `;
+}
+
+/* =========================================================
+   PRODUÇÃO
+   ========================================================= */
+function cardSol(s) {
+  const p = prodById(s.produto_id);
+  const pode = myUnits().includes(s.unidade);
+  return `<div class="sol ${s.status === 'Em produção' ? 'prog' : ''}">
+    <div class="meta"><span class="pill ${s.status === 'Em produção' ? 'info' : 'bad'}">${esc(s.status)}</span>${s.prioridade === 'Urgente' ? '<span class="pill bad">Urgente</span>' : ''}<span>${esc(solNum(s))}</span></div>
+    <div class="t">${esc(s.produto_nome)}</div>
+    <div class="m">Para ${UN[s.unidade] ? UN[s.unidade].nome : esc(s.unidade)}. Saldo ${fmtN(s.saldo)} ${esc(s.medida)}, mínimo ${fmtN(s.minimo)}.</div>
+    <div><span class="m">Produzir</span> <span class="q num">${fmtN(s.qtd_sugerida)} ${esc(s.medida)}</span></div>
+    <div class="m">Pedido por ${esc(s.solicitante)} em ${fmtDH(s.data_hora)}${s.obs ? `. ${esc(s.obs)}` : ''}</div>
+    ${pode && p ? `<div class="actions">
+      <button type="button" class="btn sm" data-act="nova-prod" data-sol="${esc(s.id)}">Registrar produção</button>
+      ${s.status === 'Aberta' ? `<button type="button" class="btn sm ghost" data-act="sol-iniciar" data-id="${esc(s.id)}">Começar a produzir</button>` : ''}
+      ${isManager() ? `<button type="button" class="btn sm danger" data-act="sol-cancelar" data-id="${esc(s.id)}">Cancelar</button>` : ''}
+    </div>` : ''}
+  </div>`;
+}
+function vProducao() {
+  const us = myUnits();
+  const dia = PROD_DIA || today();
+  const sols = solAbertas().filter(s => us.includes(s.unidade) && unOk(s.unidade));
+  const list = DB.producoes.filter(r => r.status !== 'cancelado' && r.data === dia && us.includes(r.unidade) && unOk(r.unidade))
+    .sort((a, b) => String(b.criado_em).localeCompare(String(a.criado_em)));
+  const tot = {};
+  list.forEach(r => { const k = r.medida || ''; tot[k] = (tot[k] || 0) + (num(r.qtd) || 0); });
+  return `
+  <h2 class="view">Produção</h2>
+  <p class="lead">Registre cada produção logo depois de pronta: produto, quantidade, unidade de destino e validade.</p>
+  <div class="quick" style="margin:0 0 6px"><button type="button" class="btn" data-act="nova-prod">Registrar produção</button></div>
+
+  <h3 class="sec">Pedidos de produção <span class="count">${sols.length} ${sols.length === 1 ? 'aberto' : 'abertos'}</span></h3>
+  ${sols.length ? `<div class="fila">${sols.map(cardSol).join('')}</div>` : '<div class="empty">Nenhum pedido aberto. Os pedidos aparecem aqui quando a contagem indicar reposição.</div>'}
+
+  <h3 class="sec">Registros do dia <span class="count">${list.length} ${list.length === 1 ? 'registro' : 'registros'}${Object.keys(tot).length ? `, ${Object.entries(tot).map(([m, v]) => `${fmtN(v)} ${esc(m)}`).join(' + ')}` : ''}</span></h3>
+  <div class="filters">
+    <label class="fld sm"><span>Dia</span><input type="date" id="prodDia" value="${dia}" max="${today()}"></label>
+    <label class="fld sm"><span>Unidade de destino</span><select data-f="un"><option value="todas">Todas</option>${us.map(u => `<option value="${u}" ${F.un === u ? 'selected' : ''}>${UN[u].nome}</option>`).join('')}</select></label>
+  </div>
+  ${list.length ? `<div class="list">${list.map(r => `
+    <div class="rec">
+      <div style="flex:1;min-width:0">
+        <b>${esc(r.produto_nome)}</b>
+        <div class="meta"><span>Para ${UN[r.unidade] ? UN[r.unidade].curto : esc(r.unidade)}</span><span>feito em ${UN[r.local] ? UN[r.local].curto : esc(r.local || '—')}</span><span>por ${esc(r.responsavel)}</span>${r.validade ? `<span>validade ${fmtD(r.validade)}</span>` : ''}${r.lote ? `<span>lote ${esc(r.lote)}</span>` : ''}${r.ficha_usada === 'Não' ? '<span class="pill warn">Sem ficha técnica</span>' : ''}</div>
+        ${r.obs ? `<div class="obs">${esc(r.obs)}</div>` : ''}
+        ${r.evidencia ? `<div class="obs"><a href="${esc(r.evidencia)}" target="_blank" rel="noopener">Ver foto</a></div>` : ''}
+        ${podeEditar(r) ? `<button type="button" class="btn sm ghost" style="margin-top:8px" data-act="edit-prod" data-id="${esc(r.id)}">Editar</button>` : ''}
+      </div>
+      <div class="qty num">${fmtN(r.qtd)} <small style="font-size:14px">${esc(r.medida)}</small></div>
+    </div>`).join('')}</div>` : `<div class="empty">Nenhuma produção registrada em ${fmtD(dia)}.</div>`}
+  `;
+}
+function formProducao(r, sol) {
+  const us = myUnits();
+  const destino = r ? r.unidade : sol ? sol.unidade : (F.un !== 'todas' ? F.un : us[0]);
+  const lastLocal = localStorage.getItem('cprod_last_local') || 'CP';
+  const local = r ? r.local : lastLocal;
+  const pid = r ? r.produto_id : sol ? sol.produto_id : '';
+  const resp = r ? r.responsavel : USER.nome;
+  return `<form id="fProd" class="stack" novalidate>
+    ${sol ? `<div class="banner" style="margin:0">Atendendo o pedido ${esc(solNum(sol))}: ${fmtN(sol.qtd_sugerida)} ${esc(sol.medida)} de ${esc(sol.produto_nome)}.</div>` : ''}
+    <div class="grid2">
+      <label class="fld req"><span>Data</span><input type="date" name="data" value="${r ? r.data : today()}" max="${today()}"></label>
+      <label class="fld req"><span>Unidade de destino</span><select name="unidade">${opts(us.map(u => ({ v: u, t: UN[u].nome })), destino)}</select></label>
+    </div>
+    <label class="fld req"><span>Produto</span><select name="produto_id"></select></label>
+    <div class="grid2">
+      <label class="fld req"><span>Quantidade produzida</span><input type="text" inputmode="decimal" name="qtd" value="${r ? fmtN(r.qtd).replace(/\./g, '') : (sol && sol.qtd_sugerida !== '' ? fmtN(sol.qtd_sugerida).replace(/\./g, '') : '')}" placeholder="0"></label>
+      <label class="fld"><span>Unidade de medida</span><select name="medida">${opts(MEDIDAS, r ? r.medida : '')}</select></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>Produzido em</span><select name="local">${opts(UN_IDS.map(u => ({ v: u, t: UN[u].nome })), local)}</select></label>
+      <label class="fld" id="fldVal"><span>Validade</span><input type="date" name="validade" value="${r ? (r.validade || '') : ''}"></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>Responsável pela produção</span>${isManager() ? `<select name="responsavel">${opts(pessoasAtivas().map(p => p.nome).concat(pessoasAtivas().some(p => p.nome === resp) ? [] : [resp]), resp)}</select>` : `<input type="text" name="responsavel" value="${esc(resp)}" readonly>`}</label>
+      <label class="fld"><span>Lote</span><input type="text" name="lote" value="${r ? esc(r.lote || '') : ''}" placeholder="Opcional"></label>
+    </div>
+    <label class="fld"><span>Usou a ficha técnica?</span><select name="ficha_usada">${opts(['Sim', 'Não', 'Não se aplica'], r ? r.ficha_usada : 'Sim')}</select></label>
+    <label class="fld"><span>Observação</span><textarea name="obs" placeholder="Ex.: rendeu menos que o normal, faltou cebolinha">${r ? esc(r.obs || '') : ''}</textarea></label>
+    ${fotoField(r)}
+    <input type="hidden" name="solicitacao_id" value="${sol ? esc(sol.id) : (r ? esc(r.solicitacao_id || '') : '')}">
+    <div class="err-msg" id="fErr"></div>
+    <div class="actions">
+      <button type="submit" class="btn" style="flex:1">${r ? 'Salvar alterações' : 'Salvar produção'}</button>
+      ${r ? '<button type="button" class="btn danger" data-act="cancel-prod">Excluir registro</button>' : ''}
+    </div>
+  </form>`;
+}
+function fotoField(r) {
+  return `<div class="fld"><span>Foto</span>
+    <input type="file" accept="image/*" capture="environment" data-foto ${CFG.GAS_URL ? '' : 'disabled'}>
+    <input type="hidden" name="evidencia" value="${r ? esc(r.evidencia || '') : ''}">
+    <span class="hint foto-st">${r && r.evidencia ? `<a href="${esc(r.evidencia)}" target="_blank" rel="noopener">Ver foto anexada</a>` : (CFG.GAS_URL ? 'Opcional. Use para item novo, teste ou divergência.' : 'A foto fica disponível quando a sincronização estiver ligada.')}</span>
+  </div>`;
+}
+function abrirProducao(r, solId) {
+  const sol = solId ? DB.solicitacoes.find(s => s.id === solId) : null;
+  openModal(r ? 'Editar produção' : 'Registrar produção', formProducao(r, sol), root => {
+    const fm = $('#fProd', root), f = fm.elements;
+    const selU = f.unidade, selP = f.produto_id, selM = f.medida, inV = f.validade, fData = f.data;
+    let valTocada = !!(r && r.validade);
+    inV.addEventListener('input', () => { valTocada = true; });
+    const fillProds = keep => {
+      const u = selU.value;
+      let list = prodsDaUnidade(u);
+      const cur = keep || selP.value;
+      if (cur && !list.some(p => p.id === cur) && prodById(cur)) list = list.concat([prodById(cur)]);
+      selP.innerHTML = `<option value="">${list.length ? 'Escolha o produto' : 'Nenhum produto cadastrado para esta unidade'}</option>` +
+        list.map(p => `<option value="${esc(p.id)}" ${p.id === cur ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
+    };
+    const onProd = first => {
+      const p = prodById(selP.value);
+      if (!p) return;
+      if (!(first && r)) selM.value = p.medida || 'un';
+      $('#fldVal', root).classList.toggle('req', usaValidade(p));
+      const dias = num(p.dias_validade);
+      if (!valTocada && !isNaN(dias)) inV.value = addDays(fData.value || today(), dias);
+    };
+    fillProds(r ? r.produto_id : sol ? sol.produto_id : '');
+    onProd(true);
+    selU.addEventListener('change', () => { fillProds(); onProd(); });
+    selP.addEventListener('change', () => onProd());
+    fData.addEventListener('change', () => { if (!valTocada) onProd(); });
+    bindFoto(root);
+    const cancelBtn = $('[data-act="cancel-prod"]', root);
+    if (cancelBtn) cancelBtn.addEventListener('click', () => {
+      if (!confirm('Excluir este registro de produção?')) return;
+      save('producoes', { id: r.id, status: 'cancelado' });
+      closeModal(); toast('Registro excluído');
+    });
+    fm.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const err = $('#fErr', root);
+      if (FOTO_BUSY) { err.textContent = 'Aguarde o envio da foto terminar.'; return; }
+      const p = prodById(selP.value);
+      const q = num(f.qtd.value);
+      if (!f.data.value) { err.textContent = 'Informe a data.'; return; }
+      if (!p) { err.textContent = 'Escolha o produto.'; return; }
+      if (isNaN(q) || q <= 0) { err.textContent = 'Informe a quantidade produzida.'; return; }
+      if (usaValidade(p) && !f.validade.value) { err.textContent = 'Este produto exige validade.'; return; }
+      localStorage.setItem('cprod_last_local', f.local.value);
+      let solVinc = f.solicitacao_id.value;
+      if (!r && !solVinc) {
+        const aberta = solAbertaDe(selU.value, p.id);
+        if (aberta && confirm(`Existe o pedido ${solNum(aberta)} aberto para ${p.nome}. Marcar como atendido com esta produção?`)) solVinc = aberta.id;
+      }
+      const row = {
+        id: r ? r.id : uid('pr'), data: f.data.value, unidade: selU.value, local: f.local.value,
+        produto_id: p.id, produto_nome: p.nome, qtd: q, medida: selM.value, lote: f.lote.value.trim(),
+        validade: f.validade.value, responsavel: f.responsavel.value, ficha_usada: f.ficha_usada.value,
+        obs: f.obs.value.trim(), evidencia: f.evidencia.value, solicitacao_id: solVinc, status: 'ativo'
+      };
+      if (!r) { row.criado_por = USER.nome; row.criado_em = nowISO(); }
+      save('producoes', row, true);
+      if (solVinc && !r) {
+        save('solicitacoes', { id: solVinc, status: 'Atendida', producao_id: row.id, atendida_em: nowISO() }, true);
+      }
+      closeModal();
+      render();
+      toast(r ? 'Produção atualizada' : 'Produção salva');
+    });
+  });
+}
+
+/* =========================================================
+   CONTAGEM
+   ========================================================= */
+function draftOf(u) { return CONT_DRAFT[u] || (CONT_DRAFT[u] = {}); }
+function vContagem() {
+  const us = myUnits();
+  if (!us.includes(CONT_UN)) CONT_UN = (F.un !== 'todas' && us.includes(F.un)) ? F.un : us[0];
+  const u = CONT_UN;
+  const last = ultimasContagens();
+  const dr = draftOf(u);
+  const q = CONT_Q.trim().toLowerCase();
+  const prods = prodsDaUnidade(u).filter(p => !q || p.nome.toLowerCase().includes(q));
+  const preench = Object.values(dr).filter(d => d.qtd !== '' && d.qtd !== undefined).length;
+  return `
+  <h2 class="view">Contagem</h2>
+  <p class="lead">Informe o que tem disponível agora. O sistema compara com o mínimo e mostra o que precisa repor. Deixe em branco o que você não contou.</p>
+  <div class="ct-head">
+    <div class="seg">${us.map(x => `<button type="button" class="${x === u ? 'on' : ''}" data-act="ct-un" data-u="${x}">${UN[x].nome}</button>`).join('')}</div>
+    <input type="search" id="ctBusca" placeholder="Buscar produto" value="${esc(CONT_Q)}" style="max-width:260px">
+  </div>
+  ${prods.length ? `<div class="list" id="ctList">${prods.map(p => {
+    const c = last[u + '|' + p.id];
+    const d = dr[p.id] || {};
+    const sit = situacao(p, u, d.qtd);
+    const min = minOf(p, u);
+    const need = sit === 'repor';
+    return `<div class="ct-row ${d.qtd !== undefined && d.qtd !== '' ? 'filled' : ''}" data-pid="${esc(p.id)}">
+      <div class="nm"><b>${esc(p.nome)}</b><small>${c ? `Última: ${fmtN(c.qtd)} ${esc(p.medida)} em ${fmtDH(c.data_hora)}` : 'Nunca contado'}. Mínimo ${isNaN(min) ? 'não definido' : fmtN(min) + ' ' + esc(p.medida)}</small></div>
+      <div class="ct-in"><input type="text" inputmode="decimal" data-ct="qtd" value="${esc(d.qtd ?? '')}" placeholder="—" aria-label="Disponível de ${esc(p.nome)}"><em>${esc(p.medida)}</em></div>
+      <div class="ct-st">${sit ? `<span class="pill ${SIT[sit].c}">${SIT[sit].t}${need ? ` ${fmtN(sugestao(p, u, d.qtd))} ${esc(p.medida)}` : ''}</span>` : ''}</div>
+      <div class="ct-obs ${need || d.obs ? '' : 'hidden'}"><input type="text" data-ct="obs" value="${esc(d.obs || '')}" placeholder="${need && CFG.OBS_OBRIGATORIA_REPOR ? 'Observação obrigatória: por que está abaixo do mínimo?' : 'Observação'}"></div>
+    </div>`;
+  }).join('')}</div>` : `<div class="empty">${q ? 'Nenhum produto encontrado.' : `Nenhum produto cadastrado para ${UN[u].nome}.${isManager() ? ' Cadastre em Cadastros.' : ''}`}</div>`}
+  <div class="savebar"><div class="in">
+    <span id="ctCount">${preench} ${preench === 1 ? 'item preenchido' : 'itens preenchidos'}</span>
+    <div class="actions">
+      ${preench ? '<button type="button" class="btn ghost" data-act="ct-limpar">Limpar</button>' : ''}
+      <button type="button" class="btn" data-act="ct-salvar" ${preench ? '' : 'disabled'}>Salvar contagem</button>
+    </div>
+  </div></div>`;
+}
+function atualizaLinhaContagem(row) {
+  const u = CONT_UN, pid = row.dataset.pid, p = prodById(pid);
+  const d = draftOf(u)[pid] || {};
+  const sit = situacao(p, u, d.qtd);
+  const need = sit === 'repor';
+  row.classList.toggle('filled', d.qtd !== undefined && d.qtd !== '');
+  $('.ct-st', row).innerHTML = sit ? `<span class="pill ${SIT[sit].c}">${SIT[sit].t}${need ? ` ${fmtN(sugestao(p, u, d.qtd))} ${esc(p.medida)}` : ''}</span>` : '';
+  const ob = $('.ct-obs', row);
+  if (need) ob.classList.remove('hidden');
+  $('input', ob).placeholder = need && CFG.OBS_OBRIGATORIA_REPOR ? 'Observação obrigatória: por que está abaixo do mínimo?' : 'Observação';
+  if (!need) row.classList.remove('need-obs');
+  const preench = Object.values(draftOf(u)).filter(x => x.qtd !== '' && x.qtd !== undefined).length;
+  $('#ctCount').textContent = `${preench} ${preench === 1 ? 'item preenchido' : 'itens preenchidos'}`;
+  const b = $('[data-act="ct-salvar"]');
+  if (b) b.disabled = !preench;
+}
+function salvarContagem() {
+  const u = CONT_UN, dr = draftOf(u);
+  const itens = Object.entries(dr).filter(([, d]) => d.qtd !== '' && d.qtd !== undefined);
+  let erro = null;
+  $$('.ct-row').forEach(r => r.classList.remove('need-obs'));
+  for (const [pid, d] of itens) {
+    const p = prodById(pid);
+    const q = num(d.qtd);
+    const row = $(`.ct-row[data-pid="${CSS.escape(pid)}"]`);
+    if (!p) continue;
+    if (isNaN(q) || q < 0) { erro = `Quantidade inválida em ${p.nome}.`; if (row) row.classList.add('need-obs'); break; }
+    if (CFG.OBS_OBRIGATORIA_REPOR && situacao(p, u, q) === 'repor' && !String(d.obs || '').trim()) {
+      erro = `Escreva uma observação para ${p.nome}, que está abaixo do mínimo.`;
+      if (row) { row.classList.add('need-obs'); $('.ct-obs', row).classList.remove('hidden'); }
+      break;
+    }
+  }
+  if (erro) { toast(erro, true); return; }
+  const agora = nowISO();
+  const repor = [];
+  itens.forEach(([pid, d]) => {
+    const p = prodById(pid); if (!p) return;
+    const q = num(d.qtd);
+    const sit = situacao(p, u, q);
+    const min = minOf(p, u);
+    save('contagens', {
+      id: uid('ct'), data_hora: agora, unidade: u, produto_id: p.id, produto_nome: p.nome, qtd: q, medida: p.medida,
+      minimo: isNaN(min) ? '' : min, situacao: sit ? SIT[sit].t : '', responsavel: USER.nome, obs: String(d.obs || '').trim(),
+      status: 'ativo', criado_por: USER.nome, criado_em: agora
+    }, true);
+    if (sit === 'repor' && !solAbertaDe(u, p.id)) repor.push({ p, q });
+  });
+  CONT_DRAFT[u] = {};
+  render();
+  if (!repor.length) { toast(`Contagem salva: ${itens.length} ${itens.length === 1 ? 'item' : 'itens'}`); return; }
+  openModal('Contagem salva', `
+    <p>${itens.length} ${itens.length === 1 ? 'item salvo' : 'itens salvos'} em ${UN[u].nome}. Estes estão abaixo do mínimo e ainda não têm pedido de produção:</p>
+    <div class="list" style="margin:12px 0">${repor.map(x => `<div class="row"><span class="dot bad"></span><div class="row-main"><b>${esc(x.p.nome)}</b><small>disponível ${fmtN(x.q)} ${esc(x.p.medida)}, mínimo ${fmtN(minOf(x.p, u))}</small></div><div class="row-num"><b class="num">${fmtN(sugestao(x.p, u, x.q))} ${esc(x.p.medida)}</b><small>a produzir</small></div></div>`).join('')}</div>
+    <div class="actions"><button type="button" class="btn" style="flex:1" id="btnCriarSols">Criar ${repor.length} ${repor.length === 1 ? 'pedido' : 'pedidos'} de produção</button><button type="button" class="btn ghost" data-act="close">Agora não</button></div>
+  `, root => {
+    $('#btnCriarSols', root).addEventListener('click', () => {
+      repor.forEach(x => criarSolicitacao(x.p, u, x.q, { silent: true }));
+      closeModal(); render();
+      toast(`${repor.length} ${repor.length === 1 ? 'pedido criado' : 'pedidos criados'}`);
+    });
+  });
+}
+
+/* =========================================================
+   SOLICITAÇÃO MANUAL
+   ========================================================= */
+function abrirSolicitar(u, pid) {
+  const p = prodById(pid); if (!p) return;
+  const c = ultimasContagens()[u + '|' + pid];
+  const saldo = c ? c.qtd : '';
+  openModal('Pedir produção', `<form id="fSol" class="stack">
+    <p style="margin:0"><b>${esc(p.nome)}</b> para ${UN[u].nome}. Saldo ${fmtN(saldo)} ${esc(p.medida)}, mínimo ${fmtN(minOf(p, u))}.</p>
+    <div class="grid2">
+      <label class="fld req"><span>Quantidade a produzir (${esc(p.medida)})</span><input type="text" inputmode="decimal" name="qtd" value="${fmtN(sugestao(p, u, saldo)).replace('—', '').replace(/\./g, '')}"></label>
+      <label class="fld"><span>Prioridade</span><select name="prioridade">${opts(['Normal', 'Urgente'], 'Normal')}</select></label>
+    </div>
+    <label class="fld"><span>Observação</span><input type="text" name="obs" placeholder="Opcional"></label>
+    <div class="err-msg" id="sErr"></div>
+    <button type="submit" class="btn">Criar pedido de produção</button>
+  </form>`, root => {
+    $('#fSol', root).addEventListener('submit', ev => {
+      ev.preventDefault();
+      const f = ev.target.elements, q = num(f.qtd.value);
+      if (isNaN(q) || q <= 0) { $('#sErr', root).textContent = 'Informe a quantidade a produzir.'; return; }
+      const s = criarSolicitacao(p, u, saldo, { qtd: q, prioridade: f.prioridade.value, obs: f.obs.value.trim(), silent: true });
+      closeModal(); render();
+      toast(s ? 'Pedido criado' : 'Já existe um pedido aberto para este item', !s);
+    });
+  });
+}
+
+/* =========================================================
+   OBSERVAÇÕES
+   ========================================================= */
+function cardObs(o) {
+  const crit = o.impacto === 'Crítico' || o.impacto === 'Alto';
+  const cls = o.impacto === 'Crítico' ? 'bad' : o.impacto === 'Alto' ? 'warn' : o.impacto === 'Médio' ? 'info' : 'mute';
+  return `<div class="obs-card ${crit ? 'crit' : ''}">
+    <div class="meta"><span class="pill ${cls}">${esc(o.impacto)}</span><span class="pill mute">${esc(o.tipo)}</span>${o.demanda_tecnica === 'Sim' ? '<span class="pill info">Pede demanda técnica</span>' : ''}</div>
+    <div>${esc(o.descricao)}</div>
+    <div class="meta"><span>${UN[o.unidade] ? UN[o.unidade].curto : esc(o.unidade)}${o.setor ? `, ${esc(o.setor)}` : ''}</span>${o.produto_nome ? `<span>${esc(o.produto_nome)}</span>` : ''}<span>${esc(o.responsavel)}, ${fmtDH(o.data_hora)}</span></div>
+    <div class="actions">${o.evidencia ? `<a href="${esc(o.evidencia)}" target="_blank" rel="noopener" class="btn sm ghost">Ver foto</a>` : ''}${podeEditar(o) ? `<button type="button" class="btn sm ghost" data-act="edit-obs" data-id="${esc(o.id)}">Editar</button>` : ''}</div>
+  </div>`;
+}
+function vObservacoes() {
+  const per = periodo();
+  const us = myUnits().filter(unOk);
+  const list = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && inPer(o.data_hora, per))
+    .sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora)));
+  return `
+  <h2 class="view">Observações</h2>
+  <p class="lead">Falta de insumo, perda, problema de qualidade, equipamento ou equipe. Registre de forma objetiva o que aconteceu.</p>
+  <div class="quick" style="margin:0 0 18px"><button type="button" class="btn" data-act="nova-obs">Registrar observação</button></div>
+  ${filtros(true)}
+  ${list.length ? `<div class="obs-grid">${list.map(cardObs).join('')}</div>` : '<div class="empty">Nenhuma observação no período.</div>'}`;
+}
+function abrirObs(o) {
+  const us = myUnits();
+  const u0 = o ? o.unidade : (F.un !== 'todas' ? F.un : us[0]);
+  openModal(o ? 'Editar observação' : 'Registrar observação', `<form id="fObs" class="stack" novalidate>
+    <div class="grid2">
+      <label class="fld req"><span>Unidade</span><select name="unidade">${opts(us.map(u => ({ v: u, t: UN[u].nome })), u0)}</select></label>
+      <label class="fld req"><span>Setor</span><select name="setor">${opts(SETORES, o ? o.setor : 'Produção')}</select></label>
+    </div>
+    <div class="grid2">
+      <label class="fld req"><span>Tipo</span><select name="tipo"><option value="">Escolha</option>${opts(TIPOS_OBS, o ? o.tipo : '')}</select></label>
+      <label class="fld req"><span>Impacto</span><select name="impacto">${opts(IMPACTOS, o ? o.impacto : 'Baixo')}</select></label>
+    </div>
+    <label class="fld"><span>Produto relacionado</span><select name="produto_id"></select></label>
+    <label class="fld req"><span>O que aconteceu</span><textarea name="descricao" placeholder="Ex.: acabou o gochujang às 15h e não deu para produzir o Frango Coreano">${o ? esc(o.descricao) : ''}</textarea></label>
+    ${fotoField(o)}
+    <label class="fld"><span>Precisa abrir demanda técnica?</span><select name="demanda_tecnica">${opts(['Não', 'Sim'], o ? o.demanda_tecnica : 'Não')}</select>
+      <span class="hint">Marque "Sim" quando o problema não se resolve só produzindo mais. Fabrícia, Tairine e Léo acompanham esses casos.</span></label>
+    <div class="err-msg" id="oErr"></div>
+    <div class="actions">
+      <button type="submit" class="btn" style="flex:1">${o ? 'Salvar alterações' : 'Salvar observação'}</button>
+      ${o ? '<button type="button" class="btn danger" id="oDel">Excluir</button>' : ''}
+    </div>
+  </form>`, root => {
+    const fm = $('#fObs', root), f = fm.elements;
+    const fill = () => {
+      const list = prodsDaUnidade(f.unidade.value);
+      const cur = o ? o.produto_id : '';
+      f.produto_id.innerHTML = '<option value="">Nenhum</option>' + list.map(p => `<option value="${esc(p.id)}" ${p.id === cur ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
+    };
+    fill();
+    f.unidade.addEventListener('change', fill);
+    bindFoto(root);
+    const del = $('#oDel', root);
+    if (del) del.addEventListener('click', () => {
+      if (!confirm('Excluir esta observação?')) return;
+      save('observacoes', { id: o.id, status: 'cancelado' }); closeModal(); toast('Observação excluída');
+    });
+    fm.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const err = $('#oErr', root);
+      if (FOTO_BUSY) { err.textContent = 'Aguarde o envio da foto terminar.'; return; }
+      if (!f.tipo.value) { err.textContent = 'Escolha o tipo.'; return; }
+      if (f.descricao.value.trim().length < 5) { err.textContent = 'Descreva o que aconteceu.'; return; }
+      const p = prodById(f.produto_id.value);
+      const row = {
+        id: o ? o.id : uid('ob'), unidade: f.unidade.value, setor: f.setor.value, tipo: f.tipo.value,
+        impacto: f.impacto.value, produto_id: p ? p.id : '', produto_nome: p ? p.nome : '',
+        descricao: f.descricao.value.trim(), evidencia: f.evidencia.value, demanda_tecnica: f.demanda_tecnica.value, status: 'ativo'
+      };
+      if (!o) { row.data_hora = nowISO(); row.responsavel = USER.nome; row.criado_por = USER.nome; row.criado_em = nowISO(); }
+      save('observacoes', row, true);
+      closeModal(); render();
+      toast(o ? 'Observação atualizada' : 'Observação salva');
+    });
+  });
+}
+
+/* =========================================================
+   RELATÓRIOS
+   ========================================================= */
+function vRelatorios() {
+  const per = periodo();
+  const us = myUnits().filter(unOk);
+  const prods = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && inPer(r.data, per));
+  const conts = DB.contagens.filter(c => c.status !== 'cancelado' && us.includes(c.unidade) && inPer(c.data_hora, per));
+  const sols = DB.solicitacoes.filter(s => us.includes(s.unidade) && inPer(s.data_hora, per) && s.status !== 'Cancelada');
+  const obs = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && inPer(o.data_hora, per));
+  const atend = sols.filter(s => s.status === 'Atendida');
+  const tempos = atend.map(s => (new Date(String(s.atendida_em).replace(' ', 'T')) - new Date(String(s.data_hora).replace(' ', 'T'))) / 36e5).filter(h => !isNaN(h) && h >= 0);
+  const tMed = tempos.length ? tempos.reduce((a, b) => a + b, 0) / tempos.length : null;
+
+  const porProd = {};
+  prods.forEach(r => { const k = r.produto_nome + '|' + r.medida; (porProd[k] = porProd[k] || { nome: r.produto_nome, medida: r.medida, total: 0, n: 0 }); porProd[k].total += num(r.qtd) || 0; porProd[k].n++; });
+  const pp = Object.values(porProd).sort((a, b) => b.n - a.n || b.total - a.total);
+  const maxMed = {}; pp.forEach(x => { maxMed[x.medida] = Math.max(maxMed[x.medida] || 0, x.total); });
+
+  const porResp = {};
+  prods.forEach(r => { const k = r.responsavel || '—'; (porResp[k] = porResp[k] || { nome: k, n: 0, itens: new Set() }); porResp[k].n++; porResp[k].itens.add(r.produto_nome); });
+  const pr = Object.values(porResp).sort((a, b) => b.n - a.n);
+
+  const porRepo = {};
+  sols.forEach(s => { const k = s.produto_nome + '|' + s.unidade; (porRepo[k] = porRepo[k] || { nome: s.produto_nome, u: s.unidade, n: 0, at: 0 }); porRepo[k].n++; if (s.status === 'Atendida') porRepo[k].at++; });
+  const rp = Object.values(porRepo).sort((a, b) => b.n - a.n);
+
+  const est = estoqueAtual(us).sort((a, b) => (b.dias === null ? 9999 : b.dias) - (a.dias === null ? 9999 : a.dias));
+
+  const tipos = {};
+  obs.forEach(o => { tipos[o.tipo] = tipos[o.tipo] || { Baixo: 0, 'Médio': 0, Alto: 0, 'Crítico': 0, total: 0 }; tipos[o.tipo][o.impacto] = (tipos[o.tipo][o.impacto] || 0) + 1; tipos[o.tipo].total++; });
+  const tp = Object.entries(tipos).sort((a, b) => b[1].total - a[1].total);
+
+  return `
+  <h2 class="view">Relatórios</h2>
+  <p class="lead">Resumo de ${fmtD(per[0])} a ${fmtD(per[1])}.</p>
+  ${filtros(true)}
+  <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+    <div class="tile"><b class="num">${prods.length}</b><span>Registros de produção</span></div>
+    <div class="tile"><b class="num">${conts.length}</b><span>Itens contados</span></div>
+    <div class="tile"><b class="num">${sols.length}</b><span>Pedidos de produção</span></div>
+    <div class="tile"><b class="num">${sols.length ? Math.round(atend.length / sols.length * 100) + '%' : '—'}</b><span>Pedidos atendidos</span></div>
+    <div class="tile"><b class="num">${tMed === null ? '—' : (tMed < 1 ? Math.round(tMed * 60) + ' min' : fmtN(+tMed.toFixed(1)) + ' h')}</b><span>Tempo médio até atender</span></div>
+    <div class="tile"><b class="num">${obs.length}</b><span>Observações</span></div>
+  </div>
+  <div class="actions" style="margin-top:14px">
+    <button type="button" class="btn sm ghost" data-act="csv" data-t="producoes">Baixar produções (CSV)</button>
+    <button type="button" class="btn sm ghost" data-act="csv" data-t="contagens">Baixar contagens (CSV)</button>
+    <button type="button" class="btn sm ghost" data-act="csv" data-t="solicitacoes">Baixar pedidos (CSV)</button>
+    <button type="button" class="btn sm ghost" data-act="csv" data-t="observacoes">Baixar observações (CSV)</button>
+  </div>
+
+  <h3 class="sec">Produzido por produto</h3>
+  ${pp.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th class="r">Total</th><th class="r">Registros</th><th style="width:30%"></th></tr></thead><tbody>
+    ${pp.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num"><b>${fmtN(x.total)}</b> ${esc(x.medida)}</td><td class="r num">${x.n}</td><td><div class="bar"><i style="width:${maxMed[x.medida] ? Math.round(x.total / maxMed[x.medida] * 100) : 0}%"></i></div></td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">Sem produção no período.</div>'}
+
+  <h3 class="sec">Produção por responsável</h3>
+  ${pr.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Responsável</th><th class="r">Registros</th><th class="r">Produtos diferentes</th></tr></thead><tbody>
+    ${pr.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num">${x.n}</td><td class="r num">${x.itens.size}</td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">Sem produção no período.</div>'}
+
+  <h3 class="sec">Itens que mais pediram reposição</h3>
+  ${rp.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th>Unidade</th><th class="r">Pedidos</th><th class="r">Atendidos</th></tr></thead><tbody>
+    ${rp.map(x => `<tr><td>${esc(x.nome)}</td><td>${UN[x.u] ? UN[x.u].curto : esc(x.u)}</td><td class="r num">${x.n}</td><td class="r num">${x.at}</td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">Nenhum pedido de produção no período.</div>'}
+
+  <h3 class="sec">Situação atual e dias sem contagem</h3>
+  ${est.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th>Unidade</th><th class="r">Último saldo</th><th class="r">Mínimo</th><th>Situação</th><th class="r">Dias sem contar</th></tr></thead><tbody>
+    ${est.map(e => `<tr><td>${esc(e.p.nome)}</td><td>${UN[e.u].curto}</td><td class="r num">${e.c ? fmtN(e.c.qtd) + ' ' + esc(e.p.medida) : '—'}</td><td class="r num">${fmtN(minOf(e.p, e.u))}</td><td>${e.sit ? `<span class="pill ${SIT[e.sit].c}">${SIT[e.sit].t}</span>` : '<span class="pill mute">Sem contagem</span>'}</td><td class="r num">${e.c ? e.dias : 'nunca'}</td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">Nenhum produto cadastrado.</div>'}
+
+  <h3 class="sec">Observações por tipo e impacto</h3>
+  ${tp.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Tipo</th><th class="r">Baixo</th><th class="r">Médio</th><th class="r">Alto</th><th class="r">Crítico</th><th class="r">Total</th></tr></thead><tbody>
+    ${tp.map(([t, v]) => `<tr><td>${esc(t)}</td><td class="r num">${v.Baixo || ''}</td><td class="r num">${v['Médio'] || ''}</td><td class="r num">${v.Alto || ''}</td><td class="r num"><b>${v['Crítico'] || ''}</b></td><td class="r num"><b>${v.total}</b></td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">Sem observações no período.</div>'}`;
+}
+const CSV_COLS = {
+  producoes: [['data', 'Data'], ['unidade', 'Unidade destino'], ['local', 'Produzido em'], ['produto_nome', 'Produto'], ['qtd', 'Quantidade'], ['medida', 'Medida'], ['lote', 'Lote'], ['validade', 'Validade'], ['responsavel', 'Responsável'], ['ficha_usada', 'Ficha técnica'], ['obs', 'Observação'], ['evidencia', 'Foto'], ['criado_por', 'Registrado por'], ['criado_em', 'Registrado em']],
+  contagens: [['data_hora', 'Data e hora'], ['unidade', 'Unidade'], ['produto_nome', 'Produto'], ['qtd', 'Disponível'], ['medida', 'Medida'], ['minimo', 'Mínimo'], ['situacao', 'Situação'], ['responsavel', 'Responsável'], ['obs', 'Observação']],
+  solicitacoes: [['numero', 'Pedido'], ['data_hora', 'Criado em'], ['unidade', 'Unidade'], ['produto_nome', 'Produto'], ['saldo', 'Saldo'], ['minimo', 'Mínimo'], ['qtd_sugerida', 'Qtd. a produzir'], ['medida', 'Medida'], ['prioridade', 'Prioridade'], ['status', 'Status'], ['solicitante', 'Pedido por'], ['atendida_em', 'Atendido em'], ['obs', 'Observação']],
+  observacoes: [['data_hora', 'Data e hora'], ['unidade', 'Unidade'], ['setor', 'Setor'], ['tipo', 'Tipo'], ['impacto', 'Impacto'], ['produto_nome', 'Produto'], ['descricao', 'Descrição'], ['responsavel', 'Responsável'], ['demanda_tecnica', 'Demanda técnica'], ['evidencia', 'Foto']]
+};
+function baixarCSV(tab) {
+  const per = periodo(), us = myUnits().filter(unOk);
+  const dateKey = tab === 'producoes' ? 'data' : 'data_hora';
+  const rows = DB[tab].filter(r => r.status !== 'cancelado' && r.status !== 'Cancelada' && us.includes(r.unidade) && inPer(r[dateKey], per));
+  const cols = CSV_COLS[tab];
+  const cell = (k, v) => {
+    if (k === 'unidade' || k === 'local') v = UN[v] ? UN[v].nome : v;
+    else if (['qtd', 'minimo', 'saldo', 'qtd_sugerida'].includes(k) && !isNaN(num(v))) v = String(num(v)).replace('.', ',');
+    else if (['data', 'validade'].includes(k)) v = v ? fmtD(v) : '';
+    else if (['data_hora', 'criado_em', 'atendida_em'].includes(k)) v = v ? fmtDH(v) : '';
+    return '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  };
+  const csv = '\ufeff' + cols.map(c => c[1]).join(';') + '\n' + rows.map(r => cols.map(c => cell(c[0], r[c[0]])).join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `${tab}_${per[0]}_a_${per[1]}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* =========================================================
+   CADASTROS
+   ========================================================= */
+function vCadastros() {
+  const tabs = isGestor() ? [['produtos', 'Produtos'], ['pessoas', 'Pessoas']] : [['produtos', 'Produtos']];
+  if (!tabs.some(t => t[0] === CAD_TAB)) CAD_TAB = 'produtos';
+  let body = '';
+  if (CAD_TAB === 'produtos') {
+    const list = DB.produtos.slice().sort((a, b) => (a.ativo === 'Não') - (b.ativo === 'Não') || byNome(a, b));
+    body = `<div class="actions" style="margin-bottom:12px"><button type="button" class="btn" data-act="novo-produto">Novo produto</button></div>
+    <div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th>Medida</th><th>Unidades</th><th class="r">Mín. Mercearia</th><th class="r">Mín. Gogui</th><th class="r">Mín. Cozinha</th><th class="r">Validade</th><th>Ativo</th></tr></thead><tbody>
+    ${list.map(p => `<tr class="click" data-act="edit-prod-cad" data-id="${esc(p.id)}" style="${p.ativo === 'Não' ? 'opacity:.5' : ''}">
+      <td><b>${esc(p.nome)}</b>${p.ficha ? '<br><small class="hint">com ficha técnica</small>' : ''}</td><td>${esc(p.medida)}</td>
+      <td><div class="chips">${split(p.unidades).map(u => `<span class="chip">${UN[u] ? UN[u].curto : esc(u)}</span>`).join('')}</div></td>
+      ${UN_IDS.map(u => `<td class="r num">${split(p.unidades).includes(u) ? fmtN(p['min_' + u]) : ''}</td>`).join('')}
+      <td class="r">${p.validade === 'Não' ? 'Não controla' : (p.dias_validade ? p.dias_validade + ' dias' : 'Informar')}</td>
+      <td>${p.ativo === 'Não' ? 'Não' : 'Sim'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  } else {
+    const list = DB.pessoas.slice().sort((a, b) => (a.ativo === 'Não') - (b.ativo === 'Não') || byNome(a, b));
+    body = `<div class="actions" style="margin-bottom:12px"><button type="button" class="btn" data-act="nova-pessoa">Nova pessoa</button></div>
+    <div class="tb-wrap"><table class="tb"><thead><tr><th>Nome</th><th>Função</th><th>Papel</th><th>Unidades</th><th>Ativo</th></tr></thead><tbody>
+    ${list.map(p => `<tr class="click" data-act="edit-pessoa" data-id="${esc(p.id)}" style="${p.ativo === 'Não' ? 'opacity:.5' : ''}">
+      <td><b>${esc(p.nome)}</b></td><td>${esc(p.funcao)}</td><td>${esc(PAPEIS[p.papel] || p.papel)}</td>
+      <td><div class="chips">${['tecnico', 'gestor', 'admin'].includes(p.papel) ? '<span class="chip">Todas</span>' : split(p.unidades).map(u => `<span class="chip">${UN[u] ? UN[u].curto : esc(u)}</span>`).join('')}</div></td>
+      <td>${p.ativo === 'Não' ? 'Não' : 'Sim'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+  return `<h2 class="view">Cadastros</h2>
+  <p class="lead">Produtos, mínimos por unidade e pessoas. Alterações valem na hora para toda a equipe.</p>
+  <div class="seg" style="margin-bottom:16px">${tabs.map(([k, t]) => `<button type="button" class="${CAD_TAB === k ? 'on' : ''}" data-act="cad-tab" data-t="${k}">${t}</button>`).join('')}</div>
+  ${body}`;
+}
+function unChecks(name, sel) {
+  const s = split(sel);
+  return `<div class="checks">${UN_IDS.map(u => `<label><input type="checkbox" name="${name}" value="${u}" ${s.includes(u) ? 'checked' : ''}> ${UN[u].nome}</label>`).join('')}</div>`;
+}
+function abrirProdutoCad(p) {
+  const nomeOrig = p ? p.nome : '';
+  openModal(p ? 'Editar produto' : 'Novo produto', `<form id="fPc" class="stack" novalidate>
+    <label class="fld req"><span>Nome do produto</span><input type="text" name="nome" value="${p ? esc(p.nome) : ''}"></label>
+    <div class="grid2">
+      <label class="fld req"><span>Unidade de medida</span><select name="medida">${opts(MEDIDAS, p ? p.medida : 'un')}</select></label>
+      <label class="fld"><span>Margem de atenção (%)</span><input type="text" inputmode="decimal" name="margem" value="${p ? esc(p.margem ?? '20') : '20'}"><span class="hint">Acima do mínimo até essa margem, o item fica em "Atenção".</span></label>
+    </div>
+    <div class="fld req"><span>Usado em</span>${unChecks('unidades', p ? p.unidades : (F.un !== 'todas' ? F.un : ''))}</div>
+    <div class="grid3" id="mins">${UN_IDS.map(u => `<label class="fld" data-min="${u}"><span>Mínimo ${UN[u].curto}</span><input type="text" inputmode="decimal" name="min_${u}" value="${p ? esc(p['min_' + u] ?? '') : ''}" placeholder="Não definido"></label>`).join('')}</div>
+    <div class="grid2">
+      <label class="fld"><span>Controla validade?</span><select name="validade">${opts(['Sim', 'Não'], p ? p.validade : 'Sim')}</select></label>
+      <label class="fld"><span>Dias de validade</span><input type="text" inputmode="numeric" name="dias_validade" value="${p ? esc(p.dias_validade ?? '') : ''}" placeholder="Ex.: 3"><span class="hint">Preenche a validade sozinho no registro.</span></label>
+    </div>
+    <label class="fld"><span>Ficha técnica</span><input type="text" name="ficha" value="${p ? esc(p.ficha || '') : ''}" placeholder="Link ou código da ficha, se existir"></label>
+    <label class="fld"><span>Ativo</span><select name="ativo">${opts(['Sim', 'Não'], p ? (p.ativo === 'Não' ? 'Não' : 'Sim') : 'Sim')}</select></label>
+    <div class="err-msg" id="pcErr"></div>
+    <button type="submit" class="btn">${p ? 'Salvar produto' : 'Cadastrar produto'}</button>
+  </form>`, root => {
+    const fm = $('#fPc', root), f = fm.elements;
+    const syncMins = () => {
+      const sel = $$('input[name=unidades]:checked', fm).map(i => i.value);
+      $$('[data-min]', fm).forEach(el => el.classList.toggle('hidden', !sel.includes(el.dataset.min)));
+    };
+    syncMins();
+    $$('input[name=unidades]', fm).forEach(i => i.addEventListener('change', syncMins));
+    fm.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const err = $('#pcErr', root);
+      const nome = f.nome.value.trim();
+      const unis = $$('input[name=unidades]:checked', fm).map(i => i.value);
+      if (!nome) { err.textContent = 'Informe o nome.'; return; }
+      if (DB.produtos.some(x => x.nome.toLowerCase() === nome.toLowerCase() && (!p || x.id !== p.id))) { err.textContent = 'Já existe um produto com esse nome.'; return; }
+      if (!unis.length) { err.textContent = 'Marque pelo menos uma unidade.'; return; }
+      const row = { id: p ? p.id : uid('p'), nome, medida: f.medida.value, unidades: unis.join(','), margem: isNaN(num(f.margem.value)) ? '20' : String(num(f.margem.value)), validade: f.validade.value, dias_validade: isNaN(num(f.dias_validade.value)) ? '' : String(Math.round(num(f.dias_validade.value))), ficha: f.ficha.value.trim(), ativo: f.ativo.value };
+      for (const u of UN_IDS) {
+        const v = f['min_' + u].value.trim();
+        if (v === '') { row['min_' + u] = ''; continue; }
+        const n = num(v);
+        if (isNaN(n) || n < 0) { err.textContent = `Mínimo inválido em ${UN[u].curto}.`; return; }
+        row['min_' + u] = String(n);
+      }
+      save('produtos', row, true);
+      closeModal(); render();
+      toast(p ? (nomeOrig !== nome ? 'Produto renomeado' : 'Produto salvo') : 'Produto cadastrado');
+    });
+  });
+}
+function abrirPessoa(p) {
+  openModal(p ? 'Editar pessoa' : 'Nova pessoa', `<form id="fPe" class="stack" novalidate>
+    <label class="fld req"><span>Nome</span><input type="text" name="nome" value="${p ? esc(p.nome) : ''}"></label>
+    <label class="fld"><span>Função</span><input type="text" name="funcao" value="${p ? esc(p.funcao || '') : ''}"></label>
+    <label class="fld req"><span>Papel no sistema</span><select name="papel">${opts(Object.entries(PAPEIS).map(([v, t]) => ({ v, t })), p ? p.papel : 'alimentador')}</select>
+      <span class="hint">Registro diário: produção, contagem e observações das unidades marcadas. Acompanhamento e Coordenação: todas as unidades, relatórios e cadastro de produtos. Só Coordenação e Administrador editam pessoas.</span></label>
+    <div class="fld"><span>Unidades de acesso</span>${unChecks('unidades', p ? p.unidades : 'ML,GG,CP')}</div>
+    <label class="fld"><span>Ativo</span><select name="ativo">${opts(['Sim', 'Não'], p ? (p.ativo === 'Não' ? 'Não' : 'Sim') : 'Sim')}</select></label>
+    <div class="err-msg" id="peErr"></div>
+    <button type="submit" class="btn">${p ? 'Salvar pessoa' : 'Cadastrar pessoa'}</button>
+  </form>`, root => {
+    const fm = $('#fPe', root), f = fm.elements;
+    fm.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const nome = f.nome.value.trim();
+      const unis = $$('input[name=unidades]:checked', fm).map(i => i.value);
+      if (!nome) { $('#peErr', root).textContent = 'Informe o nome.'; return; }
+      if (p && p.id === USER.id && !['gestor', 'admin'].includes(f.papel.value)) { $('#peErr', root).textContent = 'Você não pode tirar a sua própria permissão de coordenação.'; return; }
+      save('pessoas', { id: p ? p.id : uid('u'), nome, funcao: f.funcao.value.trim(), papel: f.papel.value, unidades: unis.join(','), ativo: f.ativo.value }, true);
+      closeModal(); render(); toast('Pessoa salva');
+    });
+  });
+}
+
+/* =========================================================
+   FOTO (envio para o Drive via Apps Script)
+   ========================================================= */
+async function compressImg(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const max = 1280, s = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.72);
+  } finally { URL.revokeObjectURL(url); }
+}
+function bindFoto(root) {
+  const inp = $('[data-foto]', root);
+  if (!inp) return;
+  inp.addEventListener('change', async () => {
+    const file = inp.files[0];
+    if (!file) return;
+    const out = $('input[name=evidencia]', root), st = $('.foto-st', root);
+    if (!CFG.GAS_URL) { st.textContent = 'A foto fica disponível quando a sincronização estiver ligada.'; return; }
+    FOTO_BUSY = true;
+    st.textContent = 'Enviando foto…';
+    try {
+      const data = await compressImg(file);
+      const nome = `${today()}_${USER.nome.replace(/[^\w]+/g, '_')}_${Date.now()}.jpg`;
+      const r = await api({ action: 'upload', name: nome, mime: 'image/jpeg', data: data.split(',')[1] });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'Falha');
+      out.value = r.url;
+      st.innerHTML = `Foto anexada. <a href="${esc(r.url)}" target="_blank" rel="noopener">Ver</a>`;
+    } catch (e) {
+      console.warn(e);
+      st.textContent = 'Não foi possível enviar a foto. Verifique a internet e escolha a foto de novo.';
+      inp.value = '';
+    } finally { FOTO_BUSY = false; }
+  });
+}
+
+/* =========================================================
+   MODAL E EVENTOS
+   ========================================================= */
+function openModal(title, html, mount) {
+  $('#mTitle').textContent = title;
+  $('#mBody').innerHTML = html;
+  $('#modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (mount) mount($('#mBody'));
+  const first = $('#mBody input:not([type=hidden]):not([readonly]), #mBody select');
+  if (first && window.matchMedia('(min-width:700px)').matches) first.focus();
+}
+function closeModal() {
+  $('#modal').classList.remove('open');
+  $('#mBody').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+const VIEWS = { geral: vGeral, producao: vProducao, contagem: vContagem, observacoes: vObservacoes, relatorios: vRelatorios, cadastros: vCadastros };
+const AFTER = {
+  producao() {
+    const d = $('#prodDia');
+    if (d) d.addEventListener('change', () => { PROD_DIA = d.value || today(); render(); });
+  },
+  contagem() {
+    const b = $('#ctBusca');
+    if (b) b.addEventListener('input', () => {
+      CONT_Q = b.value;
+      const pos = b.selectionStart;
+      render();
+      const nb = $('#ctBusca'); nb.focus(); nb.setSelectionRange(pos, pos);
+    });
+  }
+};
+
+document.addEventListener('click', ev => {
+  const lg = ev.target.closest('[data-login]');
+  if (lg) { login(lg.dataset.login); return; }
+  const nv = ev.target.closest('[data-view]');
+  if (nv) { VIEW = nv.dataset.view; render(); window.scrollTo(0, 0); return; }
+  if (ev.target === $('#modal')) { closeModal(); return; }
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  switch (a) {
+    case 'logout': logout(); break;
+    case 'close': closeModal(); break;
+    case 'goto': VIEW = el.dataset.v; render(); window.scrollTo(0, 0); break;
+    case 'nova-prod': abrirProducao(null, el.dataset.sol); break;
+    case 'edit-prod': abrirProducao(DB.producoes.find(r => r.id === id)); break;
+    case 'nova-obs': abrirObs(null); break;
+    case 'edit-obs': abrirObs(DB.observacoes.find(r => r.id === id)); break;
+    case 'solicitar': abrirSolicitar(el.dataset.u, el.dataset.p); break;
+    case 'sol-iniciar': save('solicitacoes', { id, status: 'Em produção' }); toast('Pedido em produção'); break;
+    case 'sol-cancelar':
+      if (confirm('Cancelar este pedido de produção?')) { save('solicitacoes', { id, status: 'Cancelada' }); toast('Pedido cancelado'); }
+      break;
+    case 'ct-un': CONT_UN = el.dataset.u; CONT_Q = ''; render(); break;
+    case 'ct-limpar': CONT_DRAFT[CONT_UN] = {}; render(); break;
+    case 'ct-salvar': salvarContagem(); break;
+    case 'csv': baixarCSV(el.dataset.t); break;
+    case 'cad-tab': CAD_TAB = el.dataset.t; render(); break;
+    case 'novo-produto': abrirProdutoCad(null); break;
+    case 'edit-prod-cad': abrirProdutoCad(prodById(id)); break;
+    case 'nova-pessoa': abrirPessoa(null); break;
+    case 'edit-pessoa': abrirPessoa(DB.pessoas.find(p => p.id === id)); break;
+  }
+});
+document.addEventListener('change', ev => {
+  const f = ev.target.closest('[data-f]');
+  if (!f) return;
+  F[f.dataset.f] = f.value;
+  if (f.dataset.f === 'per' && f.value === 'custom') { F.de = F.de || addDays(today(), -6); F.ate = F.ate || today(); }
+  render();
+});
+document.addEventListener('input', ev => {
+  const t = ev.target;
+  if (!t.dataset || !t.dataset.ct) return;
+  const row = t.closest('.ct-row');
+  const dr = draftOf(CONT_UN);
+  const pid = row.dataset.pid;
+  dr[pid] = dr[pid] || {};
+  dr[pid][t.dataset.ct] = t.value;
+  if (t.dataset.ct === 'qtd') atualizaLinhaContagem(row);
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && $('#modal').classList.contains('open')) closeModal();
+  if (ev.key === 'Enter' && ev.target.dataset && ev.target.dataset.ct === 'qtd') {
+    ev.preventDefault();
+    const all = $$('input[data-ct="qtd"]');
+    const nx = all[all.indexOf(ev.target) + 1];
+    if (nx) nx.focus(); else ev.target.blur();
+  }
+});
+window.addEventListener('beforeunload', ev => {
+  const pend = Object.values(CONT_DRAFT).some(d => Object.values(d).some(x => x.qtd !== '' && x.qtd !== undefined));
+  if (pend) { ev.preventDefault(); ev.returnValue = ''; }
+});
+window.addEventListener('online', () => { flush(); load(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+
+/* =========================================================
+   INÍCIO
+   ========================================================= */
+(function init() {
+  restore();
+  const s = getSession();
+  if (s) USER = DB.pessoas.find(p => p.id === s.id) || null;
+  if (USER) { VIEW = USER.papel === 'alimentador' ? 'producao' : 'geral'; render(); } else renderLogin();
+  if (CFG.GAS_URL) {
+    load().then(() => {
+      if (!USER && s) { USER = DB.pessoas.find(p => p.id === s.id) || null; }
+      if (!USER) renderLogin();
+    });
+    setInterval(() => { if (!document.hidden) load(); }, CFG.REFRESH_MS);
+  }
+})();
+</script>
+</body>
+</html>
