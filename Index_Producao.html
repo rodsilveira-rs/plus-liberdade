@@ -10,8 +10,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#1E2B33; --ink-2:#2C3C46; --paper:#F3F5F1; --card:#FFFFFF; --line:#DCE1DA;
-  --text:#1E2B33; --mute:#66737C;
+  --ink:#141416; --ink-2:#26272B; --paper:#F4F4F5; --card:#FFFFFF; --line:#DEDFE2;
+  --text:#1B1C20; --mute:#6A6D75;
+  --brand:#C4161C; --brand-on:#FFFFFF; --brand-soft:#FBE4E5; --accent:#E8383D;
+  --logo-bg:transparent; --chip:#ECEDEF;
   --jade:#1F7A63; --jade-soft:#E0EFE9;
   --chili:#C23A2E; --chili-soft:#FAE5E2;
   --yuzu:#B98107; --yuzu-soft:#FAF0D4;
@@ -20,6 +22,27 @@
   --display:'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
   --body:'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
+/* Temas por empresa: QF = Q Food (Todas e Cozinha de Produção), ML = Mercearia Liberdade, GG = Gogui */
+body[data-tema="ML"]{
+  --ink:#3A0C10; --ink-2:#521519; --paper:#FBF6F1; --line:#EEDFD3;
+  --text:#2B1A17; --mute:#7A6259;
+  --brand:#D8261F; --brand-on:#FFFFFF; --brand-soft:#FDE6DC; --accent:#F29A22;
+  --logo-bg:#FFFFFF; --chip:#F6E8DC;
+}
+body[data-tema="GG"]{
+  --ink:#110F0C; --ink-2:#231F19; --paper:#F7F4EE; --line:#E6DECF;
+  --text:#1D1913; --mute:#756B5C;
+  --brand:#8A6629; --brand-on:#FFFFFF; --brand-soft:#F3EAD7; --accent:#D4AF5F;
+  --logo-bg:#110F0C; --chip:#EFE7D8;
+}
+body{transition:background-color .35s ease}
+.top,.gauge,.login{transition:background-color .35s ease}
+.brand-row{display:flex;align-items:center;gap:12px;min-width:0;min-height:46px}
+.brand-logo{height:40px;width:auto;max-width:96px;object-fit:contain;border-radius:8px;background:var(--logo-bg);padding:3px 6px;flex:none}
+body[data-tema="GG"] .brand-logo{height:44px;padding:0}
+body[data-tema="QF"] .brand-logo{height:44px;max-width:120px;padding:0}
+.login .brand-logo{height:72px;max-width:180px;margin:0 0 18px}
+@media (max-width:640px){.brand-logo{height:32px;max-width:70px}.brand small{display:none}}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{font-family:var(--body);background:var(--paper);color:var(--text);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
@@ -49,7 +72,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 nav.tabs{max-width:1180px;margin:0 auto;padding:10px 10px 0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{background:none;border:0;color:rgba(255,255,255,.7);padding:10px 12px 12px;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;font-size:14.5px}
-nav.tabs button.on{color:#fff;border-bottom-color:#5fd3a9}
+nav.tabs button.on{color:#fff;border-bottom-color:var(--accent)}
 @media (max-width:640px){.who .who-txt{display:none}.sync .sync-txt{display:none}.brand{font-size:19px}}
 
 main{max-width:1180px;margin:0 auto;padding:20px 18px 110px}
@@ -60,7 +83,7 @@ h3.sec .count{font-family:var(--body);font-size:13px;color:var(--mute);font-weig
 
 /* ---------- Componentes ---------- */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--r);padding:12px 18px;background:var(--jade);color:#fff;font-weight:700;cursor:pointer;font-size:15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--r);padding:12px 18px;background:var(--brand);color:var(--brand-on);font-weight:700;cursor:pointer;font-size:15px;transition:background-color .35s ease}
 .btn:hover{filter:brightness(1.07)}
 .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
 .btn.danger{background:transparent;color:var(--chili);border:1.5px solid #eec3be}
@@ -96,7 +119,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--sky);outline:none}
 .err-msg{color:var(--chili);font-size:13px;font-weight:600}
 .checks{display:flex;gap:8px;flex-wrap:wrap}
 .checks label{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:14px;background:#fff}
-.checks input{accent-color:var(--jade)}
+.checks input{accent-color:var(--brand)}
 .seg{display:inline-flex;background:#E4E8E3;border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
 .seg button{border:0;background:transparent;padding:8px 14px;border-radius:9px;font-weight:600;cursor:pointer;color:var(--mute)}
 .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(30,43,51,.12)}
@@ -179,9 +202,9 @@ table.tb td.r,table.tb th.r{text-align:right}
 table.tb tr.click{cursor:pointer}
 table.tb tr.click:hover td{background:#F7F9F6}
 .bar{height:8px;background:#E8ECE8;border-radius:99px;overflow:hidden;min-width:80px}
-.bar i{display:block;height:100%;background:var(--jade);border-radius:99px}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:99px}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
-.chip{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:#E9EDE9;color:var(--ink-2)}
+.chip{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--chip);color:var(--ink-2)}
 
 /* ---------- Login ---------- */
 .login{min-height:100vh;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;padding:48px 18px 40px}
@@ -210,7 +233,7 @@ table.tb tr.click:hover td{background:#F7F9F6}
 .toast.bad{background:var(--chili)}
 </style>
 </head>
-<body>
+<body data-tema="QF"></body>
 
 <div id="login" class="login hidden"></div>
 
@@ -218,7 +241,10 @@ table.tb tr.click:hover td{background:#F7F9F6}
   <header class="top">
     <div class="top-in">
       <a class="menu-link" href="#" data-act="menu" aria-label="Voltar ao menu">&#8592; Menu</a>
-      <div class="brand">Controle de Produção<small id="brandSub">Mercearia Liberdade, Gogui e Cozinha de Produção</small></div>
+      <div class="brand-row">
+        <img class="brand-logo" id="brandLogo" src="https://rodsilveira-rs.github.io/qfood-dashboard/assets/qfood-logo.png" alt="Q Food Company" onerror="this.style.visibility='hidden'">
+        <div class="brand">Controle de Produção<small id="brandSub">Mercearia Liberdade, Gogui e Cozinha de Produção</small></div>
+      </div>
       <div class="spacer"></div>
       <span class="sync" id="sync"><i></i><span class="sync-txt">Somente neste aparelho</span></span>
       <div class="who"><div class="who-txt"><b id="whoName"></b><span id="whoRole"></span></div><button type="button" data-act="logout">Trocar</button></div>
@@ -251,7 +277,12 @@ const CFG = {
   OBS_OBRIGATORIA_REPOR: true,   // exige observação quando a contagem der "Repor"
   DIAS_SEM_CONTAGEM: 2,          // a partir de quantos dias o item entra em "sem contagem recente"
   REFRESH_MS: 120000,
-  MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html'
+  MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
+  // Logins do Index_Menu que entram só como equipe de produção (sem Relatórios e Cadastros)
+  EMAILS_OPERADOR: ['producao@mercearialiberdade.com.br'],
+  LIB_XLSX: 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js',
+  LIB_JSPDF: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  LIB_AUTOTABLE: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'
 };
 
 const UN = {
@@ -260,6 +291,27 @@ const UN = {
   CP: { nome: 'Cozinha de Produção', curto: 'Cozinha' }
 };
 const UN_IDS = ['ML', 'GG', 'CP'];
+/* Tema visual por empresa. "Todas" e Cozinha de Produção usam a identidade Q Food. */
+const ASSETS_URL = 'https://rodsilveira-rs.github.io/qfood-dashboard/assets/';
+const TEMAS = {
+  QF: { logo: 'qfood-logo.png', alt: 'Q Food Company', cor: '#141416', sub: 'Mercearia Liberdade, Gogui e Cozinha de Produção' },
+  ML: { logo: 'Logo_Mercearia_Liberdade.png', alt: 'Mercearia Liberdade', cor: '#3A0C10', sub: 'Mercearia Liberdade' },
+  GG: { logo: 'gogui-logo.jpg', alt: 'Gogui Korean BBQ', cor: '#110F0C', sub: 'Gogui Korean' }
+};
+const temaDaUnidade = u => (u === 'ML' || u === 'GG') ? u : 'QF';
+function aplicarTema(u) {
+  const id = temaDaUnidade(u);
+  const t = TEMAS[id];
+  if (document.body.dataset.tema !== id) document.body.dataset.tema = id;
+  $$('.brand-logo').forEach(img => {
+    const src = ASSETS_URL + t.logo;
+    if (img.getAttribute('src') !== src) { img.style.visibility = ''; img.src = src; img.alt = t.alt; }
+  });
+  const sub = $('#brandSub');
+  if (sub) sub.textContent = u === 'CP' ? 'Cozinha de Produção' : t.sub;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', t.cor);
+}
 const MEDIDAS = ['un', 'kg', 'g', 'L', 'ml', 'porção', 'bandeja', 'pote'];
 const TIPOS_OBS = ['Falta de insumo', 'Perda', 'Qualidade', 'Equipamento', 'Equipe', 'Processo', 'Validade', 'Recebimento', 'Outro'];
 const SETORES = ['Cozinha', 'Produção', 'Salão', 'Estoque', 'Recebimento', 'Higienização', 'Estrutura', 'Outro'];
@@ -428,8 +480,20 @@ async function load() {
    REGRAS
    ========================================================= */
 const pessoasAtivas = () => DB.pessoas.filter(p => p.ativo !== 'Não').sort(byNome);
-const isManager = () => !!USER && ['tecnico', 'gestor', 'admin'].includes(USER.papel);
-const isGestor = () => !!USER && ['gestor', 'admin'].includes(USER.papel);
+/* Sessão do Index_Menu (mesmo domínio github.io). Login de operador = só registro diário. */
+function sessaoMenu() {
+  try {
+    const s = JSON.parse(localStorage.getItem('qfood_session') || 'null');
+    if (!s || !s.email || Date.now() - (s.ts || 0) > 8 * 3600e3) return null;
+    return s;
+  } catch (e) { return null; }
+}
+const modoOperador = () => {
+  const s = sessaoMenu();
+  return !!s && CFG.EMAILS_OPERADOR.map(e => e.toLowerCase()).includes(String(s.email).trim().toLowerCase());
+};
+const isManager = () => !!USER && !modoOperador() && ['tecnico', 'gestor', 'admin'].includes(USER.papel);
+const isGestor = () => !!USER && !modoOperador() && ['gestor', 'admin'].includes(USER.papel);
 const myUnits = () => {
   if (!USER) return [];
   if (isManager()) return UN_IDS;
@@ -521,12 +585,15 @@ function renderLogin() {
   $('#app').classList.add('hidden');
   const el = $('#login');
   el.classList.remove('hidden');
-  const ps = pessoasAtivas();
+  aplicarTema('todas');
+  const operador = modoOperador();
+  const ps = pessoasAtivas().filter(p => !operador || (p.papel || 'alimentador') === 'alimentador');
   const grupos = [['alimentador', 'Registro diário'], ['tecnico', 'Acompanhamento'], ['gestor', 'Coordenação'], ['admin', 'Administração']];
   el.innerHTML = `
     <a class="menu-link" href="#" data-act="menu" aria-label="Voltar ao menu">&#8592; Menu</a>
+    <img class="brand-logo" src="${ASSETS_URL + TEMAS.QF.logo}" alt="Q Food Company" onerror="this.style.visibility='hidden'">
     <h1>Controle de Produção</h1>
-    <p class="sub">Registre o que foi produzido, o que tem disponível e o que precisa repor.</p>
+    <p class="sub">${operador ? 'Acesso da equipe de produção. Toque no seu nome para começar.' : 'Registre o que foi produzido, o que tem disponível e o que precisa repor.'}</p>
     <div class="unis">${UN_IDS.map(u => `<span>${UN[u].nome}</span>`).join('')}</div>
     ${ps.length ? grupos.map(([k, t]) => {
       const g = ps.filter(p => (p.papel || 'alimentador') === k);
@@ -537,6 +604,7 @@ function renderLogin() {
 function login(id) {
   const p = DB.pessoas.find(x => x.id === id);
   if (!p) return;
+  if (modoOperador() && (p.papel || 'alimentador') !== 'alimentador') { toast('Este acesso é só para a equipe de produção.', true); return; }
   localStorage.setItem(CFG.SESSION_KEY, JSON.stringify({ id: p.id, ts: Date.now() }));
   USER = p;
   VIEW = p.papel === 'alimentador' ? 'producao' : 'geral';
@@ -563,6 +631,7 @@ function render() {
   if (!USER) { renderLogin(); return; }
   const fresh = DB.pessoas.find(p => p.id === USER.id);
   if (fresh) USER = fresh;
+  if (modoOperador() && (USER.papel || 'alimentador') !== 'alimentador') { logout(); return; }
   $('#app').classList.remove('hidden');
   $('#whoName').textContent = USER.nome;
   $('#whoRole').textContent = PAPEIS[USER.papel] || '';
@@ -573,6 +642,7 @@ function render() {
   const html = VIEWS[VIEW]();
   const banner = !CFG.GAS_URL ? '<div class="banner">Modo de teste: os registros ficam só neste aparelho. Para usar com a equipe, configure o GAS_URL.</div>' : '';
   $('#main').innerHTML = banner + html;
+  aplicarTema(VIEW === 'contagem' ? CONT_UN : F.un);
   if (AFTER[VIEW]) AFTER[VIEW]();
   updSync();
 }
@@ -1059,53 +1129,84 @@ function abrirObs(o) {
 /* =========================================================
    RELATÓRIOS
    ========================================================= */
-function vRelatorios() {
+function dadosRelatorio() {
   const per = periodo();
   const us = myUnits().filter(unOk);
-  const prods = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && inPer(r.data, per));
-  const conts = DB.contagens.filter(c => c.status !== 'cancelado' && us.includes(c.unidade) && inPer(c.data_hora, per));
-  const sols = DB.solicitacoes.filter(s => us.includes(s.unidade) && inPer(s.data_hora, per) && s.status !== 'Cancelada');
-  const obs = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && inPer(o.data_hora, per));
+  const prods = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && inPer(r.data, per))
+    .sort((a, b) => String(a.data + a.criado_em).localeCompare(String(b.data + b.criado_em)));
+  const conts = DB.contagens.filter(c => c.status !== 'cancelado' && us.includes(c.unidade) && inPer(c.data_hora, per))
+    .sort((a, b) => String(a.data_hora).localeCompare(String(b.data_hora)));
+  const sols = DB.solicitacoes.filter(s => us.includes(s.unidade) && inPer(s.data_hora, per) && s.status !== 'Cancelada')
+    .sort((a, b) => String(a.data_hora).localeCompare(String(b.data_hora)));
+  const obs = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && inPer(o.data_hora, per))
+    .sort((a, b) => String(a.data_hora).localeCompare(String(b.data_hora)));
   const atend = sols.filter(s => s.status === 'Atendida');
   const tempos = atend.map(s => (new Date(String(s.atendida_em).replace(' ', 'T')) - new Date(String(s.data_hora).replace(' ', 'T'))) / 36e5).filter(h => !isNaN(h) && h >= 0);
   const tMed = tempos.length ? tempos.reduce((a, b) => a + b, 0) / tempos.length : null;
 
   const porProd = {};
-  prods.forEach(r => { const k = r.produto_nome + '|' + r.medida; (porProd[k] = porProd[k] || { nome: r.produto_nome, medida: r.medida, total: 0, n: 0 }); porProd[k].total += num(r.qtd) || 0; porProd[k].n++; });
+  prods.forEach(r => {
+    const k = r.produto_nome + '|' + r.medida;
+    porProd[k] = porProd[k] || { nome: r.produto_nome, medida: r.medida, total: 0, n: 0, unidades: new Set() };
+    porProd[k].total += num(r.qtd) || 0; porProd[k].n++; porProd[k].unidades.add(r.unidade);
+  });
   const pp = Object.values(porProd).sort((a, b) => b.n - a.n || b.total - a.total);
   const maxMed = {}; pp.forEach(x => { maxMed[x.medida] = Math.max(maxMed[x.medida] || 0, x.total); });
 
   const porResp = {};
-  prods.forEach(r => { const k = r.responsavel || '—'; (porResp[k] = porResp[k] || { nome: k, n: 0, itens: new Set() }); porResp[k].n++; porResp[k].itens.add(r.produto_nome); });
+  prods.forEach(r => {
+    const k = r.responsavel || '—';
+    porResp[k] = porResp[k] || { nome: k, n: 0, itens: new Set(), dias: new Set() };
+    porResp[k].n++; porResp[k].itens.add(r.produto_nome); porResp[k].dias.add(r.data);
+  });
   const pr = Object.values(porResp).sort((a, b) => b.n - a.n);
 
   const porRepo = {};
-  sols.forEach(s => { const k = s.produto_nome + '|' + s.unidade; (porRepo[k] = porRepo[k] || { nome: s.produto_nome, u: s.unidade, n: 0, at: 0 }); porRepo[k].n++; if (s.status === 'Atendida') porRepo[k].at++; });
+  sols.forEach(s => {
+    const k = s.produto_nome + '|' + s.unidade;
+    porRepo[k] = porRepo[k] || { nome: s.produto_nome, u: s.unidade, n: 0, at: 0, abertos: 0 };
+    porRepo[k].n++;
+    if (s.status === 'Atendida') porRepo[k].at++;
+    if (s.status === 'Aberta' || s.status === 'Em produção') porRepo[k].abertos++;
+  });
   const rp = Object.values(porRepo).sort((a, b) => b.n - a.n);
 
   const est = estoqueAtual(us).sort((a, b) => (b.dias === null ? 9999 : b.dias) - (a.dias === null ? 9999 : a.dias));
+  const avaliados = est.filter(e => e.sit === 'ok' || e.sit === 'atencao' || e.sit === 'repor');
+  const pct = avaliados.length ? Math.round(avaliados.filter(e => e.sit !== 'repor').length / avaliados.length * 100) : null;
 
   const tipos = {};
-  obs.forEach(o => { tipos[o.tipo] = tipos[o.tipo] || { Baixo: 0, 'Médio': 0, Alto: 0, 'Crítico': 0, total: 0 }; tipos[o.tipo][o.impacto] = (tipos[o.tipo][o.impacto] || 0) + 1; tipos[o.tipo].total++; });
+  obs.forEach(o => {
+    tipos[o.tipo] = tipos[o.tipo] || { Baixo: 0, 'Médio': 0, Alto: 0, 'Crítico': 0, total: 0 };
+    tipos[o.tipo][o.impacto] = (tipos[o.tipo][o.impacto] || 0) + 1;
+    tipos[o.tipo].total++;
+  });
   const tp = Object.entries(tipos).sort((a, b) => b[1].total - a[1].total);
 
+  return { per, us, prods, conts, sols, obs, atend, tMed, pp, maxMed, pr, rp, est, avaliados, pct, tp,
+    pctAtend: sols.length ? Math.round(atend.length / sols.length * 100) : null };
+}
+const fmtHoras = h => h === null ? '—' : (h < 1 ? Math.round(h * 60) + ' min' : fmtN(+h.toFixed(1)) + ' h');
+const nomeUnidades = us => us.length === UN_IDS.length ? 'Todas as unidades' : us.map(u => UN[u].nome).join(', ');
+
+function vRelatorios() {
+  const R = dadosRelatorio();
+  const { per, prods, conts, sols, obs, tMed, pp, maxMed, pr, rp, est, tp } = R;
   return `
   <h2 class="view">Relatórios</h2>
   <p class="lead">Resumo de ${fmtD(per[0])} a ${fmtD(per[1])}.</p>
   ${filtros(true)}
+  <div class="actions" style="margin:-4px 0 18px">
+    <button type="button" class="btn" data-act="exp-xlsx">Baixar Excel</button>
+    <button type="button" class="btn dark" data-act="exp-pdf">Baixar PDF</button>
+  </div>
   <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
     <div class="tile"><b class="num">${prods.length}</b><span>Registros de produção</span></div>
     <div class="tile"><b class="num">${conts.length}</b><span>Itens contados</span></div>
     <div class="tile"><b class="num">${sols.length}</b><span>Pedidos de produção</span></div>
-    <div class="tile"><b class="num">${sols.length ? Math.round(atend.length / sols.length * 100) + '%' : '—'}</b><span>Pedidos atendidos</span></div>
-    <div class="tile"><b class="num">${tMed === null ? '—' : (tMed < 1 ? Math.round(tMed * 60) + ' min' : fmtN(+tMed.toFixed(1)) + ' h')}</b><span>Tempo médio até atender</span></div>
+    <div class="tile"><b class="num">${R.pctAtend === null ? '—' : R.pctAtend + '%'}</b><span>Pedidos atendidos</span></div>
+    <div class="tile"><b class="num">${fmtHoras(tMed)}</b><span>Tempo médio até atender</span></div>
     <div class="tile"><b class="num">${obs.length}</b><span>Observações</span></div>
-  </div>
-  <div class="actions" style="margin-top:14px">
-    <button type="button" class="btn sm ghost" data-act="csv" data-t="producoes">Baixar produções (CSV)</button>
-    <button type="button" class="btn sm ghost" data-act="csv" data-t="contagens">Baixar contagens (CSV)</button>
-    <button type="button" class="btn sm ghost" data-act="csv" data-t="solicitacoes">Baixar pedidos (CSV)</button>
-    <button type="button" class="btn sm ghost" data-act="csv" data-t="observacoes">Baixar observações (CSV)</button>
   </div>
 
   <h3 class="sec">Produzido por produto</h3>
@@ -1114,13 +1215,13 @@ function vRelatorios() {
   </tbody></table></div>` : '<div class="empty">Sem produção no período.</div>'}
 
   <h3 class="sec">Produção por responsável</h3>
-  ${pr.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Responsável</th><th class="r">Registros</th><th class="r">Produtos diferentes</th></tr></thead><tbody>
-    ${pr.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num">${x.n}</td><td class="r num">${x.itens.size}</td></tr>`).join('')}
+  ${pr.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Responsável</th><th class="r">Registros</th><th class="r">Produtos diferentes</th><th class="r">Dias com registro</th></tr></thead><tbody>
+    ${pr.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num">${x.n}</td><td class="r num">${x.itens.size}</td><td class="r num">${x.dias.size}</td></tr>`).join('')}
   </tbody></table></div>` : '<div class="empty">Sem produção no período.</div>'}
 
   <h3 class="sec">Itens que mais pediram reposição</h3>
-  ${rp.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th>Unidade</th><th class="r">Pedidos</th><th class="r">Atendidos</th></tr></thead><tbody>
-    ${rp.map(x => `<tr><td>${esc(x.nome)}</td><td>${UN[x.u] ? UN[x.u].curto : esc(x.u)}</td><td class="r num">${x.n}</td><td class="r num">${x.at}</td></tr>`).join('')}
+  ${rp.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th>Unidade</th><th class="r">Pedidos</th><th class="r">Atendidos</th><th class="r">Em aberto</th></tr></thead><tbody>
+    ${rp.map(x => `<tr><td>${esc(x.nome)}</td><td>${UN[x.u] ? UN[x.u].curto : esc(x.u)}</td><td class="r num">${x.n}</td><td class="r num">${x.at}</td><td class="r num">${x.abertos}</td></tr>`).join('')}
   </tbody></table></div>` : '<div class="empty">Nenhum pedido de produção no período.</div>'}
 
   <h3 class="sec">Situação atual e dias sem contagem</h3>
@@ -1133,29 +1234,337 @@ function vRelatorios() {
     ${tp.map(([t, v]) => `<tr><td>${esc(t)}</td><td class="r num">${v.Baixo || ''}</td><td class="r num">${v['Médio'] || ''}</td><td class="r num">${v.Alto || ''}</td><td class="r num"><b>${v['Crítico'] || ''}</b></td><td class="r num"><b>${v.total}</b></td></tr>`).join('')}
   </tbody></table></div>` : '<div class="empty">Sem observações no período.</div>'}`;
 }
-const CSV_COLS = {
-  producoes: [['data', 'Data'], ['unidade', 'Unidade destino'], ['local', 'Produzido em'], ['produto_nome', 'Produto'], ['qtd', 'Quantidade'], ['medida', 'Medida'], ['lote', 'Lote'], ['validade', 'Validade'], ['responsavel', 'Responsável'], ['ficha_usada', 'Ficha técnica'], ['obs', 'Observação'], ['evidencia', 'Foto'], ['criado_por', 'Registrado por'], ['criado_em', 'Registrado em']],
-  contagens: [['data_hora', 'Data e hora'], ['unidade', 'Unidade'], ['produto_nome', 'Produto'], ['qtd', 'Disponível'], ['medida', 'Medida'], ['minimo', 'Mínimo'], ['situacao', 'Situação'], ['responsavel', 'Responsável'], ['obs', 'Observação']],
-  solicitacoes: [['numero', 'Pedido'], ['data_hora', 'Criado em'], ['unidade', 'Unidade'], ['produto_nome', 'Produto'], ['saldo', 'Saldo'], ['minimo', 'Mínimo'], ['qtd_sugerida', 'Qtd. a produzir'], ['medida', 'Medida'], ['prioridade', 'Prioridade'], ['status', 'Status'], ['solicitante', 'Pedido por'], ['atendida_em', 'Atendido em'], ['obs', 'Observação']],
-  observacoes: [['data_hora', 'Data e hora'], ['unidade', 'Unidade'], ['setor', 'Setor'], ['tipo', 'Tipo'], ['impacto', 'Impacto'], ['produto_nome', 'Produto'], ['descricao', 'Descrição'], ['responsavel', 'Responsável'], ['demanda_tecnica', 'Demanda técnica'], ['evidencia', 'Foto']]
+
+/* =========================================================
+   EXPORTAÇÃO: EXCEL E PDF
+   ========================================================= */
+const LIBS = {};
+function carregarScript(src) {
+  if (!LIBS[src]) {
+    LIBS[src] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src; s.async = true;
+      s.onload = () => res();
+      s.onerror = () => { delete LIBS[src]; rej(new Error('Não foi possível carregar ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+  return LIBS[src];
+}
+const numOuVazio = v => { const n = num(v); return isNaN(n) ? '' : n; };
+const nomeArquivo = (R, ext) => `Relatorio_Producao_${R.per[0]}_a_${R.per[1]}.${ext}`;
+const situacaoTxt = e => e.sit ? SIT[e.sit].t : 'Sem contagem';
+const necessidade = e => {
+  const min = minOf(e.p, e.u);
+  if (isNaN(min) || !e.c) return '';
+  return Math.max(+(min - (num(e.c.qtd) || 0)).toFixed(3), 0);
 };
-function baixarCSV(tab) {
-  const per = periodo(), us = myUnits().filter(unOk);
-  const dateKey = tab === 'producoes' ? 'data' : 'data_hora';
-  const rows = DB[tab].filter(r => r.status !== 'cancelado' && r.status !== 'Cancelada' && us.includes(r.unidade) && inPer(r[dateKey], per));
-  const cols = CSV_COLS[tab];
-  const cell = (k, v) => {
-    if (k === 'unidade' || k === 'local') v = UN[v] ? UN[v].nome : v;
-    else if (['qtd', 'minimo', 'saldo', 'qtd_sugerida'].includes(k) && !isNaN(num(v))) v = String(num(v)).replace('.', ',');
-    else if (['data', 'validade'].includes(k)) v = v ? fmtD(v) : '';
-    else if (['data_hora', 'criado_em', 'atendida_em'].includes(k)) v = v ? fmtDH(v) : '';
-    return '"' + String(v ?? '').replace(/"/g, '""') + '"';
+
+/* ---------- Excel ---------- */
+function xlSerial(iso) {
+  if (!iso) return '';
+  const s = String(iso);
+  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return s;
+  let v = (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 864e5;
+  if (s.length > 10) {
+    const [hh, mi, ss] = s.slice(11).split(':').map(Number);
+    v += ((hh || 0) * 3600 + (mi || 0) * 60 + (ss || 0)) / 86400;
+  }
+  return v;
+}
+function xlAba(titulo, subtitulo, cols, linhas, totais) {
+  const X = window.XLSX;
+  const borda = { style: 'thin', color: { rgb: 'DCE1DA' } };
+  const bordas = { top: borda, bottom: borda, left: borda, right: borda };
+  const ws = {};
+  const n = cols.length;
+  const put = (r, c, cell) => { ws[X.utils.encode_cell({ r, c })] = cell; };
+  put(0, 0, { v: titulo, t: 's', s: { font: { bold: true, sz: 15, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1E2B33' } }, alignment: { vertical: 'center' } } });
+  put(1, 0, { v: subtitulo, t: 's', s: { font: { sz: 10, color: { rgb: '66737C' } } } });
+  for (let c = 1; c < n; c++) put(0, c, { v: '', t: 's', s: { fill: { fgColor: { rgb: '1E2B33' } } } });
+  cols.forEach((col, c) => put(3, c, {
+    v: col.h, t: 's',
+    s: { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F7A63' } }, border: bordas,
+      alignment: { horizontal: col.t === 'n' || col.t === 'i' ? 'right' : 'left', vertical: 'center', wrapText: true } }
+  }));
+  linhas.forEach((row, i) => {
+    const r = 4 + i;
+    const zebra = i % 2 ? { fgColor: { rgb: 'F3F5F1' } } : undefined;
+    cols.forEach((col, c) => {
+      let v = row[c];
+      const s = { border: bordas, alignment: { vertical: 'top', wrapText: col.t === 's' && (col.w || 0) >= 30 } };
+      if (zebra) s.fill = zebra;
+      if (col.cor) { const rgb = col.cor(v); if (rgb) s.font = { bold: true, color: { rgb } }; }
+      let cell;
+      if (v === '' || v === null || v === undefined) cell = { v: '', t: 's', s };
+      else if (col.t === 'n') cell = { v: Number(v), t: 'n', z: '#,##0.###', s };
+      else if (col.t === 'i') cell = { v: Number(v), t: 'n', z: '0', s };
+      else if (col.t === 'p') cell = { v: Number(v) / 100, t: 'n', z: '0%', s };
+      else if (col.t === 'd' || col.t === 'dt') {
+        const ser = xlSerial(v);
+        cell = typeof ser === 'number' ? { v: ser, t: 'n', z: col.t === 'd' ? 'dd/mm/yyyy' : 'dd/mm/yyyy hh:mm', s } : { v: String(v), t: 's', s };
+      } else cell = { v: String(v), t: 's', s };
+      put(r, c, cell);
+    });
+  });
+  let last = 3 + linhas.length;
+  if (totais && linhas.length) {
+    last++;
+    cols.forEach((col, c) => {
+      const s = { font: { bold: true }, fill: { fgColor: { rgb: 'E0EFE9' } }, border: bordas };
+      const t = totais[c];
+      if (t === 'SOMA') {
+        const L = X.utils.encode_col(c);
+        put(last, c, { t: 'n', f: `SUBTOTAL(9,${L}5:${L}${last})`, z: col.t === 'i' ? '0' : '#,##0.###', s });
+      } else put(last, c, { v: t || '', t: 's', s });
+    });
+  }
+  ws['!ref'] = X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(last, 3), c: n - 1 } });
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: n - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: n - 1 } }];
+  ws['!cols'] = cols.map(c => ({ wch: c.w || 14 }));
+  ws['!rows'] = [{ hpt: 26 }, { hpt: 16 }, { hpt: 6 }, { hpt: 22 }];
+  if (linhas.length) ws['!autofilter'] = { ref: X.utils.encode_range({ s: { r: 3, c: 0 }, e: { r: 3 + linhas.length, c: n - 1 } }) };
+  return ws;
+}
+const corSituacao = v => ({ Repor: 'C23A2E', 'Atenção': 'B98107', OK: '1F7A63' }[v] || null);
+const corImpacto = v => ({ 'Crítico': 'C23A2E', Alto: 'B98107' }[v] || null);
+
+async function exportarExcel() {
+  toast('Gerando Excel…');
+  await carregarScript(CFG.LIB_XLSX);
+  const X = window.XLSX;
+  const R = dadosRelatorio();
+  const sub = `${nomeUnidades(R.us)}  |  ${fmtD(R.per[0])} a ${fmtD(R.per[1])}  |  Gerado por ${USER.nome} em ${fmtDH(nowISO())}`;
+  const wb = X.utils.book_new();
+  const un = u => UN[u] ? UN[u].nome : (u || '');
+
+  X.utils.book_append_sheet(wb, xlAba('Resumo do período', sub,
+    [{ h: 'Indicador', w: 38, t: 's' }, { h: 'Valor', w: 16, t: 'n' }],
+    [
+      ['Registros de produção', R.prods.length],
+      ['Itens contados', R.conts.length],
+      ['Pedidos de produção', R.sols.length],
+      ['Pedidos atendidos', R.atend.length],
+      ['Pedidos atendidos (%)', R.pctAtend === null ? '' : R.pctAtend / 100],
+      ['Tempo médio até atender (horas)', R.tMed === null ? '' : +R.tMed.toFixed(2)],
+      ['Observações', R.obs.length],
+      ['Observações de impacto alto ou crítico', R.obs.filter(o => o.impacto === 'Alto' || o.impacto === 'Crítico').length],
+      ['Itens acima do mínimo (%)', R.pct === null ? '' : R.pct / 100],
+      ['Itens para repor agora', R.est.filter(e => e.sit === 'repor').length],
+      ['Itens em atenção', R.est.filter(e => e.sit === 'atencao').length],
+      ['Itens sem contagem', R.est.filter(e => !e.c).length]
+    ]), 'Resumo');
+  const wsR = wb.Sheets['Resumo'];
+  ['B9', 'B13'].forEach(a => { if (wsR[a] && wsR[a].t === 'n') wsR[a].z = '0%'; });
+
+  X.utils.book_append_sheet(wb, xlAba('Produzido por produto', sub,
+    [{ h: 'Produto', w: 30, t: 's' }, { h: 'Medida', w: 10, t: 's' }, { h: 'Total produzido', w: 16, t: 'n' }, { h: 'Registros', w: 12, t: 'i' }, { h: 'Unidades de destino', w: 34, t: 's' }],
+    R.pp.map(x => [x.nome, x.medida, x.total, x.n, [...x.unidades].map(un).join(', ')])), 'Por produto');
+
+  X.utils.book_append_sheet(wb, xlAba('Produção por responsável', sub,
+    [{ h: 'Responsável', w: 26, t: 's' }, { h: 'Registros', w: 12, t: 'i' }, { h: 'Produtos diferentes', w: 18, t: 'i' }, { h: 'Dias com registro', w: 18, t: 'i' }],
+    R.pr.map(x => [x.nome, x.n, x.itens.size, x.dias.size]), ['Total', 'SOMA', '', '']), 'Por responsável');
+
+  X.utils.book_append_sheet(wb, xlAba('Itens que mais pediram reposição', sub,
+    [{ h: 'Produto', w: 30, t: 's' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Pedidos', w: 12, t: 'i' }, { h: 'Atendidos', w: 12, t: 'i' }, { h: 'Em aberto', w: 12, t: 'i' }],
+    R.rp.map(x => [x.nome, un(x.u), x.n, x.at, x.abertos]), ['Total', '', 'SOMA', 'SOMA', 'SOMA']), 'Reposições');
+
+  X.utils.book_append_sheet(wb, xlAba('Situação atual do estoque de produção', sub,
+    [{ h: 'Produto', w: 30, t: 's' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Medida', w: 10, t: 's' }, { h: 'Último saldo', w: 14, t: 'n' }, { h: 'Mínimo', w: 12, t: 'n' }, { h: 'Necessidade', w: 14, t: 'n' }, { h: 'Situação', w: 14, t: 's', cor: corSituacao }, { h: 'Última contagem', w: 18, t: 'dt' }, { h: 'Dias sem contar', w: 15, t: 'i' }],
+    R.est.map(e => [e.p.nome, un(e.u), e.p.medida, e.c ? numOuVazio(e.c.qtd) : '', numOuVazio(minOf(e.p, e.u)), necessidade(e), situacaoTxt(e), e.c ? e.c.data_hora : '', e.c ? e.dias : ''])), 'Situação atual');
+
+  X.utils.book_append_sheet(wb, xlAba('Observações por tipo e impacto', sub,
+    [{ h: 'Tipo', w: 22, t: 's' }, { h: 'Baixo', w: 10, t: 'i' }, { h: 'Médio', w: 10, t: 'i' }, { h: 'Alto', w: 10, t: 'i' }, { h: 'Crítico', w: 10, t: 'i' }, { h: 'Total', w: 10, t: 'i' }],
+    R.tp.map(([t, v]) => [t, v.Baixo, v['Médio'], v.Alto, v['Crítico'], v.total]), ['Total', 'SOMA', 'SOMA', 'SOMA', 'SOMA', 'SOMA']), 'Obs por tipo');
+
+  X.utils.book_append_sheet(wb, xlAba('Produções do período (detalhe)', sub,
+    [{ h: 'Data', w: 12, t: 'd' }, { h: 'Unidade destino', w: 22, t: 's' }, { h: 'Produzido em', w: 22, t: 's' }, { h: 'Produto', w: 28, t: 's' }, { h: 'Quantidade', w: 12, t: 'n' }, { h: 'Medida', w: 9, t: 's' }, { h: 'Validade', w: 12, t: 'd' }, { h: 'Lote', w: 12, t: 's' }, { h: 'Responsável', w: 20, t: 's' }, { h: 'Ficha técnica', w: 14, t: 's' }, { h: 'Pedido atendido', w: 18, t: 's' }, { h: 'Observação', w: 40, t: 's' }, { h: 'Foto', w: 30, t: 's' }, { h: 'Registrado por', w: 18, t: 's' }, { h: 'Registrado em', w: 17, t: 'dt' }],
+    R.prods.map(r => {
+      const s = r.solicitacao_id ? DB.solicitacoes.find(x => x.id === r.solicitacao_id) : null;
+      return [r.data, un(r.unidade), un(r.local), r.produto_nome, numOuVazio(r.qtd), r.medida, r.validade, r.lote, r.responsavel, r.ficha_usada, s ? solNum(s) : '', r.obs, r.evidencia, r.criado_por, r.criado_em];
+    }), ['Total', '', '', '', 'SOMA']), 'Produções');
+
+  X.utils.book_append_sheet(wb, xlAba('Contagens do período (detalhe)', sub,
+    [{ h: 'Data e hora', w: 17, t: 'dt' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Produto', w: 28, t: 's' }, { h: 'Disponível', w: 12, t: 'n' }, { h: 'Medida', w: 9, t: 's' }, { h: 'Mínimo', w: 10, t: 'n' }, { h: 'Situação', w: 13, t: 's', cor: corSituacao }, { h: 'Responsável', w: 20, t: 's' }, { h: 'Observação', w: 40, t: 's' }],
+    R.conts.map(c => [c.data_hora, un(c.unidade), c.produto_nome, numOuVazio(c.qtd), c.medida, numOuVazio(c.minimo), c.situacao, c.responsavel, c.obs])), 'Contagens');
+
+  X.utils.book_append_sheet(wb, xlAba('Pedidos de produção do período', sub,
+    [{ h: 'Pedido', w: 18, t: 's' }, { h: 'Criado em', w: 17, t: 'dt' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Produto', w: 28, t: 's' }, { h: 'Saldo', w: 10, t: 'n' }, { h: 'Mínimo', w: 10, t: 'n' }, { h: 'Qtd. a produzir', w: 14, t: 'n' }, { h: 'Medida', w: 9, t: 's' }, { h: 'Prioridade', w: 11, t: 's' }, { h: 'Status', w: 13, t: 's' }, { h: 'Pedido por', w: 18, t: 's' }, { h: 'Atendido em', w: 17, t: 'dt' }, { h: 'Horas até atender', w: 16, t: 'n' }, { h: 'Observação', w: 36, t: 's' }],
+    R.sols.map(s => {
+      const h = s.atendida_em ? (new Date(String(s.atendida_em).replace(' ', 'T')) - new Date(String(s.data_hora).replace(' ', 'T'))) / 36e5 : NaN;
+      return [solNum(s), s.data_hora, un(s.unidade), s.produto_nome, numOuVazio(s.saldo), numOuVazio(s.minimo), numOuVazio(s.qtd_sugerida), s.medida, s.prioridade, s.status, s.solicitante, s.atendida_em, isNaN(h) ? '' : +h.toFixed(2), s.obs];
+    })), 'Pedidos');
+
+  X.utils.book_append_sheet(wb, xlAba('Observações do período (detalhe)', sub,
+    [{ h: 'Data e hora', w: 17, t: 'dt' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Setor', w: 14, t: 's' }, { h: 'Tipo', w: 16, t: 's' }, { h: 'Impacto', w: 10, t: 's', cor: corImpacto }, { h: 'Produto', w: 24, t: 's' }, { h: 'Descrição', w: 50, t: 's' }, { h: 'Responsável', w: 18, t: 's' }, { h: 'Demanda técnica', w: 15, t: 's' }, { h: 'Foto', w: 30, t: 's' }],
+    R.obs.map(o => [o.data_hora, un(o.unidade), o.setor, o.tipo, o.impacto, o.produto_nome, o.descricao, o.responsavel, o.demanda_tecnica, o.evidencia])), 'Observações');
+
+  X.writeFile(wb, nomeArquivo(R, 'xlsx'), { compression: true });
+}
+
+/* ---------- PDF ---------- */
+const PDF_COR = { ink: [30, 43, 51], jade: [31, 122, 99], jadeSoft: [224, 239, 233], chili: [194, 58, 46], yuzu: [185, 129, 7], mute: [102, 115, 124], line: [220, 225, 218], paper: [243, 245, 241] };
+function pdfGauge(doc, cx, cy, r, pct) {
+  const fundo = [218, 224, 219];
+  const cor = pct === null ? PDF_COR.mute : pct < 60 ? PDF_COR.chili : pct < 85 ? PDF_COR.yuzu : PDF_COR.jade;
+  const arco = (ini, fim, rgb) => {
+    doc.setDrawColor(...rgb); doc.setLineWidth(4.2); doc.setLineCap('round');
+    const passos = Math.max(2, Math.round((fim - ini) * 60));
+    for (let i = 0; i < passos; i++) {
+      const a1 = Math.PI * (1 - (ini + (fim - ini) * i / passos));
+      const a2 = Math.PI * (1 - (ini + (fim - ini) * (i + 1) / passos));
+      doc.line(cx + r * Math.cos(a1), cy - r * Math.sin(a1), cx + r * Math.cos(a2), cy - r * Math.sin(a2));
+    }
   };
-  const csv = '\ufeff' + cols.map(c => c[1]).join(';') + '\n' + rows.map(r => cols.map(c => cell(c[0], r[c[0]])).join(';')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = `${tab}_${per[0]}_a_${per[1]}.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
+  arco(0, 1, fundo);
+  if (pct) arco(0, pct / 100, cor);
+  doc.setLineCap('butt');
+  doc.setTextColor(...PDF_COR.ink);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(24);
+  doc.text(pct === null ? '—' : pct + '%', cx, cy - 1, { align: 'center' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...PDF_COR.mute);
+  doc.text('Itens acima do mínimo', cx, cy + 6, { align: 'center' });
+}
+async function exportarPDF() {
+  toast('Gerando PDF…');
+  await carregarScript(CFG.LIB_JSPDF);
+  await carregarScript(CFG.LIB_AUTOTABLE);
+  const { jsPDF } = window.jspdf;
+  const R = dadosRelatorio();
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 12;
+  const un = u => UN[u] ? UN[u].curto : (u || '');
+
+  const cabecalho = () => {
+    doc.setFillColor(...PDF_COR.ink); doc.rect(0, 0, W, 22, 'F');
+    doc.setFillColor(...PDF_COR.jade); doc.rect(0, 22, W, 1.2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17);
+    doc.text('Controle de Produção', M, 11);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text(`${nomeUnidades(R.us)}   |   ${fmtD(R.per[0])} a ${fmtD(R.per[1])}`, M, 17);
+    doc.setFontSize(8.5);
+    doc.text(`Gerado por ${USER.nome}`, W - M, 11, { align: 'right' });
+    doc.text(fmtDH(nowISO()), W - M, 17, { align: 'right' });
+  };
+  const rodape = () => {
+    doc.setDrawColor(...PDF_COR.line); doc.setLineWidth(0.2); doc.line(M, H - 9, W - M, H - 9);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...PDF_COR.mute);
+    doc.text('Mercearia Liberdade  |  Gogui Korean  |  Cozinha de Produção', M, H - 5);
+    doc.text(`Página ${doc.internal.getCurrentPageInfo().pageNumber} de {total}`, W - M, H - 5, { align: 'right' });
+  };
+  let y = 30;
+  cabecalho();
+
+  // Painel: velocímetro + indicadores
+  doc.setFillColor(...PDF_COR.paper); doc.roundedRect(M, y, 70, 40, 3, 3, 'F');
+  pdfGauge(doc, M + 35, y + 27, 20, R.pct);
+  const kpis = [
+    [R.prods.length, 'Registros de produção'],
+    [R.conts.length, 'Itens contados'],
+    [R.sols.length, 'Pedidos de produção'],
+    [R.pctAtend === null ? '—' : R.pctAtend + '%', 'Pedidos atendidos'],
+    [fmtHoras(R.tMed), 'Tempo médio até atender'],
+    [R.est.filter(e => e.sit === 'repor').length, 'Itens para repor agora'],
+    [R.est.filter(e => e.sit === 'atencao').length, 'Itens em atenção'],
+    [R.obs.length, 'Observações']
+  ];
+  const kx = M + 74, kw = (W - M - kx - 3 * 3) / 4, kh = 18.5;
+  kpis.forEach((k, i) => {
+    const x = kx + (i % 4) * (kw + 3), yy = y + Math.floor(i / 4) * (kh + 3);
+    doc.setDrawColor(...PDF_COR.line); doc.setLineWidth(0.3); doc.setFillColor(255, 255, 255);
+    doc.roundedRect(x, yy, kw, kh, 2.5, 2.5, 'FD');
+    const alerta = (i === 5 && k[0] > 0) ? PDF_COR.chili : (i === 6 && k[0] > 0) ? PDF_COR.yuzu : PDF_COR.ink;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...alerta);
+    doc.text(String(k[0]), x + 4, yy + 9.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...PDF_COR.mute);
+    doc.text(k[1], x + 4, yy + 15);
+  });
+  y += 48;
+
+  const secao = (titulo, head, body, opts = {}) => {
+    if (y > H - 40) { doc.addPage(); cabecalho(); y = 30; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...PDF_COR.ink);
+    doc.text(titulo, M, y);
+    y += 2.5;
+    if (!body.length) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...PDF_COR.mute);
+      doc.text('Sem registros no período.', M, y + 5);
+      y += 14;
+      return;
+    }
+    doc.autoTable({
+      startY: y, head: [head], body, margin: { left: M, right: M, top: 30, bottom: 14 },
+      theme: 'grid',
+      styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 1.8, textColor: PDF_COR.ink, lineColor: PDF_COR.line, lineWidth: 0.15, overflow: 'linebreak' },
+      headStyles: { fillColor: PDF_COR.jade, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: PDF_COR.paper },
+      columnStyles: opts.cols || {},
+      didParseCell: d => {
+        const cs = (opts.cols || {})[d.column.index];
+        if (d.section === 'head' && cs && cs.halign) d.cell.styles.halign = cs.halign;
+        if (opts.celula) opts.celula(d);
+      },
+      didDrawPage: () => cabecalho()
+    });
+    y = doc.lastAutoTable.finalY + 9;
+  };
+  const dir = { halign: 'right' };
+  const corSit = d => {
+    if (d.section !== 'body') return;
+    const rgb = { Repor: PDF_COR.chili, 'Atenção': PDF_COR.yuzu, OK: PDF_COR.jade }[d.cell.raw];
+    if (rgb) { d.cell.styles.textColor = rgb; d.cell.styles.fontStyle = 'bold'; }
+  };
+
+  const criticos = R.est.filter(e => e.sit === 'repor' || e.sit === 'atencao');
+  secao('Precisa de atenção agora', ['Produto', 'Unidade', 'Último saldo', 'Mínimo', 'Necessidade', 'Situação', 'Contado em'],
+    criticos.map(e => [e.p.nome, un(e.u), `${fmtN(e.c.qtd)} ${e.p.medida}`, fmtN(minOf(e.p, e.u)), necessidade(e) === '' ? '—' : `${fmtN(necessidade(e))} ${e.p.medida}`, situacaoTxt(e), fmtDH(e.c.data_hora)]),
+    { cols: { 2: dir, 3: dir, 4: dir }, celula: corSit });
+
+  secao('Produzido por produto', ['Produto', 'Total produzido', 'Registros', 'Unidades de destino'],
+    R.pp.map(x => [x.nome, `${fmtN(x.total)} ${x.medida}`, x.n, [...x.unidades].map(un).join(', ')]),
+    { cols: { 1: dir, 2: dir } });
+
+  secao('Produção por responsável', ['Responsável', 'Registros', 'Produtos diferentes', 'Dias com registro'],
+    R.pr.map(x => [x.nome, x.n, x.itens.size, x.dias.size]), { cols: { 1: dir, 2: dir, 3: dir } });
+
+  secao('Itens que mais pediram reposição', ['Produto', 'Unidade', 'Pedidos', 'Atendidos', 'Em aberto'],
+    R.rp.map(x => [x.nome, un(x.u), x.n, x.at, x.abertos]), { cols: { 2: dir, 3: dir, 4: dir } });
+
+  secao('Situação atual e dias sem contagem', ['Produto', 'Unidade', 'Último saldo', 'Mínimo', 'Situação', 'Dias sem contar'],
+    R.est.map(e => [e.p.nome, un(e.u), e.c ? `${fmtN(e.c.qtd)} ${e.p.medida}` : '—', fmtN(minOf(e.p, e.u)), situacaoTxt(e), e.c ? e.dias : 'nunca']),
+    { cols: { 2: dir, 3: dir, 5: dir }, celula: corSit });
+
+  secao('Observações por tipo e impacto', ['Tipo', 'Baixo', 'Médio', 'Alto', 'Crítico', 'Total'],
+    R.tp.map(([t, v]) => [t, v.Baixo || '', v['Médio'] || '', v.Alto || '', v['Crítico'] || '', v.total]),
+    { cols: { 1: dir, 2: dir, 3: dir, 4: dir, 5: dir } });
+
+  secao('Observações do período', ['Data', 'Unidade', 'Tipo', 'Impacto', 'Produto', 'Descrição', 'Responsável'],
+    R.obs.slice().reverse().map(o => [fmtDH(o.data_hora), un(o.unidade), o.tipo, o.impacto, o.produto_nome || '—', o.descricao, o.responsavel]),
+    { cols: { 5: { cellWidth: 95 } }, celula: d => {
+      if (d.section !== 'body' || d.column.index !== 3) return;
+      const rgb = { 'Crítico': PDF_COR.chili, Alto: PDF_COR.yuzu }[d.cell.raw];
+      if (rgb) { d.cell.styles.textColor = rgb; d.cell.styles.fontStyle = 'bold'; }
+    } });
+
+  secao('Produções do período', ['Data', 'Destino', 'Feito em', 'Produto', 'Quantidade', 'Validade', 'Responsável', 'Observação'],
+    R.prods.slice().reverse().map(r => [fmtD(r.data), un(r.unidade), un(r.local), r.produto_nome, `${fmtN(r.qtd)} ${r.medida}`, r.validade ? fmtD(r.validade) : '—', r.responsavel, r.obs || '']),
+    { cols: { 4: dir, 7: { cellWidth: 70 } } });
+
+  const total = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= total; i++) { doc.setPage(i); rodape(); }
+  doc.putTotalPages('{total}');
+  doc.save(nomeArquivo(R, 'pdf'));
+}
+async function exportar(tipo) {
+  if (!isManager()) { toast('Relatórios disponíveis só para acompanhamento e coordenação.', true); return; }
+  try {
+    if (tipo === 'xlsx') await exportarExcel(); else await exportarPDF();
+  } catch (e) {
+    console.error(e);
+    toast('Não foi possível gerar o arquivo. Verifique a internet e tente de novo.', true);
+  }
 }
 
 /* =========================================================
@@ -1374,10 +1783,11 @@ document.addEventListener('click', ev => {
     case 'sol-cancelar':
       if (confirm('Cancelar este pedido de produção?')) { save('solicitacoes', { id, status: 'Cancelada' }); toast('Pedido cancelado'); }
       break;
-    case 'ct-un': CONT_UN = el.dataset.u; CONT_Q = ''; render(); break;
+    case 'ct-un': CONT_UN = el.dataset.u; F.un = el.dataset.u; CONT_Q = ''; render(); break;
     case 'ct-limpar': CONT_DRAFT[CONT_UN] = {}; render(); break;
     case 'ct-salvar': salvarContagem(); break;
-    case 'csv': baixarCSV(el.dataset.t); break;
+    case 'exp-xlsx': exportar('xlsx'); break;
+    case 'exp-pdf': exportar('pdf'); break;
     case 'cad-tab': CAD_TAB = el.dataset.t; render(); break;
     case 'novo-produto': abrirProdutoCad(null); break;
     case 'edit-prod-cad': abrirProdutoCad(prodById(id)); break;
@@ -1389,6 +1799,7 @@ document.addEventListener('change', ev => {
   const f = ev.target.closest('[data-f]');
   if (!f) return;
   F[f.dataset.f] = f.value;
+  if (f.dataset.f === 'un' && UN_IDS.includes(f.value)) CONT_UN = f.value;
   if (f.dataset.f === 'per' && f.value === 'custom') { F.de = F.de || addDays(today(), -6); F.ate = F.ate || today(); }
   render();
 });
