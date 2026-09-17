@@ -233,7 +233,7 @@ table.tb tr.click:hover td{background:#F7F9F6}
 .toast.bad{background:var(--chili)}
 </style>
 </head>
-<body data-tema="QF"></body>
+<body data-tema="QF">
 
 <div id="login" class="login hidden"></div>
 
@@ -281,8 +281,7 @@ const CFG = {
   // Logins do Index_Menu que entram só como equipe de produção (sem Relatórios e Cadastros)
   EMAILS_OPERADOR: ['producao@mercearialiberdade.com.br'],
   LIB_XLSX: 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js',
-  LIB_JSPDF: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  LIB_AUTOTABLE: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'
+  LIB_XLSX_NOTA: 'Excel via xlsx-js-style; PDF é gerado pelo próprio navegador (imprimir para PDF)'
 };
 
 const UN = {
@@ -1198,7 +1197,7 @@ function vRelatorios() {
   ${filtros(true)}
   <div class="actions" style="margin:-4px 0 18px">
     <button type="button" class="btn" data-act="exp-xlsx">Baixar Excel</button>
-    <button type="button" class="btn dark" data-act="exp-pdf">Baixar PDF</button>
+    <button type="button" class="btn dark" data-act="exp-pdf">Gerar PDF</button>
   </div>
   <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
     <div class="tile"><b class="num">${prods.length}</b><span>Registros de produção</span></div>
@@ -1403,160 +1402,207 @@ async function exportarExcel() {
   X.writeFile(wb, nomeArquivo(R, 'xlsx'), { compression: true });
 }
 
-/* ---------- PDF ---------- */
-const PDF_COR = { ink: [30, 43, 51], jade: [31, 122, 99], jadeSoft: [224, 239, 233], chili: [194, 58, 46], yuzu: [185, 129, 7], mute: [102, 115, 124], line: [220, 225, 218], paper: [243, 245, 241] };
-function pdfGauge(doc, cx, cy, r, pct) {
-  const fundo = [218, 224, 219];
-  const cor = pct === null ? PDF_COR.mute : pct < 60 ? PDF_COR.chili : pct < 85 ? PDF_COR.yuzu : PDF_COR.jade;
-  const arco = (ini, fim, rgb) => {
-    doc.setDrawColor(...rgb); doc.setLineWidth(4.2); doc.setLineCap('round');
-    const passos = Math.max(2, Math.round((fim - ini) * 60));
-    for (let i = 0; i < passos; i++) {
-      const a1 = Math.PI * (1 - (ini + (fim - ini) * i / passos));
-      const a2 = Math.PI * (1 - (ini + (fim - ini) * (i + 1) / passos));
-      doc.line(cx + r * Math.cos(a1), cy - r * Math.sin(a1), cx + r * Math.cos(a2), cy - r * Math.sin(a2));
-    }
-  };
-  arco(0, 1, fundo);
-  if (pct) arco(0, pct / 100, cor);
-  doc.setLineCap('butt');
-  doc.setTextColor(...PDF_COR.ink);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(24);
-  doc.text(pct === null ? '—' : pct + '%', cx, cy - 1, { align: 'center' });
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...PDF_COR.mute);
-  doc.text('Itens acima do mínimo', cx, cy + 6, { align: 'center' });
+/* ---------- PDF: relatório em HTML enviado para impressão ---------- */
+const PDF_TEMA = {
+  QF: { dark: '#141416', brand: '#C4161C', soft: '#F8F8F9', zebra: '#FAFAFB', line: '#E3E3E6', text: '#1B1C20', mute: '#6A6D75', logoBg: '#141416', logoPad: '0' },
+  ML: { dark: '#3A0C10', brand: '#D8261F', soft: '#FBF6F1', zebra: '#FCFAF8', line: '#E7DED5', text: '#241A17', mute: '#7A6259', logoBg: '#FFFFFF', logoPad: '5px 8px' },
+  GG: { dark: '#110F0C', brand: '#8A6629', soft: '#F7F4EE', zebra: '#FBF9F4', line: '#E6DECF', text: '#1D1913', mute: '#756B5C', logoBg: '#110F0C', logoPad: '0' }
+};
+const pdfPill = sit => {
+  const c = { repor: ['#FBE4E1', '#B0281D'], atencao: ['#FBF0D6', '#9A6A05'], ok: ['#E2F1EA', '#1A6E52'], sem: ['#ECEDEF', '#6A6D75'] }[sit] || ['#ECEDEF', '#6A6D75'];
+  const t = { repor: 'Repor', atencao: 'Atenção', ok: 'OK', sem: 'Sem contagem' }[sit] || sit;
+  return `<span class="pill" style="background:${c[0]};color:${c[1]}">${esc(t)}</span>`;
+};
+const pdfPillImpacto = i => pdfPill(i === 'Crítico' ? 'repor' : i === 'Alto' ? 'atencao' : 'sem').replace(/>[^<]*<\/span>/, `>${esc(i)}</span>`);
+function pdfGaugeSVG(pct) {
+  const p = pct === null ? 0 : Math.max(0, Math.min(100, pct));
+  const cor = pct === null ? 'rgba(255,255,255,.35)' : p < 60 ? '#E4574A' : p < 85 ? '#E9B23C' : '#3EC49A';
+  const ang = Math.PI * (1 - p / 100);
+  const x = 60 + 50 * Math.cos(ang), y = 60 - 50 * Math.sin(ang);
+  return `<svg viewBox="0 0 120 74" style="width:148px">
+    <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="16" stroke-linecap="round"/>
+    ${p > 0 ? `<path d="M10 60 A50 50 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)}" fill="none" stroke="${cor}" stroke-width="16" stroke-linecap="round"/>` : ''}
+  </svg>`;
+}
+function relatorioHTML(R) {
+  const temaId = temaDaUnidade(F.un !== 'todas' ? F.un : (R.us.length === 1 ? R.us[0] : 'todas'));
+  const T = PDF_TEMA[temaId], L = TEMAS[temaId];
+  const un = u => UN[u] ? UN[u].curto : (u || '');
+  const unl = u => UN[u] ? UN[u].nome : (u || '');
+  const kpis = [
+    [R.prods.length, 'Registros de produção'], [R.conts.length, 'Itens contados'], [R.sols.length, 'Pedidos de produção'],
+    [R.pctAtend === null ? '—' : R.pctAtend + '%', 'Pedidos atendidos'], [fmtHoras(R.tMed), 'Tempo médio até atender'],
+    [R.obs.length, 'Observações']
+  ].map(k => `<div class="kpi"><b>${esc(String(k[0]))}</b><span>${k[1]}</span></div>`).join('');
+
+  const criticos = R.est.filter(e => e.sit === 'repor').concat(R.est.filter(e => e.sit === 'atencao'));
+  const cards = criticos.slice(0, 8).map(e => {
+    const need = necessidade(e);
+    return `<div class="alerta ${e.sit}">
+      <div class="a-top"><b>${esc(e.p.nome)}</b>${pdfPill(e.sit)}</div>
+      <div class="a-mid"><span class="big">${fmtN(e.c.qtd)} ${esc(e.p.medida)}</span><span class="mute">disponível, mínimo ${fmtN(minOf(e.p, e.u))}</span></div>
+      <div class="a-bot">${need === '' || need === 0 ? 'Perto do mínimo' : `Produzir ${fmtN(need)} ${esc(e.p.medida)}`} · ${esc(un(e.u))} · contado ${fmtDH(e.c.data_hora)}</div>
+    </div>`;
+  }).join('');
+  const maxUn = {};
+  R.pp.forEach(x => { maxUn[x.medida] = Math.max(maxUn[x.medida] || 0, x.total); });
+  const prod = R.pp.slice(0, 12).map(x => `<tr><td>${esc(x.nome)}</td>
+    <td class="r"><b>${fmtN(x.total)}</b> ${esc(x.medida)}</td><td class="r">${x.n}</td>
+    <td style="width:24%"><div class="bar"><i style="width:${maxUn[x.medida] ? Math.round(x.total / maxUn[x.medida] * 100) : 0}%"></i></div></td></tr>`).join('');
+  const maxResp = R.pr.length ? R.pr[0].n : 1;
+  const resp = R.pr.map(x => `<tr><td>${esc(x.nome)}</td><td class="r">${x.n}</td><td class="r">${x.itens.size}</td><td class="r">${x.dias.size}</td>
+    <td style="width:22%"><div class="bar"><i class="alt" style="width:${Math.round(x.n / maxResp * 100)}%"></i></div></td></tr>`).join('');
+  const multi = R.us.length > 1;
+  const colUn = t => multi ? `<td>${esc(t)}</td>` : '';
+  const thUn = multi ? '<th>Unidade</th>' : '';
+  const repo = R.rp.slice(0, 10).map(x => `<tr><td>${esc(x.nome)}</td>${colUn(un(x.u))}<td class="r">${x.n}</td><td class="r">${x.at}</td><td class="r">${x.abertos}</td></tr>`).join('');
+  const tipos = R.tp.map(([t, v]) => `<tr><td>${esc(t)}</td><td class="r">${v.Baixo || ''}</td><td class="r">${v['Médio'] || ''}</td><td class="r">${v.Alto || ''}</td><td class="r"><b>${v['Crítico'] || ''}</b></td><td class="r"><b>${v.total}</b></td></tr>`).join('');
+  const ordemSit = { repor: 0, atencao: 1, semmin: 2, ok: 3 };
+  const sit = R.est.slice().sort((a, b) => (ordemSit[a.sit] ?? 4) - (ordemSit[b.sit] ?? 4) || (b.dias === null ? 999 : b.dias) - (a.dias === null ? 999 : a.dias))
+    .map(e => `<tr><td>${esc(e.p.nome)}</td>${colUn(un(e.u))}
+    <td class="r">${e.c ? fmtN(e.c.qtd) + ' ' + esc(e.p.medida) : '—'}</td><td class="r">${fmtN(minOf(e.p, e.u))}</td>
+    <td class="r">${pdfPill(e.sit || 'sem')}</td><td class="r">${e.c ? e.dias : 'nunca'}</td></tr>`).join('');
+  const ordemImp = { 'Crítico': 0, Alto: 1, 'Médio': 2, Baixo: 3 };
+  const obs = R.obs.slice().sort((a, b) => (ordemImp[a.impacto] ?? 9) - (ordemImp[b.impacto] ?? 9) || String(b.data_hora).localeCompare(String(a.data_hora)))
+    .map(o => `<div class="obs"><div class="obs-h">${pdfPillImpacto(o.impacto)}<b>${esc(o.tipo)}</b>${o.produto_nome ? `<span class="mute">${esc(o.produto_nome)}</span>` : ''}<span class="mute dir">${esc(un(o.unidade))} · ${fmtDH(o.data_hora)} · ${esc(o.responsavel)}</span></div><div>${esc(o.descricao)}</div></div>`).join('');
+  const vazio = t => `<div class="vazio">${t}</div>`;
+
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>Relatório de Produção ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page{size:A4 portrait;margin:10mm}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Figtree',system-ui,sans-serif;color:${T.text};font-size:9.2pt;line-height:1.35;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1,h2{margin:0;font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+table{width:100%;border-collapse:collapse}
+td,th{font-variant-numeric:tabular-nums}
+.r{text-align:right}
+.pill{display:inline-block;border-radius:99px;padding:1px 7px;font-size:7.6pt;font-weight:700;white-space:nowrap}
+.bar{height:6px;background:${T.line};border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:${T.brand}}
+.bar i.alt{background:${T.dark}}
+.mute{color:${T.mute}}
+.head{background:${T.dark};color:#fff;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:14px}
+.head .logo{background:${T.logoBg};border-radius:8px;padding:${T.logoPad};height:44px;display:flex;align-items:center}
+.head .logo img{height:34px;max-width:110px;object-fit:contain;display:block}
+.head h1{font-size:17pt;font-weight:800}
+.head .sub{font-size:8.6pt;opacity:.8;margin-top:2px}
+.head .right{margin-left:auto;text-align:right;font-size:8pt;opacity:.85;line-height:1.5}
+.head .right b{display:block;font-size:9.4pt;opacity:1}
+.painel{display:flex;gap:10px;margin:10px 0 12px;align-items:stretch}
+.gaugebox{background:${T.dark};color:#fff;border-radius:10px;padding:10px 14px 8px;text-align:center;width:172px;flex:none}
+.gaugebox .v{font-family:'Bricolage Grotesque';font-size:25pt;font-weight:800;margin-top:-34px}
+.gaugebox .l{font-size:8pt;opacity:.85;margin-top:4px}
+.gaugebox .l2{font-size:7pt;opacity:.6;margin-top:2px}
+.kpis{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:${T.soft};border:1px solid ${T.line};border-radius:9px;padding:8px 10px}
+.kpi b{display:block;font-family:'Bricolage Grotesque';font-size:16pt;font-weight:800;line-height:1.1}
+.kpi span{font-size:7.8pt;color:${T.mute}}
+h2.sec{font-size:10.5pt;font-weight:700;color:${T.dark};margin:14px 0 7px;padding-left:8px;border-left:4px solid ${T.brand};display:flex;align-items:baseline;gap:8px}
+h2.sec small{font-family:'Figtree';font-weight:500;font-size:7.8pt;color:${T.mute}}
+.alertas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.alerta{border:1px solid ${T.line};border-left:5px solid #C23A2E;border-radius:9px;padding:8px 10px;break-inside:avoid}
+.alerta.atencao{border-left-color:#E0A020}
+.a-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px}
+.a-mid .big{font-family:'Bricolage Grotesque';font-size:14pt;font-weight:800;margin-right:5px}
+.a-mid .mute,.a-bot{font-size:7.8pt;color:${T.mute}}
+.a-bot{margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+.box{border:1px solid ${T.line};border-radius:10px;overflow:hidden;break-inside:avoid;margin-bottom:10px}
+.box>h2{background:${T.dark};color:#fff;font-size:9.6pt;font-weight:700;padding:6px 10px;display:flex;justify-content:space-between;align-items:baseline}
+.box>h2 span{font-family:'Figtree';font-size:7.6pt;font-weight:500;opacity:.8}
+.box table{font-size:8.6pt}
+.box th{text-align:left;font-size:7.4pt;color:${T.mute};font-weight:600;padding:5px 10px;border-bottom:1px solid ${T.line}}
+.box th.r{text-align:right}
+.box td{padding:4.5px 10px;border-bottom:1px solid ${T.line}}
+.box tr:last-child td{border-bottom:0}
+.box tbody tr:nth-child(even) td{background:${T.zebra}}
+.obs{padding:7px 10px;border-bottom:1px solid ${T.line};font-size:8.4pt;break-inside:avoid}
+.obs:last-child{border-bottom:0}
+.obs-h{display:flex;gap:6px;align-items:center;margin-bottom:2px}
+.obs-h .mute{font-size:7.8pt}
+.obs-h .dir{margin-left:auto;text-align:right}
+.vazio{padding:10px;text-align:center;color:${T.mute};font-size:8.4pt}
+.rodape{margin-top:14px;border-top:1px solid ${T.line};padding-top:5px;display:flex;justify-content:space-between;font-size:7.4pt;color:${T.mute}}
+@media print{.dica{display:none}}
+.dica{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;background:${T.dark};color:#fff;padding:9px 16px;border-radius:99px;font-size:9pt;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.dica button{margin-left:10px;border:0;border-radius:99px;padding:5px 12px;background:${T.brand};color:#fff;font-weight:700;cursor:pointer;font:inherit}
+</style></head><body>
+<div class="head">
+  <div class="logo"><img src="${ASSETS_URL + L.logo}" alt="${esc(L.alt)}" onerror="this.style.display='none'"></div>
+  <div><h1>Relatório de Produção</h1><div class="sub">${esc(nomeUnidades(R.us))} · ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</div></div>
+  <div class="right"><b>Q Food Group</b>Gerado por ${esc(USER.nome)} · ${fmtDH(nowISO())}</div>
+</div>
+
+<div class="painel">
+  <div class="gaugebox">${pdfGaugeSVG(R.pct)}<div class="v">${R.pct === null ? '—' : R.pct + '%'}</div>
+    <div class="l">Itens acima do mínimo</div>
+    <div class="l2">${R.avaliados.length ? `${R.avaliados.length - R.est.filter(e => e.sit === 'repor').length} de ${R.avaliados.length} itens com mínimo e contagem` : 'sem mínimos definidos'}</div></div>
+  <div class="kpis">${kpis}</div>
+</div>
+
+<h2 class="sec">Precisa de atenção agora <small>situação na última contagem</small></h2>
+${cards ? `<div class="alertas">${cards}</div>` : vazio('Nenhum item abaixo ou perto do mínimo.')}
+${criticos.length > 8 ? `<div class="mute" style="font-size:7.8pt;margin-top:5px">e mais ${criticos.length - 8} ${criticos.length - 8 === 1 ? 'item' : 'itens'} na tabela de situação atual</div>` : ''}
+
+<div class="grid" style="margin-top:12px">
+  <div>
+    <div class="box"><h2>Produzido por produto <span>total no período</span></h2>
+      ${prod ? `<table><thead><tr><th>Produto</th><th class="r">Total</th><th class="r">Reg.</th><th></th></tr></thead><tbody>${prod}</tbody></table>` : vazio('Sem produção no período.')}</div>
+    <div class="box"><h2>Reposições <span>pedidos de produção</span></h2>
+      ${repo ? `<table><thead><tr><th>Produto</th>${thUn}<th class="r">Ped.</th><th class="r">Atend.</th><th class="r">Aberto</th></tr></thead><tbody>${repo}</tbody></table>` : vazio('Nenhum pedido no período.')}</div>
+  </div>
+  <div>
+    <div class="box"><h2>Produção por responsável <span>registros no período</span></h2>
+      ${resp ? `<table><thead><tr><th>Responsável</th><th class="r">Reg.</th><th class="r">Prod.</th><th class="r">Dias</th><th></th></tr></thead><tbody>${resp}</tbody></table>` : vazio('Sem produção no período.')}</div>
+    <div class="box"><h2>Observações por tipo <span>por impacto</span></h2>
+      ${tipos ? `<table><thead><tr><th>Tipo</th><th class="r">Bx</th><th class="r">Méd</th><th class="r">Alt</th><th class="r">Crít</th><th class="r">Total</th></tr></thead><tbody>${tipos}</tbody></table>` : vazio('Sem observações no período.')}</div>
+  </div>
+</div>
+
+<div class="box"><h2>Situação atual do estoque <span>saldo da última contagem e dias sem contar</span></h2>
+  ${sit ? `<table><thead><tr><th>Produto</th>${thUn}<th class="r">Saldo</th><th class="r">Mínimo</th><th class="r">Situação</th><th class="r">Dias</th></tr></thead><tbody>${sit}</tbody></table>` : vazio('Nenhum produto cadastrado.')}</div>
+
+<div class="box"><h2>Observações do período <span>impacto alto e crítico primeiro</span></h2>
+  ${obs || vazio('Sem observações no período.')}</div>
+
+<div class="rodape"><span>${esc(UN_IDS.map(u => UN[u].nome).join(' · '))}</span><span>Controle de Produção · Q Food Group</span></div>
+<div class="dica">Use "Salvar como PDF" no destino da impressão.<button type="button" onclick="window.print()">Imprimir</button></div>
+</body></html>`;
 }
 async function exportarPDF() {
-  toast('Gerando PDF…');
-  await carregarScript(CFG.LIB_JSPDF);
-  await carregarScript(CFG.LIB_AUTOTABLE);
-  const { jsPDF } = window.jspdf;
   const R = dadosRelatorio();
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 12;
-  const un = u => UN[u] ? UN[u].curto : (u || '');
-
-  const cabecalho = () => {
-    doc.setFillColor(...PDF_COR.ink); doc.rect(0, 0, W, 22, 'F');
-    doc.setFillColor(...PDF_COR.jade); doc.rect(0, 22, W, 1.2, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(17);
-    doc.text('Controle de Produção', M, 11);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text(`${nomeUnidades(R.us)}   |   ${fmtD(R.per[0])} a ${fmtD(R.per[1])}`, M, 17);
-    doc.setFontSize(8.5);
-    doc.text(`Gerado por ${USER.nome}`, W - M, 11, { align: 'right' });
-    doc.text(fmtDH(nowISO()), W - M, 17, { align: 'right' });
-  };
-  const rodape = () => {
-    doc.setDrawColor(...PDF_COR.line); doc.setLineWidth(0.2); doc.line(M, H - 9, W - M, H - 9);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...PDF_COR.mute);
-    doc.text('Mercearia Liberdade  |  Gogui Korean  |  Cozinha de Produção', M, H - 5);
-    doc.text(`Página ${doc.internal.getCurrentPageInfo().pageNumber} de {total}`, W - M, H - 5, { align: 'right' });
-  };
-  let y = 30;
-  cabecalho();
-
-  // Painel: velocímetro + indicadores
-  doc.setFillColor(...PDF_COR.paper); doc.roundedRect(M, y, 70, 40, 3, 3, 'F');
-  pdfGauge(doc, M + 35, y + 27, 20, R.pct);
-  const kpis = [
-    [R.prods.length, 'Registros de produção'],
-    [R.conts.length, 'Itens contados'],
-    [R.sols.length, 'Pedidos de produção'],
-    [R.pctAtend === null ? '—' : R.pctAtend + '%', 'Pedidos atendidos'],
-    [fmtHoras(R.tMed), 'Tempo médio até atender'],
-    [R.est.filter(e => e.sit === 'repor').length, 'Itens para repor agora'],
-    [R.est.filter(e => e.sit === 'atencao').length, 'Itens em atenção'],
-    [R.obs.length, 'Observações']
-  ];
-  const kx = M + 74, kw = (W - M - kx - 3 * 3) / 4, kh = 18.5;
-  kpis.forEach((k, i) => {
-    const x = kx + (i % 4) * (kw + 3), yy = y + Math.floor(i / 4) * (kh + 3);
-    doc.setDrawColor(...PDF_COR.line); doc.setLineWidth(0.3); doc.setFillColor(255, 255, 255);
-    doc.roundedRect(x, yy, kw, kh, 2.5, 2.5, 'FD');
-    const alerta = (i === 5 && k[0] > 0) ? PDF_COR.chili : (i === 6 && k[0] > 0) ? PDF_COR.yuzu : PDF_COR.ink;
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...alerta);
-    doc.text(String(k[0]), x + 4, yy + 9.5);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...PDF_COR.mute);
-    doc.text(k[1], x + 4, yy + 15);
-  });
-  y += 48;
-
-  const secao = (titulo, head, body, opts = {}) => {
-    if (y > H - 40) { doc.addPage(); cabecalho(); y = 30; }
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...PDF_COR.ink);
-    doc.text(titulo, M, y);
-    y += 2.5;
-    if (!body.length) {
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...PDF_COR.mute);
-      doc.text('Sem registros no período.', M, y + 5);
-      y += 14;
-      return;
-    }
-    doc.autoTable({
-      startY: y, head: [head], body, margin: { left: M, right: M, top: 30, bottom: 14 },
-      theme: 'grid',
-      styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 1.8, textColor: PDF_COR.ink, lineColor: PDF_COR.line, lineWidth: 0.15, overflow: 'linebreak' },
-      headStyles: { fillColor: PDF_COR.jade, textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: PDF_COR.paper },
-      columnStyles: opts.cols || {},
-      didParseCell: d => {
-        const cs = (opts.cols || {})[d.column.index];
-        if (d.section === 'head' && cs && cs.halign) d.cell.styles.halign = cs.halign;
-        if (opts.celula) opts.celula(d);
-      },
-      didDrawPage: () => cabecalho()
-    });
-    y = doc.lastAutoTable.finalY + 9;
-  };
-  const dir = { halign: 'right' };
-  const corSit = d => {
-    if (d.section !== 'body') return;
-    const rgb = { Repor: PDF_COR.chili, 'Atenção': PDF_COR.yuzu, OK: PDF_COR.jade }[d.cell.raw];
-    if (rgb) { d.cell.styles.textColor = rgb; d.cell.styles.fontStyle = 'bold'; }
-  };
-
-  const criticos = R.est.filter(e => e.sit === 'repor' || e.sit === 'atencao');
-  secao('Precisa de atenção agora', ['Produto', 'Unidade', 'Último saldo', 'Mínimo', 'Necessidade', 'Situação', 'Contado em'],
-    criticos.map(e => [e.p.nome, un(e.u), `${fmtN(e.c.qtd)} ${e.p.medida}`, fmtN(minOf(e.p, e.u)), necessidade(e) === '' ? '—' : `${fmtN(necessidade(e))} ${e.p.medida}`, situacaoTxt(e), fmtDH(e.c.data_hora)]),
-    { cols: { 2: dir, 3: dir, 4: dir }, celula: corSit });
-
-  secao('Produzido por produto', ['Produto', 'Total produzido', 'Registros', 'Unidades de destino'],
-    R.pp.map(x => [x.nome, `${fmtN(x.total)} ${x.medida}`, x.n, [...x.unidades].map(un).join(', ')]),
-    { cols: { 1: dir, 2: dir } });
-
-  secao('Produção por responsável', ['Responsável', 'Registros', 'Produtos diferentes', 'Dias com registro'],
-    R.pr.map(x => [x.nome, x.n, x.itens.size, x.dias.size]), { cols: { 1: dir, 2: dir, 3: dir } });
-
-  secao('Itens que mais pediram reposição', ['Produto', 'Unidade', 'Pedidos', 'Atendidos', 'Em aberto'],
-    R.rp.map(x => [x.nome, un(x.u), x.n, x.at, x.abertos]), { cols: { 2: dir, 3: dir, 4: dir } });
-
-  secao('Situação atual e dias sem contagem', ['Produto', 'Unidade', 'Último saldo', 'Mínimo', 'Situação', 'Dias sem contar'],
-    R.est.map(e => [e.p.nome, un(e.u), e.c ? `${fmtN(e.c.qtd)} ${e.p.medida}` : '—', fmtN(minOf(e.p, e.u)), situacaoTxt(e), e.c ? e.dias : 'nunca']),
-    { cols: { 2: dir, 3: dir, 5: dir }, celula: corSit });
-
-  secao('Observações por tipo e impacto', ['Tipo', 'Baixo', 'Médio', 'Alto', 'Crítico', 'Total'],
-    R.tp.map(([t, v]) => [t, v.Baixo || '', v['Médio'] || '', v.Alto || '', v['Crítico'] || '', v.total]),
-    { cols: { 1: dir, 2: dir, 3: dir, 4: dir, 5: dir } });
-
-  secao('Observações do período', ['Data', 'Unidade', 'Tipo', 'Impacto', 'Produto', 'Descrição', 'Responsável'],
-    R.obs.slice().reverse().map(o => [fmtDH(o.data_hora), un(o.unidade), o.tipo, o.impacto, o.produto_nome || '—', o.descricao, o.responsavel]),
-    { cols: { 5: { cellWidth: 95 } }, celula: d => {
-      if (d.section !== 'body' || d.column.index !== 3) return;
-      const rgb = { 'Crítico': PDF_COR.chili, Alto: PDF_COR.yuzu }[d.cell.raw];
-      if (rgb) { d.cell.styles.textColor = rgb; d.cell.styles.fontStyle = 'bold'; }
-    } });
-
-  secao('Produções do período', ['Data', 'Destino', 'Feito em', 'Produto', 'Quantidade', 'Validade', 'Responsável', 'Observação'],
-    R.prods.slice().reverse().map(r => [fmtD(r.data), un(r.unidade), un(r.local), r.produto_nome, `${fmtN(r.qtd)} ${r.medida}`, r.validade ? fmtD(r.validade) : '—', r.responsavel, r.obs || '']),
-    { cols: { 4: dir, 7: { cellWidth: 70 } } });
-
-  const total = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= total; i++) { doc.setPage(i); rodape(); }
-  doc.putTotalPages('{total}');
-  doc.save(nomeArquivo(R, 'pdf'));
+  const html = relatorioHTML(R);
+  const nome = `Relatorio_Producao_${R.per[0]}_a_${R.per[1]}`;
+  toast('Preparando o relatório…');
+  const janela = window.open('', '_blank');
+  if (janela && janela.document) {
+    janela.document.open();
+    janela.document.write(html);
+    janela.document.close();
+    janela.document.title = nome;
+    const disparar = () => { try { janela.focus(); janela.print(); } catch (e) { console.warn(e); } };
+    if (janela.document.readyState === 'complete') setTimeout(disparar, 700);
+    else janela.addEventListener('load', () => setTimeout(disparar, 700));
+    return;
+  }
+  // Sem permissão para abrir aba nova: imprime por um quadro oculto na própria página.
+  const antigo = $('#quadroImpressao');
+  if (antigo) antigo.remove();
+  const f = document.createElement('iframe');
+  f.id = 'quadroImpressao';
+  f.setAttribute('title', nome);
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0';
+  document.body.appendChild(f);
+  f.srcdoc = html;
+  f.addEventListener('load', () => setTimeout(() => {
+    try { f.contentWindow.focus(); f.contentWindow.print(); }
+    catch (e) { console.warn(e); toast('Não foi possível abrir a impressão. Libere as janelas pop-up deste site.', true); }
+  }, 700));
 }
+
 async function exportar(tipo) {
   if (!isManager()) { toast('Relatórios disponíveis só para acompanhamento e coordenação.', true); return; }
   try {
