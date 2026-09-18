@@ -1372,7 +1372,8 @@ function vRelatorios() {
   ${filtros(true)}
   <div class="actions" style="margin:-4px 0 18px">
     <button type="button" class="btn" data-act="exp-xlsx">Baixar Excel</button>
-    <button type="button" class="btn dark" data-act="exp-pdf">Gerar PDF</button>
+    <button type="button" class="btn dark" data-act="exp-pdf">PDF de produção</button>
+    <button type="button" class="btn ghost" data-act="exp-desp">PDF de desperdício</button>
   </div>
   <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
     <div class="tile"><b class="num">${prods.length}</b><span>Registros de produção</span></div>
@@ -1735,6 +1736,7 @@ h2.sec small{font-family:'Figtree';font-weight:500;font-size:7.8pt;color:${T.mut
 .box table{font-size:8.6pt}
 .box th{text-align:left;font-size:7.4pt;color:${T.mute};font-weight:600;padding:5px 10px;border-bottom:1px solid ${T.line}}
 .box th.r{text-align:right}
+.box td.r{white-space:nowrap}
 .box td{padding:4.5px 10px;border-bottom:1px solid ${T.line}}
 .box tr:last-child td{border-bottom:0}
 .box tbody tr:nth-child(even) td{background:${T.zebra}}
@@ -1781,6 +1783,8 @@ ${criticos.length > 8 ? `<div class="mute" style="font-size:7.8pt;margin-top:5px
   </div>
 </div>
 
+<h2 class="sec" style="font-size:10.5pt;font-weight:700;margin:14px 0 7px">Resumo do desperdício
+  <small>${fmtN(+R.dKg.toFixed(3))} kg descartados${R.pctDesp === null ? '' : `, ${fmtN(R.pctDesp)}% da produção do período`}${R.dCausa.length ? `, causa principal: ${esc(R.dCausa[0].nome)}` : ''}</small></h2>
 <div class="grid">
   <div class="box" style="margin-bottom:0"><h2>Desperdício por produto <span>${fmtN(+R.dKg.toFixed(3))} kg no período</span></h2>
     ${dprod ? `<table><thead><tr><th>Produto</th><th class="r">Descarte</th><th class="r">Reg.</th><th class="r">Produzido</th><th class="r">Perda</th></tr></thead><tbody>${dprod}</tbody></table>` : vazio('Nenhum descarte registrado.')}</div>
@@ -1800,9 +1804,182 @@ ${criticos.length > 8 ? `<div class="mute" style="font-size:7.8pt;margin-top:5px
 }
 async function exportarPDF() {
   const R = dadosRelatorio();
-  const html = relatorioHTML(R);
-  const nome = `Relatorio_Producao_${R.per[0]}_a_${R.per[1]}`;
   toast('Preparando o relatório…');
+  imprimirHTML(relatorioHTML(R), `Relatorio_Producao_${R.per[0]}_a_${R.per[1]}`);
+}
+
+/* ---------- PDF do desperdício ---------- */
+function pdfGaugeDesp(pct) {
+  const p = pct === null ? 0 : Math.max(0, Math.min(100, pct));
+  const cor = pct === null ? 'rgba(255,255,255,.35)' : p < 5 ? '#3EC49A' : p < 10 ? '#E9B23C' : '#E4574A';
+  const esc100 = Math.min(p, 100) / (p > 20 ? 100 : 20) * 100;
+  const ang = Math.PI * (1 - esc100 / 100);
+  const x = 60 + 50 * Math.cos(ang), y = 60 - 50 * Math.sin(ang);
+  return `<svg viewBox="0 0 120 74" style="width:148px">
+    <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="16" stroke-linecap="round"/>
+    ${esc100 > 0 ? `<path d="M10 60 A50 50 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)}" fill="none" stroke="${cor}" stroke-width="16" stroke-linecap="round"/>` : ''}
+  </svg>`;
+}
+function relatorioDespHTML(R) {
+  const temaId = temaDaUnidade(F.un !== 'todas' ? F.un : (R.us.length === 1 ? R.us[0] : 'todas'));
+  const T = PDF_TEMA[temaId], L = TEMAS[temaId];
+  const un = u => UN[u] ? UN[u].curto : (u || '');
+  const dias = Math.max(1, daysBetween(R.per[0], R.per[1]) + 1);
+  const comFoto = R.desp.filter(d => d.evidencia).length;
+  const porDia = {};
+  R.desp.forEach(d => { const k = String(d.data_hora).slice(0, 10); porDia[k] = (porDia[k] || 0) + (num(d.kg) || 0); });
+  const listaDias = Object.entries(porDia).sort((a, b) => a[0].localeCompare(b[0]));
+  const maxDia = listaDias.length ? Math.max(...listaDias.map(d => d[1])) : 1;
+  const causaTop = R.dCausa[0];
+  const porResp = agrupaDesp(R.desp, 'responsavel');
+  const porUn = agrupaDesp(R.desp, 'unidade');
+  const causaDoProduto = nome => {
+    const c = agrupaDesp(R.desp.filter(d => (d.produto_nome || 'Sem produto informado') === nome), 'causa')[0];
+    return c ? c.nome : '—';
+  };
+  const kpis = [
+    [`${fmtN(+R.dKg.toFixed(3))} kg`, 'Descartado no período'],
+    [R.pctDesp === null ? '—' : `${fmtN(R.pctDesp)}%`, 'Sobre a produção do período'],
+    [`${fmtN(+(R.dKg / dias).toFixed(2))} kg`, 'Média por dia'],
+    [R.desp.length, 'Registros de descarte'],
+    [causaTop ? causaTop.nome : '—', 'Principal causa'],
+    [`${comFoto} de ${R.desp.length}`, 'Registros com foto']
+  ].map(k => `<div class="kpi"><b>${esc(String(k[0]))}</b><span>${k[1]}</span></div>`).join('');
+
+  const cards = R.dProd.slice(0, 4).map(x => {
+    const pk = R.prodKg[x.nome];
+    const idx = pk ? +(x.kg / pk * 100).toFixed(1) : null;
+    const grave = idx !== null && idx >= 10;
+    return `<div class="alerta ${grave ? '' : 'atencao'}">
+      <div class="a-top"><b>${esc(x.nome)}</b>${idx === null ? '' : `<span class="pill" style="background:${grave ? '#FBE4E1' : '#FBF0D6'};color:${grave ? '#B0281D' : '#9A6A05'}">${fmtN(idx)}% da produção</span>`}</div>
+      <div class="a-mid"><span class="big">${fmtN(+x.kg.toFixed(3))} kg</span><span class="mute">em ${x.n} ${x.n === 1 ? 'registro' : 'registros'}${pk ? `, produzidos ${fmtN(+pk.toFixed(1))} kg` : ''}</span></div>
+      <div class="a-bot">Causa mais frequente: ${esc(causaDoProduto(x.nome))}</div>
+    </div>`;
+  }).join('');
+
+  const tProd = R.dProd.map(x => {
+    const pk = R.prodKg[x.nome];
+    const idx = pk ? +(x.kg / pk * 100).toFixed(1) : null;
+    return `<tr><td>${esc(x.nome)}</td><td class="r"><b>${fmtN(+x.kg.toFixed(3))}</b> kg</td><td class="r">${x.n}</td>
+      <td class="r">${pk ? fmtN(+pk.toFixed(1)) + ' kg' : '—'}</td>
+      <td class="r">${idx === null ? '—' : `<span class="pill" style="background:${idx >= 10 ? '#FBE4E1' : idx >= 5 ? '#FBF0D6' : '#E2F1EA'};color:${idx >= 10 ? '#B0281D' : idx >= 5 ? '#9A6A05' : '#1A6E52'}">${fmtN(idx)}%</span>`}</td>
+      <td>${esc(causaDoProduto(x.nome))}</td></tr>`;
+  }).join('');
+  const linhaSimples = arr => arr.map(x => `<tr><td>${esc(x.nome)}</td><td class="r">${fmtN(+x.kg.toFixed(3))} kg</td><td class="r">${x.n}</td><td class="r">${R.dKg ? Math.round(x.kg / R.dKg * 100) : 0}%</td>
+    <td style="width:22%"><div class="bar"><i style="width:${R.dKg ? Math.round(x.kg / R.dKg * 100) : 0}%"></i></div></td></tr>`).join('');
+  const tDia = listaDias.map(([d, kg]) => `<tr><td>${fmtD(d)}</td><td class="r">${fmtN(+kg.toFixed(3))} kg</td>
+    <td style="width:60%"><div class="bar"><i style="width:${Math.round(kg / maxDia * 100)}%"></i></div></td></tr>`).join('');
+  const tResp = porResp.map(x => `<tr><td>${esc(x.nome)}</td><td class="r">${fmtN(+x.kg.toFixed(3))} kg</td><td class="r">${x.n}</td></tr>`).join('');
+  const tUn = porUn.map(x => `<tr><td>${esc(UN[x.nome] ? UN[x.nome].nome : x.nome)}</td><td class="r">${fmtN(+x.kg.toFixed(3))} kg</td><td class="r">${x.n}</td><td class="r">${R.dKg ? Math.round(x.kg / R.dKg * 100) : 0}%</td></tr>`).join('');
+  const detalhe = R.desp.slice().reverse().map(d => `<tr><td>${fmtDH(d.data_hora)}</td><td>${esc(un(d.unidade))}</td><td>${esc(d.tipo)}</td>
+    <td>${esc(d.causa)}</td><td>${esc(d.produto_nome || '—')}</td><td class="r"><b>${fmtN(d.kg)}</b> kg</td><td>${esc(d.responsavel)}</td>
+    <td>${esc(d.obs || '')}${d.demanda_tecnica === 'Sim' ? ' <b>[demanda técnica]</b>' : ''}</td><td class="r">${d.evidencia ? 'sim' : '—'}</td></tr>`).join('');
+  const vazio = t => `<div class="vazio">${t}</div>`;
+
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>Relatório de Desperdício ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page{size:A4 portrait;margin:10mm}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Figtree',system-ui,sans-serif;color:${T.text};font-size:9.2pt;line-height:1.35;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1,h2{margin:0;font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+table{width:100%;border-collapse:collapse}
+td,th{font-variant-numeric:tabular-nums}
+.r{text-align:right}
+.pill{display:inline-block;border-radius:99px;padding:1px 7px;font-size:7.6pt;font-weight:700;white-space:nowrap}
+.bar{height:6px;background:${T.line};border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:${T.brand}}
+.mute{color:${T.mute}}
+.head{background:${T.dark};color:#fff;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:14px}
+.head .logo{background:${T.logoBg};border-radius:8px;padding:${T.logoPad};height:44px;display:flex;align-items:center}
+.head .logo img{height:34px;max-width:110px;object-fit:contain;display:block}
+.head h1{font-size:17pt;font-weight:800}
+.head .sub{font-size:8.6pt;opacity:.8;margin-top:2px}
+.head .right{margin-left:auto;text-align:right;font-size:8pt;opacity:.85;line-height:1.5}
+.head .right b{display:block;font-size:9.4pt;opacity:1}
+.painel{display:flex;gap:10px;margin:10px 0 12px;align-items:stretch}
+.gaugebox{background:${T.dark};color:#fff;border-radius:10px;padding:10px 14px 8px;text-align:center;width:172px;flex:none}
+.gaugebox .v{font-family:'Bricolage Grotesque';font-size:25pt;font-weight:800;margin-top:-34px}
+.gaugebox .l{font-size:8pt;opacity:.85;margin-top:4px}
+.gaugebox .l2{font-size:7pt;opacity:.6;margin-top:2px}
+.kpis{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:${T.soft};border:1px solid ${T.line};border-radius:9px;padding:8px 10px}
+.kpi b{display:block;font-family:'Bricolage Grotesque';font-size:15pt;font-weight:800;line-height:1.1}
+.kpi span{font-size:7.8pt;color:${T.mute}}
+h2.sec{font-size:10.5pt;font-weight:700;color:${T.dark};margin:14px 0 7px;padding-left:8px;border-left:4px solid ${T.brand};display:flex;align-items:baseline;gap:8px}
+h2.sec small{font-family:'Figtree';font-weight:500;font-size:7.8pt;color:${T.mute}}
+.alertas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.alerta{border:1px solid ${T.line};border-left:5px solid #C23A2E;border-radius:9px;padding:8px 10px;break-inside:avoid}
+.alerta.atencao{border-left-color:#E0A020}
+.a-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px}
+.a-mid .big{font-family:'Bricolage Grotesque';font-size:14pt;font-weight:800;margin-right:5px}
+.a-mid .mute,.a-bot{font-size:7.8pt;color:${T.mute}}
+.a-bot{margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+.box{border:1px solid ${T.line};border-radius:10px;overflow:hidden;break-inside:avoid;margin-bottom:10px}
+.box>h2{background:${T.dark};color:#fff;font-size:9.6pt;font-weight:700;padding:6px 10px;display:flex;justify-content:space-between;align-items:baseline}
+.box>h2 span{font-family:'Figtree';font-size:7.6pt;font-weight:500;opacity:.8}
+.box table{font-size:8.6pt}
+.box th{text-align:left;font-size:7.4pt;color:${T.mute};font-weight:600;padding:5px 10px;border-bottom:1px solid ${T.line}}
+.box th.r{text-align:right}
+.box td.r{white-space:nowrap}
+.box td{padding:4.5px 10px;border-bottom:1px solid ${T.line}}
+.box tr:last-child td{border-bottom:0}
+.box tbody tr:nth-child(even) td{background:${T.zebra}}
+.vazio{padding:10px;text-align:center;color:${T.mute};font-size:8.4pt}
+.nota{font-size:7.6pt;color:${T.mute};margin:-4px 0 10px}
+.rodape{margin-top:14px;border-top:1px solid ${T.line};padding-top:5px;display:flex;justify-content:space-between;font-size:7.4pt;color:${T.mute}}
+@media print{.dica{display:none}}
+.dica{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;background:${T.dark};color:#fff;padding:9px 16px;border-radius:99px;font-size:9pt;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.dica button{margin-left:10px;border:0;border-radius:99px;padding:5px 12px;background:${T.brand};color:#fff;font-weight:700;cursor:pointer;font:inherit}
+</style></head><body>
+<div class="head">
+  <div class="logo"><img src="${ASSETS_URL + L.logo}" alt="${esc(L.alt)}" onerror="this.style.display='none'"></div>
+  <div><h1>Relatório de Desperdício</h1><div class="sub">${esc(nomeUnidades(R.us))} · ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</div></div>
+  <div class="right"><b>Q Food Group</b>Gerado por ${esc(USER.nome)} · ${fmtDH(nowISO())}</div>
+</div>
+
+<div class="painel">
+  <div class="gaugebox">${pdfGaugeDesp(R.pctDesp)}<div class="v">${R.pctDesp === null ? '—' : fmtN(R.pctDesp) + '%'}</div>
+    <div class="l">Da produção foi descartada</div>
+    <div class="l2">${R.pctDesp === null ? 'sem base de produção convertível em kg' : `${fmtN(+R.dKg.toFixed(1))} kg de ${fmtN(+R.prodKgTotal.toFixed(1))} kg produzidos`}</div></div>
+  <div class="kpis">${kpis}</div>
+</div>
+
+<h2 class="sec">Onde está a maior perda <small>produtos com maior descarte no período</small></h2>
+${cards ? `<div class="alertas">${cards}</div>` : vazio('Nenhum descarte registrado no período.')}
+
+<div class="box" style="margin-top:12px"><h2>Desperdício por produto <span>descarte comparado com o que foi produzido</span></h2>
+  ${tProd ? `<table><thead><tr><th>Produto</th><th class="r">Descarte</th><th class="r">Reg.</th><th class="r">Produzido</th><th class="r">Índice</th><th>Causa principal</th></tr></thead><tbody>${tProd}</tbody></table>` : vazio('Nenhum descarte registrado.')}</div>
+${tProd ? '<div class="nota">O índice compara o descarte com a produção do mesmo período. Produtos medidos em unidade ou litro só entram na conta quando têm peso médio preenchido no cadastro.</div>' : ''}
+
+<div class="grid">
+  <div class="box" style="margin-bottom:0"><h2>Por causa <span>onde agir primeiro</span></h2>
+    ${R.dCausa.length ? `<table><thead><tr><th>Causa</th><th class="r">kg</th><th class="r">Reg.</th><th class="r">%</th><th></th></tr></thead><tbody>${linhaSimples(R.dCausa)}</tbody></table>` : vazio('Sem registros.')}</div>
+  <div class="box" style="margin-bottom:0"><h2>Por tipo <span>o que foi para o lixo</span></h2>
+    ${R.dTipo.length ? `<table><thead><tr><th>Tipo</th><th class="r">kg</th><th class="r">Reg.</th><th class="r">%</th><th></th></tr></thead><tbody>${linhaSimples(R.dTipo)}</tbody></table>` : vazio('Sem registros.')}</div>
+</div>
+
+<div class="grid" style="margin-top:10px">
+  <div class="box" style="margin-bottom:0"><h2>Por dia <span>evolução no período</span></h2>
+    ${tDia ? `<table><thead><tr><th>Dia</th><th class="r">Descartado</th><th></th></tr></thead><tbody>${tDia}</tbody></table>` : vazio('Sem registros.')}</div>
+  <div>
+    ${R.us.length > 1 ? `<div class="box"><h2>Por unidade</h2><table><thead><tr><th>Unidade</th><th class="r">kg</th><th class="r">Reg.</th><th class="r">%</th></tr></thead><tbody>${tUn}</tbody></table></div>` : ''}
+    <div class="box" style="margin-bottom:0"><h2>Quem registrou <span>controle da rotina de pesagem</span></h2>
+      ${tResp ? `<table><thead><tr><th>Responsável</th><th class="r">kg</th><th class="r">Reg.</th></tr></thead><tbody>${tResp}</tbody></table>` : vazio('Sem registros.')}</div>
+  </div>
+</div>
+
+<div class="box" style="margin-top:10px"><h2>Registros do período <span>${R.desp.length} ${R.desp.length === 1 ? 'descarte' : 'descartes'}, ${comFoto} com foto</span></h2>
+  ${detalhe ? `<table><thead><tr><th>Data</th><th>Un.</th><th>Tipo</th><th>Causa</th><th>Produto</th><th class="r">Peso</th><th>Responsável</th><th>Observação</th><th class="r">Foto</th></tr></thead><tbody>${detalhe}</tbody></table>` : vazio('Nenhum descarte registrado no período.')}</div>
+
+<div class="rodape"><span>${esc(UN_IDS.map(u => UN[u].nome).join(' · '))}</span><span>Controle de Produção · Q Food Group</span></div>
+<div class="dica">Use "Salvar como PDF" no destino da impressão.<button type="button" onclick="window.print()">Imprimir</button></div>
+</body></html>`;
+}
+function imprimirHTML(html, nome) {
   const janela = window.open('', '_blank');
   if (janela && janela.document) {
     janela.document.open();
@@ -1814,7 +1991,6 @@ async function exportarPDF() {
     else janela.addEventListener('load', () => setTimeout(disparar, 700));
     return;
   }
-  // Sem permissão para abrir aba nova: imprime por um quadro oculto na própria página.
   const antigo = $('#quadroImpressao');
   if (antigo) antigo.remove();
   const f = document.createElement('iframe');
@@ -1828,11 +2004,17 @@ async function exportarPDF() {
     catch (e) { console.warn(e); toast('Não foi possível abrir a impressão. Libere as janelas pop-up deste site.', true); }
   }, 700));
 }
-
+async function exportarDespPDF() {
+  const R = dadosRelatorio();
+  toast('Preparando o relatório de desperdício…');
+  imprimirHTML(relatorioDespHTML(R), `Relatorio_Desperdicio_${R.per[0]}_a_${R.per[1]}`);
+}
 async function exportar(tipo) {
   if (!isManager()) { toast('Relatórios disponíveis só para acompanhamento e coordenação.', true); return; }
   try {
-    if (tipo === 'xlsx') await exportarExcel(); else await exportarPDF();
+    if (tipo === 'xlsx') await exportarExcel();
+    else if (tipo === 'desp') await exportarDespPDF();
+    else await exportarPDF();
   } catch (e) {
     console.error(e);
     toast('Não foi possível gerar o arquivo. Verifique a internet e tente de novo.', true);
@@ -2069,6 +2251,7 @@ document.addEventListener('click', ev => {
     case 'ct-salvar': salvarContagem(); break;
     case 'exp-xlsx': exportar('xlsx'); break;
     case 'exp-pdf': exportar('pdf'); break;
+    case 'exp-desp': exportar('desp'); break;
     case 'cad-tab': CAD_TAB = el.dataset.t; render(); break;
     case 'novo-produto': abrirProdutoCad(null); break;
     case 'edit-prod-cad': abrirProdutoCad(prodById(id)); break;
