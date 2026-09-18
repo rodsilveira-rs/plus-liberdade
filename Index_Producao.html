@@ -234,6 +234,8 @@ table.tb tr.click:hover td{background:#F7F9F6}
 .sheet header button{background:none;border:0;font-size:26px;line-height:1;cursor:pointer;color:var(--mute);padding:4px 8px}
 .sheet .body{padding:16px 18px calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:90vw;text-align:center}
+.aviso-versao{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;padding:10px 12px 10px 18px;border-radius:999px;font-weight:600;font-size:14px;z-index:70;box-shadow:0 10px 30px rgba(0,0,0,.28);max-width:92vw}
+.aviso-versao button{border:0;border-radius:999px;padding:8px 14px;background:var(--brand);color:var(--brand-on);font-weight:700;cursor:pointer;font:inherit;white-space:nowrap}
 .toast.bad{background:var(--chili)}
 </style>
 </head>
@@ -285,7 +287,9 @@ const CFG = {
   // Logins do Index_Menu que entram só como equipe de produção (sem Relatórios e Cadastros)
   EMAILS_OPERADOR: ['producao@mercearialiberdade.com.br'],
   LIB_XLSX: 'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js',
-  LIB_XLSX_NOTA: 'Excel via xlsx-js-style; PDF é gerado pelo próprio navegador (imprimir para PDF)'
+  LIB_XLSX_NOTA: 'Excel via xlsx-js-style; PDF é gerado pelo próprio navegador (imprimir para PDF)',
+  VERSAO_MS: 300000,   // de quanto em quanto tempo procura uma versão nova do arquivo
+  OCIOSO_MS: 60000     // tempo sem toque na tela para recarregar sozinho
 };
 
 const UN = {
@@ -435,8 +439,13 @@ function setSync(state, msg) { SYNC = { state, msg }; updSync(); }
 function updSync() {
   const el = $('#sync'); if (!el) return;
   if (!CFG.GAS_URL) { el.className = 'sync'; $('.sync-txt', el).textContent = 'Somente neste aparelho'; return; }
-  el.className = 'sync ' + SYNC.state;
-  $('.sync-txt', el).textContent = SYNC.msg + (OUTBOX.length && SYNC.state !== 'sync' ? ` (${OUTBOX.length} pendente${OUTBOX.length > 1 ? 's' : ''})` : '');
+  const fotos = fotosNaFila();
+  const fila = [];
+  if (OUTBOX.length) fila.push(`${OUTBOX.length} registro${OUTBOX.length > 1 ? 's' : ''}`);
+  if (fotos) fila.push(`${fotos} foto${fotos > 1 ? 's' : ''}`);
+  const offline = !navigator.onLine;
+  el.className = 'sync ' + (offline ? 'err' : SYNC.state);
+  $('.sync-txt', el).textContent = (offline ? 'Sem internet' : SYNC.msg) + (fila.length ? ` (${fila.join(' e ')} na fila)` : '');
 }
 async function api(body) {
   const res = await fetch(CFG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
@@ -460,6 +469,7 @@ async function flush() {
     setSync('err', 'Sem conexão');
   } finally { flushing = false; }
   if (ok && OUTBOX.length) flush();
+  if (ok) flushFotos();
 }
 const isTyping = () => { const a = document.activeElement; return a && ['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName); };
 async function load() {
@@ -808,7 +818,7 @@ function vProducao() {
         <b>${esc(r.produto_nome)}</b>
         <div class="meta"><span>Para ${UN[r.unidade] ? UN[r.unidade].curto : esc(r.unidade)}</span><span>feito em ${UN[r.local] ? UN[r.local].curto : esc(r.local || '—')}</span><span>por ${esc(r.responsavel)}</span>${r.validade ? `<span>validade ${fmtD(r.validade)}</span>` : ''}${r.lote ? `<span>lote ${esc(r.lote)}</span>` : ''}${r.ficha_usada === 'Não' ? '<span class="pill warn">Sem ficha técnica</span>' : ''}</div>
         ${r.obs ? `<div class="obs">${esc(r.obs)}</div>` : ''}
-        ${r.evidencia ? `<div class="obs"><a href="${esc(r.evidencia)}" target="_blank" rel="noopener">Ver foto</a></div>` : ''}
+        ${r.evidencia ? `<div class="obs">${fotoHTML(r.evidencia)}</div>` : ''}
         ${podeEditar(r) ? `<button type="button" class="btn sm ghost" style="margin-top:8px" data-act="edit-prod" data-id="${esc(r.id)}">Editar</button>` : ''}
       </div>
       <div class="qty num">${fmtN(r.qtd)} <small style="font-size:14px">${esc(r.medida)}</small></div>
@@ -853,10 +863,11 @@ function formProducao(r, sol) {
   </form>`;
 }
 function fotoField(r) {
+  const v = r ? (r.evidencia || '') : '';
   return `<div class="fld"><span>Foto</span>
-    <input type="file" accept="image/*" capture="environment" data-foto ${CFG.GAS_URL ? '' : 'disabled'}>
-    <input type="hidden" name="evidencia" value="${r ? esc(r.evidencia || '') : ''}">
-    <span class="hint foto-st">${r && r.evidencia ? `<a href="${esc(r.evidencia)}" target="_blank" rel="noopener">Ver foto anexada</a>` : (CFG.GAS_URL ? 'Opcional. Use para item novo, teste ou divergência.' : 'A foto fica disponível quando a sincronização estiver ligada.')}</span>
+    <input type="file" accept="image/*" capture="environment" data-foto>
+    <input type="hidden" name="evidencia" value="${esc(v)}">
+    <span class="hint foto-st">${v ? fotoHTML(v) : 'A foto fica guardada no aparelho e sobe sozinha quando houver internet.'}</span>
   </div>`;
 }
 function abrirProducao(r, solId) {
@@ -1071,7 +1082,7 @@ function cardObs(o) {
     <div class="meta"><span class="pill ${cls}">${esc(o.impacto)}</span><span class="pill mute">${esc(o.tipo)}</span>${o.demanda_tecnica === 'Sim' ? '<span class="pill info">Pede demanda técnica</span>' : ''}</div>
     <div>${esc(o.descricao)}</div>
     <div class="meta"><span>${UN[o.unidade] ? UN[o.unidade].curto : esc(o.unidade)}${o.setor ? `, ${esc(o.setor)}` : ''}</span>${o.produto_nome ? `<span>${esc(o.produto_nome)}</span>` : ''}<span>${esc(o.responsavel)}, ${fmtDH(o.data_hora)}</span></div>
-    <div class="actions">${o.evidencia ? `<a href="${esc(o.evidencia)}" target="_blank" rel="noopener" class="btn sm ghost">Ver foto</a>` : ''}${podeEditar(o) ? `<button type="button" class="btn sm ghost" data-act="edit-obs" data-id="${esc(o.id)}">Editar</button>` : ''}</div>
+    <div class="actions">${o.evidencia ? fotoHTML(o.evidencia, 'btn sm ghost') : ''}${podeEditar(o) ? `<button type="button" class="btn sm ghost" data-act="edit-obs" data-id="${esc(o.id)}">Editar</button>` : ''}</div>
   </div>`;
 }
 function vObservacoes() {
@@ -1205,7 +1216,7 @@ function vDesperdicio() {
       <b>${esc(d.tipo)}${d.produto_nome ? ' · ' + esc(d.produto_nome) : ''}</b>
       <div class="meta"><span>${UN[d.unidade] ? UN[d.unidade].curto : esc(d.unidade)}</span><span>${esc(d.setor || '')}</span><span>${esc(d.causa)}</span><span>${esc(d.responsavel)}, ${fmtDH(d.data_hora)}</span>${d.demanda_tecnica === 'Sim' ? '<span class="pill info">Pede demanda técnica</span>' : ''}</div>
       ${d.obs ? `<div class="obs">${esc(d.obs)}</div>` : ''}
-      <div class="obs">${d.evidencia ? `<a href="${esc(d.evidencia)}" target="_blank" rel="noopener">Ver foto</a>` : '<span class="pill warn">Sem foto</span>'}</div>
+      <div class="obs">${d.evidencia ? fotoHTML(d.evidencia) : '<span class="pill bad">Sem foto</span>'}</div>
       ${podeEditar(d) ? `<button type="button" class="btn sm ghost" style="margin-top:8px" data-act="edit-desp" data-id="${esc(d.id)}">Editar</button>` : ''}
     </div>
     <div class="qty num">${fmtN(d.kg)} <small style="font-size:14px">kg</small></div>
@@ -1233,9 +1244,9 @@ function abrirDesperdicio(r, tipoPre) {
     </div>
     <label class="fld"><span>Observação</span><textarea name="obs" placeholder="Ex.: sobrou metade da bandeja do almoço">${r ? esc(r.obs || '') : ''}</textarea></label>
     <div class="fld req"><span>Foto do descarte</span>
-      <input type="file" accept="image/*" capture="environment" data-foto ${CFG.GAS_URL ? '' : 'disabled'}>
+      <input type="file" accept="image/*" capture="environment" data-foto>
       <input type="hidden" name="evidencia" value="${r ? esc(r.evidencia || '') : ''}">
-      <span class="hint foto-st">${r && r.evidencia ? `<a href="${esc(r.evidencia)}" target="_blank" rel="noopener">Ver foto anexada</a>` : (CFG.GAS_URL ? 'Obrigatória: fotografe o recipiente na balança, com o peso visível.' : 'A foto fica disponível quando a sincronização estiver ligada.')}</span>
+      <span class="hint foto-st">${r && r.evidencia ? fotoHTML(r.evidencia) : 'Obrigatória: fotografe o recipiente na balança, com o peso visível. Sem internet, a foto fica guardada no aparelho e sobe sozinha depois.'}</span>
     </div>
     <label class="fld"><span>Precisa abrir demanda técnica?</span><select name="demanda_tecnica">${opts(['Não', 'Sim'], r ? r.demanda_tecnica : 'Não')}</select>
       <span class="hint">Marque "Sim" quando o descarte for fora do padrão ou já tiver se repetido.</span></label>
@@ -1267,7 +1278,7 @@ function abrirDesperdicio(r, tipoPre) {
       const peso = num(f.peso.value);
       if (isNaN(peso) || peso <= 0) { err.textContent = 'Informe o peso descartado.'; return; }
       if (!f.causa.value) { err.textContent = 'Escolha a causa provável.'; return; }
-      if (CFG.GAS_URL && !f.evidencia.value) { err.textContent = 'Anexe a foto do descarte na balança.'; return; }
+      if (!f.evidencia.value) { err.textContent = 'Anexe a foto do descarte na balança.'; return; }
       const kg = +(f.und.value === 'g' ? peso / 1000 : peso).toFixed(3);
       if (kg <= 0) { err.textContent = 'Peso muito pequeno para registrar.'; return; }
       const p = prodById(f.produto_id.value);
@@ -1873,7 +1884,7 @@ function relatorioDespHTML(R) {
   const tUn = porUn.map(x => `<tr><td>${esc(UN[x.nome] ? UN[x.nome].nome : x.nome)}</td><td class="r">${fmtN(+x.kg.toFixed(3))} kg</td><td class="r">${x.n}</td><td class="r">${R.dKg ? Math.round(x.kg / R.dKg * 100) : 0}%</td></tr>`).join('');
   const detalhe = R.desp.slice().reverse().map(d => `<tr><td>${fmtDH(d.data_hora)}</td><td>${esc(un(d.unidade))}</td><td>${esc(d.tipo)}</td>
     <td>${esc(d.causa)}</td><td>${esc(d.produto_nome || '—')}</td><td class="r"><b>${fmtN(d.kg)}</b> kg</td><td>${esc(d.responsavel)}</td>
-    <td>${esc(d.obs || '')}${d.demanda_tecnica === 'Sim' ? ' <b>[demanda técnica]</b>' : ''}</td><td class="r">${d.evidencia ? 'sim' : '—'}</td></tr>`).join('');
+    <td>${esc(d.obs || '')}${d.demanda_tecnica === 'Sim' ? ' <b>[demanda técnica]</b>' : ''}</td><td class="r">${fotoPendente(d.evidencia) ? 'fila' : (d.evidencia ? 'sim' : '—')}</td></tr>`).join('');
   const vazio = t => `<div class="vazio">${t}</div>`;
 
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
@@ -2138,8 +2149,41 @@ function abrirPessoa(p) {
 }
 
 /* =========================================================
-   FOTO (envio para o Drive via Apps Script)
+   FOTOS: guarda no aparelho e envia quando houver internet
    ========================================================= */
+const FOTO_DB = 'cprod_fotos';
+let FOTO_FLUSH = false;
+function idb() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(FOTO_DB, 1);
+    req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains('fotos')) req.result.createObjectStore('fotos', { keyPath: 'id' }); };
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+function idbOp(modo, fn) {
+  return idb().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('fotos', modo);
+    const st = tx.objectStore('fotos');
+    const r = fn(st);
+    tx.oncomplete = () => res(r && r.result !== undefined ? r.result : r);
+    tx.onerror = () => rej(tx.error);
+  }));
+}
+const fotoGuardar = f => idbOp('readwrite', st => st.put(f));
+const fotoLer = id => idbOp('readonly', st => st.get(id));
+const fotoApagar = id => idbOp('readwrite', st => st.delete(id));
+const fotoTodas = () => idbOp('readonly', st => st.getAll());
+
+const fotoPendente = v => String(v || '').startsWith('pendente:');
+function fotoHTML(v, classe) {
+  if (!v) return '';
+  if (fotoPendente(v)) return '<span class="pill warn">Foto guardada, aguardando internet</span>';
+  return `<a href="${esc(v)}" target="_blank" rel="noopener"${classe ? ` class="${classe}"` : ''}>Ver foto</a>`;
+}
+const TABS_COM_FOTO = ['producoes', 'observacoes', 'desperdicios'];
+const fotosNaFila = () => TABS_COM_FOTO.reduce((n, t) => n + DB[t].filter(r => r.status !== 'cancelado' && fotoPendente(r.evidencia)).length, 0);
+
 async function compressImg(file) {
   const url = URL.createObjectURL(file);
   try {
@@ -2151,6 +2195,11 @@ async function compressImg(file) {
     return c.toDataURL('image/jpeg', 0.72);
   } finally { URL.revokeObjectURL(url); }
 }
+async function enviarFoto(foto) {
+  const r = await api({ action: 'upload', name: foto.nome, mime: 'image/jpeg', data: foto.data.split(',')[1] });
+  if (!r || !r.ok) throw new Error((r && r.error) || 'Falha no envio da foto');
+  return r.url;
+}
 function bindFoto(root) {
   const inp = $('[data-foto]', root);
   if (!inp) return;
@@ -2158,22 +2207,148 @@ function bindFoto(root) {
     const file = inp.files[0];
     if (!file) return;
     const out = $('input[name=evidencia]', root), st = $('.foto-st', root);
-    if (!CFG.GAS_URL) { st.textContent = 'A foto fica disponível quando a sincronização estiver ligada.'; return; }
     FOTO_BUSY = true;
-    st.textContent = 'Enviando foto…';
+    st.textContent = 'Preparando a foto…';
     try {
       const data = await compressImg(file);
+      const id = uid('ft');
       const nome = `${today()}_${USER.nome.replace(/[^\w]+/g, '_')}_${Date.now()}.jpg`;
-      const r = await api({ action: 'upload', name: nome, mime: 'image/jpeg', data: data.split(',')[1] });
-      if (!r || !r.ok) throw new Error((r && r.error) || 'Falha');
-      out.value = r.url;
-      st.innerHTML = `Foto anexada. <a href="${esc(r.url)}" target="_blank" rel="noopener">Ver</a>`;
+      await fotoGuardar({ id, data, nome, criado_em: nowISO() });
+      out.value = 'pendente:' + id;
+      st.textContent = 'Foto guardada no aparelho.';
+      if (CFG.GAS_URL && navigator.onLine) {
+        st.textContent = 'Enviando foto…';
+        try {
+          const url = await enviarFoto({ data, nome });
+          await fotoApagar(id);
+          out.value = url;
+          st.innerHTML = `Foto anexada. <a href="${esc(url)}" target="_blank" rel="noopener">Ver</a>`;
+        } catch (e) {
+          console.warn(e);
+          st.textContent = 'Sem internet agora. A foto fica guardada e sobe sozinha depois.';
+        }
+      }
     } catch (e) {
       console.warn(e);
-      st.textContent = 'Não foi possível enviar a foto. Verifique a internet e escolha a foto de novo.';
+      st.textContent = 'Não foi possível ler a foto. Tente tirar de novo.';
       inp.value = '';
     } finally { FOTO_BUSY = false; }
   });
+}
+async function flushFotos() {
+  if (!CFG.GAS_URL || FOTO_FLUSH || !navigator.onLine) return;
+  const pendentes = [];
+  TABS_COM_FOTO.forEach(t => DB[t].forEach(r => { if (r.status !== 'cancelado' && fotoPendente(r.evidencia)) pendentes.push({ tab: t, row: r }); }));
+  if (!pendentes.length) { limparFotosOrfas(); return; }
+  FOTO_FLUSH = true;
+  let enviadas = 0;
+  try {
+    for (const { tab, row } of pendentes.slice(0, 5)) {
+      const id = String(row.evidencia).slice(9);
+      const foto = await fotoLer(id);
+      if (!foto) { save(tab, { id: row.id, evidencia: '' }, true); continue; }
+      const url = await enviarFoto(foto);
+      save(tab, { id: row.id, evidencia: url }, true);
+      await fotoApagar(id);
+      enviadas++;
+    }
+  } catch (e) {
+    console.warn('Envio de foto adiado', e);
+  } finally { FOTO_FLUSH = false; }
+  if (enviadas) {
+    persist();
+    if (!$('#modal').classList.contains('open') && !isTyping()) render();
+    if (fotosNaFila()) setTimeout(flushFotos, 2000);
+  }
+}
+async function limparFotosOrfas() {
+  try {
+    const usadas = new Set();
+    TABS_COM_FOTO.forEach(t => DB[t].forEach(r => { if (fotoPendente(r.evidencia)) usadas.add(String(r.evidencia).slice(9)); }));
+    const todas = await fotoTodas();
+    const limite = Date.now() - 48 * 3600e3;
+    for (const f of todas) {
+      if (usadas.has(f.id)) continue;
+      if (new Date(String(f.criado_em).replace(' ', 'T')).getTime() < limite) await fotoApagar(f.id);
+    }
+  } catch (e) { /* silencioso */ }
+}
+function iniciarFotos() {
+  flushFotos();
+  setInterval(() => { if (!document.hidden) flushFotos(); }, 60000);
+  window.addEventListener('online', () => setTimeout(flushFotos, 1500));
+}
+
+/* =========================================================
+   ATUALIZAÇÃO AUTOMÁTICA
+   Consulta o próprio arquivo no GitHub Pages de tempos em tempos.
+   Se a assinatura mudou, avisa e recarrega quando for seguro.
+   ========================================================= */
+let VERSAO_ASSINATURA = null, NOVA_VERSAO = false, ULTIMO_TOQUE = Date.now(), CHECANDO = false;
+const hashTexto = t => {
+  let h = 5381;
+  for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+  return String(h);
+};
+function trabalhoEmAndamento() {
+  if ($('#modal').classList.contains('open')) return true;
+  if (isTyping()) return true;
+  if (OUTBOX.length) return true;
+  return Object.values(CONT_DRAFT).some(d => Object.values(d).some(x => x.qtd !== '' && x.qtd !== undefined));
+}
+function recarregar() {
+  const url = location.pathname + '?v=' + Date.now() + location.hash;
+  location.replace(url);
+}
+function avisarNovaVersao() {
+  if ($('#avisoVersao')) return;
+  const el = document.createElement('div');
+  el.id = 'avisoVersao';
+  el.className = 'aviso-versao';
+  el.innerHTML = '<span>Nova versão disponível</span><button type="button" data-act="atualizar">Atualizar agora</button>';
+  document.body.appendChild(el);
+}
+async function checarVersao() {
+  if (CHECANDO) return;
+  CHECANDO = true;
+  try {
+    const url = location.pathname + '?checagem=' + Date.now();
+    let assinatura = null;
+    try {
+      const h = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      if (h.ok) assinatura = h.headers.get('etag') || h.headers.get('last-modified');
+    } catch (e) { /* alguns servidores não respondem HEAD */ }
+    if (!assinatura) {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) return;
+      const t = await r.text();
+      assinatura = t.length + ':' + hashTexto(t);
+    }
+    if (!VERSAO_ASSINATURA) { VERSAO_ASSINATURA = assinatura; return; }
+    if (assinatura !== VERSAO_ASSINATURA) {
+      NOVA_VERSAO = true;
+      avisarNovaVersao();
+      if (!trabalhoEmAndamento() && Date.now() - ULTIMO_TOQUE > CFG.OCIOSO_MS) recarregar();
+    }
+  } catch (e) {
+    console.warn('Checagem de versão falhou', e);
+  } finally { CHECANDO = false; }
+}
+function iniciarChecagemVersao() {
+  checarVersao();
+  setInterval(() => { if (!document.hidden) checarVersao(); }, CFG.VERSAO_MS);
+  setInterval(() => {
+    if (NOVA_VERSAO && !document.hidden && !trabalhoEmAndamento() && Date.now() - ULTIMO_TOQUE > CFG.OCIOSO_MS) recarregar();
+  }, 20000);
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { ULTIMO_TOQUE = Date.now(); }, { passive: true }));
+}
+
+/* =========================================================
+   SERVICE WORKER: abre o sistema mesmo sem internet
+   ========================================================= */
+function registrarServiceWorker() {
+  if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+  navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker não registrado', e));
 }
 
 /* =========================================================
@@ -2233,6 +2408,7 @@ document.addEventListener('click', ev => {
   switch (a) {
     case 'logout': logout(); break;
     case 'menu': ev.preventDefault(); irParaMenu(); break;
+    case 'atualizar': recarregar(); break;
     case 'close': closeModal(); break;
     case 'goto': VIEW = el.dataset.v; render(); window.scrollTo(0, 0); break;
     case 'nova-prod': abrirProducao(null, el.dataset.sol); break;
@@ -2290,8 +2466,15 @@ window.addEventListener('beforeunload', ev => {
   const pend = Object.values(CONT_DRAFT).some(d => Object.values(d).some(x => x.qtd !== '' && x.qtd !== undefined));
   if (pend) { ev.preventDefault(); ev.returnValue = ''; }
 });
-window.addEventListener('online', () => { flush(); load(); });
-document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+window.addEventListener('online', () => { flush(); load(); updSync(); });
+window.addEventListener('offline', () => updSync());
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  ULTIMO_TOQUE = Date.now();
+  load();
+  flushFotos();
+  checarVersao();
+});
 
 /* =========================================================
    INÍCIO
@@ -2308,6 +2491,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) load
     });
     setInterval(() => { if (!document.hidden) load(); }, CFG.REFRESH_MS);
   }
+  iniciarChecagemVersao();
+  iniciarFotos();
+  registrarServiceWorker();
 })();
 </script>
 </body>
