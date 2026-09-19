@@ -273,7 +273,9 @@ table.tb tr.click:hover td{background:#F7F9F6}
    Vazio = modo local (dados só neste aparelho, útil para teste).
    ========================================================= */
 const CFG = {
-  GAS_URL: '',
+  /* Mesma URL /exec do Controle de Produção: o backend é único e separa os
+     dois sistemas pelo parâmetro app. */
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   CACHE_KEY: 'gt_cache_v1',
   OUTBOX_KEY: 'gt_outbox_v1',
   ROSTER_KEY: 'gt_roster_v1',
@@ -467,7 +469,9 @@ function updSync() {
   $('.sync-txt', el).textContent = (offline ? 'Sem internet' : SYNC.msg) + (fila.length ? ` (${fila.join(' e ')} na fila)` : '');
 }
 async function api(body) {
-  const res = await fetch(CFG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  /* app: 'gt' diz ao backend unificado que quem fala é a Gestão Técnica.
+     É isso que impede este site de gravar nas abas do Controle de Produção. */
+  const res = await fetch(CFG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ app: 'gt', ...body }) });
   return res.json();
 }
 async function flush() {
@@ -497,7 +501,7 @@ async function load() {
   if (!CFG.GAS_URL) return;
   setSync('sync', 'Atualizando…');
   try {
-    const res = await fetch(CFG.GAS_URL + '?action=load&t=' + Date.now());
+    const res = await fetch(CFG.GAS_URL + '?action=load&app=gt&t=' + Date.now());
     const j = await res.json();
     if (!j.ok) throw new Error(j.error || 'Falha na leitura');
     TABS.forEach(t => { DB[t] = Array.isArray(j.data[t]) ? j.data[t] : []; });
