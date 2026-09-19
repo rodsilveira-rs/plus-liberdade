@@ -321,7 +321,12 @@ function aplicarTema(u) {
 }
 const MEDIDAS = ['un', 'kg', 'g', 'L', 'ml', 'porção', 'bandeja', 'pote'];
 const TIPOS_OBS = ['Falta de insumo', 'Qualidade', 'Equipamento', 'Equipe', 'Processo', 'Validade', 'Recebimento', 'Outro'];
-const TIPOS_DESP = ['Resto de prato', 'Sobra limpa', 'Perda no preparo', 'Produto vencido', 'Produto avariado'];
+/* "Registro total" é para quando pesam tudo junto, sem separar por tipo.
+   Fica por último de propósito: os tipos específicos continuam sendo o caminho
+   normal, e o total é a saída para o dia corrido. */
+const TIPO_TOTAL = 'Registro total';
+const TIPOS_DESP = ['Resto de prato', 'Sobra limpa', 'Perda no preparo', 'Produto vencido', 'Produto avariado', TIPO_TOTAL];
+const normNome = s => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const CAUSAS_DESP = ['Excesso de produção', 'Baixa saída', 'Porcionamento', 'Erro de preparo', 'Armazenamento', 'Equipamento', 'Qualidade do insumo', 'Outro'];
 const SETORES = ['Cozinha', 'Produção', 'Salão', 'Estoque', 'Recebimento', 'Higienização', 'Estrutura', 'Outro'];
 const IMPACTOS = ['Baixo', 'Médio', 'Alto', 'Crítico'];
@@ -1235,8 +1240,10 @@ function abrirDesperdicio(r, tipoPre) {
       <label class="fld req"><span>O que foi descartado</span><select name="tipo">${opts(TIPOS_DESP, r ? r.tipo : (tipoPre || TIPOS_DESP[0]))}</select></label>
       <label class="fld req"><span>Causa provável</span><select name="causa"><option value="">Escolha a causa</option>${opts(CAUSAS_DESP, r ? r.causa : '')}</select></label>
     </div>
-    <label class="fld"><span>Produto relacionado</span><select name="produto_id"></select>
-      <span class="hint">Deixe em Nenhum quando for lixo misturado de vários itens.</span></label>
+    <label class="fld"><span>Produto relacionado</span>
+      <input type="text" name="produto_nome" list="listaProdDesp" autocomplete="off" placeholder="Escolha da lista ou escreva" value="${r ? esc(r.produto_nome || '') : ''}">
+      <datalist id="listaProdDesp"></datalist>
+      <span class="hint">Pode escolher da lista ou escrever o nome. Deixe em branco quando for lixo misturado de vários itens.</span></label>
     <div class="grid2">
       <label class="fld req"><span>Peso descartado</span><input type="text" inputmode="decimal" name="peso" value="${r ? fmtN(r.kg).replace(/\./g, '') : ''}" placeholder="0"></label>
       <label class="fld"><span>Unidade do peso</span><select name="und">${opts([{ v: 'kg', t: 'kg' }, { v: 'g', t: 'gramas' }], 'kg')}</select>
@@ -1257,13 +1264,17 @@ function abrirDesperdicio(r, tipoPre) {
     </div>
   </form>`, root => {
     const fm = $('#fDesp', root), f = fm.elements;
-    const fill = () => {
-      const list = prodsDaUnidade(f.unidade.value);
-      const cur = r ? r.produto_id : '';
-      f.produto_id.innerHTML = '<option value="">Nenhum ou vários</option>' + list.map(p => `<option value="${esc(p.id)}" ${p.id === cur ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
-    };
-    fill();
-    f.unidade.addEventListener('change', fill);
+    /* A lista traz todos os produtos ativos, sem filtrar por unidade: muita coisa
+       é produzida na Cozinha de Produção e descartada na Mercearia. Como é campo
+       de texto, também aceita item que ainda não está no cadastro. */
+    const dl = $('#listaProdDesp', root);
+    dl.innerHTML = ativos().sort(byNome).map(p => `<option value="${esc(p.nome)}"></option>`).join('');
+    /* No Registro total a causa vira opcional: pesando tudo junto, a causa
+       também é misturada, e exigir só geraria dado inventado. */
+    const labelCausa = f.causa.closest('.fld');
+    const ajustaCausa = () => { labelCausa.classList.toggle('req', f.tipo.value !== TIPO_TOTAL); };
+    ajustaCausa();
+    f.tipo.addEventListener('change', ajustaCausa);
     bindFoto(root);
     const del = $('#dDel', root);
     if (del) del.addEventListener('click', () => {
@@ -1277,14 +1288,17 @@ function abrirDesperdicio(r, tipoPre) {
       if (FOTO_BUSY) { err.textContent = 'Aguarde o envio da foto terminar.'; return; }
       const peso = num(f.peso.value);
       if (isNaN(peso) || peso <= 0) { err.textContent = 'Informe o peso descartado.'; return; }
-      if (!f.causa.value) { err.textContent = 'Escolha a causa provável.'; return; }
+      if (!f.causa.value && f.tipo.value !== TIPO_TOTAL) { err.textContent = 'Escolha a causa provável.'; return; }
       if (!f.evidencia.value) { err.textContent = 'Anexe a foto do descarte na balança.'; return; }
       const kg = +(f.und.value === 'g' ? peso / 1000 : peso).toFixed(3);
       if (kg <= 0) { err.textContent = 'Peso muito pequeno para registrar.'; return; }
-      const p = prodById(f.produto_id.value);
+      /* Se o que foi escrito bate com um produto do cadastro, guarda o id junto.
+         Se não bate, guarda só o nome digitado, que serve igual no relatório. */
+      const digitado = f.produto_nome.value.trim();
+      const p = digitado ? ativos().find(x => normNome(x.nome) === normNome(digitado)) : null;
       const row = {
         id: r ? r.id : uid('ds'), unidade: f.unidade.value, setor: f.setor.value, tipo: f.tipo.value, causa: f.causa.value,
-        produto_id: p ? p.id : '', produto_nome: p ? p.nome : '', kg, obs: f.obs.value.trim(),
+        produto_id: p ? p.id : '', produto_nome: p ? p.nome : digitado, kg, obs: f.obs.value.trim(),
         evidencia: f.evidencia.value, demanda_tecnica: f.demanda_tecnica.value, status: 'ativo'
       };
       if (!r) { row.data_hora = nowISO(); row.responsavel = USER.nome; row.criado_por = USER.nome; row.criado_em = nowISO(); }
