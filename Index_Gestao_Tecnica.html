@@ -347,7 +347,10 @@ const prioCls = p => (PRIO[p] || PRIO.Normal).c;
 
 const IMPACTOS = ['Baixo', 'Médio', 'Alto', 'Crítico'];
 const SETORES = ['Cozinha', 'Produção', 'Salão', 'Estoque', 'Recebimento', 'Higienização', 'Estrutura', 'Outro'];
-const NIVEIS = { executor: 'Execução', tecnico: 'Técnico', gestor: 'Coordenação' };
+/* Todo mundo que tem acesso trabalha em pé de igualdade: abre, direciona,
+   transfere, valida e encerra. A única exceção é quem for marcado como
+   'executor' na USRR, que só recebe e executa. */
+const NIVEIS = { executor: 'Execução', gestor: 'Gestão' };
 
 /* Tipos de movimento da linha do tempo — é isso que responde "quem passou a bola para quem". */
 const MOV = {
@@ -531,19 +534,20 @@ function sessaoMenu() {
 function definirUsuario() {
   const s = sessaoMenu();
   if (!s) { USER = null; return false; }
-  const nivel = String(s.gtNivel || '').trim().toLowerCase();
-  const valido = ['executor', 'tecnico', 'gestor'].includes(nivel);
+  const bruto = String(s.gtNivel || '').trim().toLowerCase();
   const abas = String(s.abas || '').split(',').map(x => x.trim());
-  if (!valido && abas.indexOf('gestaotecnica') < 0) { USER = null; return false; }
+  /* Qualquer valor na coluna Gestao_Tecnica libera o acesso — 'X', 'gestor',
+     'tecnico' ou o que estiver escrito lá. Só 'executor' restringe. */
+  if (!bruto && abas.indexOf('gestaotecnica') < 0) { USER = null; return false; }
   USER = {
     email: String(s.email).trim().toLowerCase(),
     nome: s.nome || s.email,
-    nivel: valido ? nivel : 'executor'
+    nivel: bruto === 'executor' ? 'executor' : 'gestor'
   };
   return true;
 }
-const ehGestor = () => !!USER && USER.nivel === 'gestor';
-const ehTecnico = () => !!USER && (USER.nivel === 'tecnico' || USER.nivel === 'gestor');
+const ehGestor = () => !!USER && USER.nivel !== 'executor';
+const ehTecnico = ehGestor;
 const souEu = nome => !!USER && normal(nome) === normal(USER.nome);
 
 /* Lista de responsáveis: quem tem a coluna Gestao_Tecnica preenchida na USRR. */
