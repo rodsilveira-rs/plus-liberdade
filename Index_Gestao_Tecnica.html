@@ -106,8 +106,19 @@ button{cursor:pointer}
 .side-nav button:hover{background:rgba(255,255,255,.06)}
 .side-nav button.on{background:var(--side-ativo);color:#fff;font-weight:600;box-shadow:inset 3px 0 0 var(--red-q)}
 .side-nav .n{margin-left:auto;min-width:20px;height:20px;line-height:20px;padding:0 6px;border-radius:999px;background:var(--red-q);color:#fff;font-size:11px;font-weight:700;text-align:center}
-.side-tag{margin-top:auto;padding:24px 24px 0 34px;font-size:14px;line-height:1.4;color:var(--side-txt)}
-.side-tag i{display:block;width:34px;height:3px;border-radius:2px;background:var(--red-q);margin-top:20px}
+.side-tag{margin-top:auto;padding:24px 24px 18px 34px;font-size:14px;line-height:1.4;color:var(--side-txt)}
+.side-tag i{display:block;width:34px;height:3px;border-radius:2px;background:var(--red-q);margin-top:16px}
+/* Rodapé da lateral: usuário, menu principal e sair */
+.side-foot{padding:0 12px;display:flex;flex-direction:column;gap:2px}
+.side-user{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.04);min-width:0}
+.side-user .avatar{width:40px;height:40px;background:#27303A;border:1px solid rgba(255,255,255,.14);font-size:16px}
+.side-user div{min-width:0}
+.side-user b{display:block;color:#fff;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-user small{display:block;color:var(--side-txt);opacity:.65;font-size:12.5px}
+.side-foot a,.side-foot button{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;color:var(--side-txt);padding:10px 12px;border-radius:6px;font-size:14px;font-weight:500;text-decoration:none;text-align:left}
+.side-foot a:hover,.side-foot button:hover{background:rgba(255,255,255,.06);color:#fff}
+.side-foot .ic{width:19px;height:19px;opacity:.85}
+.side-rod{display:flex;justify-content:space-between;gap:12px;padding:14px 12px 0;font-size:11px;color:var(--side-txt);opacity:.45;white-space:nowrap}
 
 /* Cabeçalho do computador */
 .dtop{display:none}
@@ -436,6 +447,12 @@ details.mais-ind>summary::-webkit-details-marker{display:none}
     </div>
     <nav class="side-nav" id="sideNav"></nav>
     <div class="side-tag">Qualidade<br>que alimenta<br>o amanhã.<i></i></div>
+    <div class="side-foot">
+      <div class="side-user"><span class="avatar js-inicial"></span><div><b class="js-nome"></b><small class="js-nivel"></small></div></div>
+      <a href="#" data-act="menu"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Menu principal</a>
+      <button type="button" data-act="logout"><svg class="ic" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sair</button>
+      <div class="side-rod"><span>Q Food Company</span><span>Gestão Técnica</span></div>
+    </div>
   </aside>
 
   <div class="main">
@@ -1160,6 +1177,7 @@ function renderCasca() {
   });
   $$('.js-nome').forEach(el => { el.textContent = USER.nome; });
   $$('.js-email').forEach(el => { el.textContent = USER.email; });
+  $$('.js-nivel').forEach(el => { el.textContent = NIVEIS[USER.nivel] || ''; });
   $$('.js-inicial').forEach(el => { el.textContent = inicial(USER.nome); });
   $$('.js-ola').forEach(el => { el.textContent = `${saudacao()}, ${primeiroNome(USER.nome)}`; });
   $$('.js-ola-s').forEach(el => { el.textContent = fraseDoDia(); });
