@@ -1329,8 +1329,12 @@ function farol(d) {
   if (['aceite', 'bloqueada', 'terceiro', 'decisao', 'validacao'].includes(d.status) || venceHoje(d)) return 'a';
   return 'g';
 }
+/* Se o GitHub Pages ainda não publicou a foto, tenta a cópia direta do
+   repositório. Só se as duas falharem é que entra a inicial da unidade. */
+const ASSETS_RESERVA = 'https://raw.githubusercontent.com/rodsilveira-rs/qfood-dashboard/main/assets/';
 function fotoUnidade(u) {
-  return `<span class="uni-foto"><img src="${ASSETS_URL + UN[u].foto}" alt="" onerror="this.replaceWith(document.createTextNode('${inicial(UN[u].nome)}'))"></span>`;
+  const f = UN[u].foto;
+  return `<span class="uni-foto"><img src="${ASSETS_URL + f}" alt="" data-reserva="${ASSETS_RESERVA + f}" onerror="if(this.dataset.reserva){this.src=this.dataset.reserva;this.removeAttribute('data-reserva')}else{this.replaceWith(document.createTextNode('${inicial(UN[u].nome)}'))}"></span>`;
 }
 function pontos(n) {
   return `<span class="dots"><span class="r" title="Críticas"><i></i>${n.r}</span><span class="a" title="Pedem atenção"><i></i>${n.a}</span><span class="g" title="Em dia"><i></i>${n.g}</span></span>`;
