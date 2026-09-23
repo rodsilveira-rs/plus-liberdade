@@ -2668,6 +2668,16 @@ function registrarServiceWorker() {
 }
 
 /* =========================================================
+   VOLTAR AO MENU
+   ========================================================= */
+function irParaMenu() {
+  const pend = Object.values(CONT_DRAFT).some(d => Object.values(d).some(x => x.qtd !== '' && x.qtd !== undefined));
+  if (pend && !confirm('Há uma contagem preenchida e não salva. Sair mesmo assim?')) return;
+  CONT_DRAFT = {};
+  window.location.href = CFG.MENU_URL;
+}
+
+/* =========================================================
    MODAL E EVENTOS
    ========================================================= */
 function openModal(title, html, mount) {
