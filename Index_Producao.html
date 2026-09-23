@@ -41,6 +41,7 @@ body{transition:background-color .35s ease}
 .brand-logo{height:40px;width:auto;max-width:96px;object-fit:contain;border-radius:8px;background:var(--logo-bg);padding:3px 6px;flex:none}
 body[data-tema="GG"] .brand-logo{height:44px;padding:0}
 body[data-tema="QF"] .brand-logo{height:44px;max-width:120px;padding:0}
+.top-logo.brand-logo{height:32px;max-width:104px;padding:2px 4px}
 .login .brand-logo{height:72px;max-width:180px;margin:0 0 18px}
 @media (max-width:640px){.brand-logo{height:32px;max-width:70px}.brand small{display:none}}
 *{box-sizing:border-box}
@@ -242,7 +243,7 @@ table.tb tr.click:hover td{background:#F7F9F6}
 .bottom{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .bottom button{flex:1;background:none;border:0;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mute);font-size:11px;font-weight:600;cursor:pointer;position:relative;min-height:56px}
 .bottom button.on{color:var(--brand)}
-.bottom button .pt{position:absolute;top:6px;right:50%;margin-right:-18px;width:8px;height:8px;border-radius:50%;background:var(--chili)}
+.bottom button .pt{position:absolute;top:4px;right:50%;margin-right:-24px;min-width:18px;height:18px;border-radius:99px;background:var(--chili);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center;padding:0 5px}
 @media (min-width:1024px){
   .app-shell{display:grid;grid-template-columns:250px 1fr;align-items:stretch}
   .side{display:flex;flex-direction:column;background:var(--ink);position:sticky;top:0;height:100vh;overflow-y:auto}
@@ -332,6 +333,9 @@ table.tb tr.click:hover td{background:#F7F9F6}
 
 /* ---------- Visão geral do gestor ---------- */
 .kpis-topo{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid-geral{display:grid;grid-template-columns:1.15fr 1.15fr .9fr;gap:14px;margin-top:14px;align-items:start}
+.grid-fila{display:grid;grid-template-columns:2.2fr 1fr;gap:14px;margin-top:4px;align-items:start}
+@media (max-width:1100px){.grid-geral,.grid-fila{grid-template-columns:1fr}}
 @media (max-width:860px){.kpis-topo{grid-template-columns:1fr 1fr}}
 .kpi-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px}
 .kpi-card .cab{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:13px;font-weight:600}
@@ -351,6 +355,110 @@ table.tb tr.click:hover td{background:#F7F9F6}
 .resumo-sit .linha span{font-weight:600}
 .resumo-sit .linha small{display:block;color:var(--mute);font-weight:500;font-size:12.5px}
 .resumo-sit .linha .seta{margin-left:auto;color:var(--mute)}
+
+/* ---------- Cabeçalho claro (padrão do mockup) ---------- */
+.top{background:var(--card);color:var(--text);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top)}
+.top-in{max-width:none;margin:0;padding:12px 22px;display:flex;align-items:center;gap:14px}
+.tit-area{display:flex;align-items:center;gap:12px;min-width:0}
+.tit-ico{width:42px;height:42px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.tit-area h1{margin:0;font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.02em;line-height:1.1;color:var(--text)}
+.tit-area p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.pill-un{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:6px 10px;background:var(--card);min-width:0}
+.pill-un svg{color:var(--brand);flex:none}
+.pill-un label{display:block;font-size:10.5px;color:var(--mute);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.pill-un select{border:0;padding:0;min-height:0;font-weight:700;font-size:14px;background:none;width:100%;cursor:pointer}
+.pill-un select:focus{outline:none}
+.sync{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--mute);white-space:nowrap}
+.sync i{width:9px;height:9px;border-radius:50%;background:#9aa6ad;display:inline-block}
+.sync.ok i{background:var(--jade)}.sync.err i{background:var(--chili)}.sync.sync i{background:var(--yuzu);animation:pulse 1s infinite}
+.who{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;padding:5px 10px 5px 5px;background:var(--card)}
+.who .av{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:14px;flex:none}
+.who-txt b{display:block;font-size:13.5px;line-height:1.2}
+.who-txt span{font-size:11.5px;color:var(--mute)}
+.who button{background:none;border:0;color:var(--mute);cursor:pointer;font-size:12.5px;font-weight:600;padding:4px 6px;border-radius:8px}
+.who button:hover{background:var(--chip);color:var(--text)}
+.sino{position:relative;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--text);flex:none}
+.sino .n{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;border-radius:99px;background:var(--chili);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px}
+.top-logo{height:34px;max-width:112px;object-fit:contain;background:var(--logo-bg);border-radius:8px;padding:2px 4px}
+
+/* ---------- Painéis no padrão do mockup ---------- */
+.painel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.painel>header{display:flex;align-items:center;gap:9px;margin:-2px 0 14px}
+.painel>header h3{margin:0;font-family:var(--display);font-weight:700;font-size:16.5px;letter-spacing:-.01em;flex:1}
+.painel>header .ic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand);flex:none}
+.painel>header .ic.alerta{background:var(--chili-soft);color:var(--chili)}
+.painel>header .ic.ok{background:var(--jade-soft);color:var(--jade)}
+.painel>header a,.painel>header button.link{background:none;border:0;color:var(--mute);font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.painel>header .cont{background:var(--chili);color:#fff;border-radius:99px;font-size:11.5px;font-weight:700;padding:1px 8px}
+.linhas{display:flex;flex-direction:column}
+.linha-item{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:11px 4px;cursor:pointer;text-align:left;color:var(--text)}
+.linha-item:first-child{border-top:0;padding-top:2px}
+.linha-item:hover{background:var(--paper)}
+.linha-item b{display:block;font-weight:600;font-size:14.5px}
+.linha-item small{display:block;font-size:12.5px;font-weight:600}
+.linha-item small.bad{color:var(--chili)}
+.linha-item small.warn{color:var(--yuzu)}
+.linha-item small.mute{color:var(--mute)}
+.linha-item .seta{margin-left:auto;color:var(--mute)}
+.obs-linha{border-left:3px solid var(--chili);padding:4px 0 4px 12px;margin-bottom:14px}
+.obs-linha.alto{border-left-color:var(--yuzu)}
+.obs-linha b{display:block;font-size:14px}
+.obs-linha p{margin:2px 0 0;font-size:13px;color:var(--text)}
+.obs-linha time{display:block;color:var(--mute);font-size:11.5px;margin-top:4px}
+
+/* donut da saúde do estoque */
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut{position:relative;width:168px;height:168px;flex:none}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut .centro{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.donut .centro b{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-.03em;line-height:1}
+.donut .centro span{font-size:12px;color:var(--mute)}
+.legenda{display:flex;flex-direction:column;gap:12px}
+.legenda div{display:flex;align-items:flex-start;gap:9px;font-size:13.5px}
+.legenda i{width:10px;height:10px;border-radius:50%;margin-top:4px;flex:none}
+.legenda b{display:block;font-size:14px}
+.legenda small{color:var(--mute)}
+
+/* fila de produção */
+.fila{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:12px}
+.sol{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px}
+.sol .badge-prio{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:3px 9px;font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;align-self:flex-start}
+.sol .badge-prio.urg{background:var(--chili);color:#fff}
+.sol .badge-prio.nor{background:var(--yuzu-soft);color:var(--yuzu)}
+.sol .badge-prio.prog{background:var(--sky-soft);color:var(--sky)}
+.sol .linha-prod{display:flex;align-items:center;gap:12px}
+.sol .t{font-weight:700;font-size:15.5px;line-height:1.2}
+.sol .q{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.02em}
+.sol .m{display:flex;align-items:center;gap:5px;color:var(--mute);font-size:12.5px}
+.sol .btn{min-height:44px}
+
+/* ---------- Início do operador (mockup) ---------- */
+.ola{margin:14px 0 2px;font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.02em}
+.acao-grande{background:var(--brand);color:var(--brand-on);border:0;border-radius:18px;padding:22px 18px;width:100%;
+  display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;
+  font-family:var(--display);font-weight:800;font-size:20px;min-height:120px;box-shadow:0 8px 22px rgba(0,0,0,.13)}
+.acoes-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.acao{display:flex;flex-direction:column;align-items:flex-start;gap:0;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:14px;cursor:pointer;text-align:left;font-weight:700;font-size:15px;color:var(--text);min-height:104px}
+.acao .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;margin-bottom:10px}
+.acao .ic.v{background:var(--jade-soft);color:var(--jade)}
+.acao .ic.a{background:var(--yuzu-soft);color:var(--yuzu)}
+.acao .ic.z{background:var(--sky-soft);color:var(--sky)}
+.acao .ic.r{background:var(--chili-soft);color:var(--chili)}
+.acao small{font-weight:500;font-size:12px;color:var(--mute);margin-top:2px}
+.sub-sec{display:flex;align-items:baseline;gap:8px;margin:20px 0 8px}
+.sub-sec h3{margin:0;font-family:var(--display);font-weight:700;font-size:16px}
+.sub-sec button{margin-left:auto;background:none;border:0;color:var(--mute);font-size:12.5px;font-weight:600;cursor:pointer}
+@media (max-width:1023px){
+  .top-in{padding:9px 12px;gap:8px}
+  .tit-area,.who{display:none}
+  .pill-un{flex:1;min-width:0;padding:5px 9px}
+  .pill-un label{display:none}
+  .pill-un select{font-size:13.5px}
+  .sync .sync-txt{display:none}
+  .sino{width:38px;height:38px}
+}
+@media (min-width:1024px){ .top-logo{display:none} }
 
 /* ---------- Login ---------- */
 .login{min-height:100vh;background:var(--ink);color:#fff;display:flex;flex-direction:column;align-items:center;padding:48px 18px 40px}
@@ -388,19 +496,7 @@ table.tb tr.click:hover td{background:#F7F9F6}
 <div id="app" class="app-shell hidden">
   <aside class="side" id="side"></aside>
   <div class="area">
-  <header class="top">
-    <div class="top-in">
-      <a class="menu-link" href="#" data-act="menu" aria-label="Voltar ao menu">&#8592; Menu</a>
-      <div class="brand-row">
-        <img class="brand-logo" id="brandLogo" src="https://rodsilveira-rs.github.io/qfood-dashboard/assets/qfood-logo.png" alt="Q Food Company" onerror="this.style.visibility='hidden'">
-        <div class="brand">Controle de Produção<small id="brandSub">Mercearia Liberdade, Gogui e Cozinha de Produção</small></div>
-      </div>
-      <div class="spacer"></div>
-      <span class="sync" id="sync"><i></i><span class="sync-txt">Somente neste aparelho</span></span>
-      <div class="who"><div class="who-txt"><b id="whoName"></b><span id="whoRole"></span></div><button type="button" data-act="logout">Trocar</button></div>
-    </div>
-    <nav class="tabs" id="tabs"></nav>
-  </header>
+  <header class="top"><div class="top-in" id="topo"></div><nav class="tabs" id="tabs"></nav></header>
   <main id="main"></main>
   </div>
   <nav class="bottom" id="bottom"></nav>
@@ -789,11 +885,9 @@ function render() {
   if (fresh) USER = fresh;
   if (modoOperador() && (USER.papel || 'alimentador') !== 'alimentador') { logout(); return; }
   $('#app').classList.remove('hidden');
-  $('#whoName').textContent = USER.nome;
-  $('#whoRole').textContent = PAPEIS[USER.papel] || '';
   const items = navItems();
   if (!items.some(i => i[0] === VIEW)) VIEW = isManager() ? 'geral' : 'inicio';
-  $('#tabs').innerHTML = items.map(([k, t]) => `<button type="button" class="${VIEW === k ? 'on' : ''}" data-view="${k}">${t}</button>`).join('');
+  renderTopo();
   renderNav();
   if (F.un !== 'todas' && !myUnits().includes(F.un)) F.un = 'todas';
   const html = VIEWS[VIEW]();
@@ -804,11 +898,10 @@ function render() {
   updSync();
 }
 function filtros(withPer = true) {
-  const us = myUnits();
+  if (!withPer) return '';
   return `<div class="filters">
-    <label class="fld sm"><span>Unidade</span><select data-f="un"><option value="todas">Todas as unidades</option>${us.map(u => `<option value="${u}" ${F.un === u ? 'selected' : ''}>${UN[u].nome}</option>`).join('')}</select></label>
-    ${withPer ? `<label class="fld sm"><span>Período</span><select data-f="per">${opts([{ v: 'hoje', t: 'Hoje' }, { v: 'semana', t: 'Últimos 7 dias' }, { v: 'mes', t: 'Este mês' }, { v: 'custom', t: 'Personalizado' }], F.per)}</select></label>
-    ${F.per === 'custom' ? `<label class="fld sm"><span>De</span><input type="date" data-f="de" value="${F.de || today()}"></label><label class="fld sm"><span>Até</span><input type="date" data-f="ate" value="${F.ate || today()}"></label>` : ''}` : ''}
+    <label class="fld sm"><span>Período</span><select data-f="per">${opts([{ v: 'hoje', t: 'Hoje' }, { v: 'semana', t: 'Últimos 7 dias' }, { v: 'mes', t: 'Este mês' }, { v: 'custom', t: 'Personalizado' }], F.per)}</select></label>
+    ${F.per === 'custom' ? `<label class="fld sm"><span>De</span><input type="date" data-f="de" value="${F.de || today()}"></label><label class="fld sm"><span>Até</span><input type="date" data-f="ate" value="${F.ate || today()}"></label>` : ''}
   </div>`;
 }
 
@@ -840,115 +933,13 @@ function linhaEstoque(e) {
     ${sol ? `<span class="pill info">${esc(sol.status)}</span>` : `<button type="button" class="btn sm" data-act="solicitar" data-u="${e.u}" data-p="${esc(e.p.id)}">Solicitar</button>`}
   </div>`;
 }
-function vGeral() {
-  const per = periodo();
-  const us = myUnits().filter(unOk);
-  const est = estoqueAtual(us);
-  const prods = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && inPer(r.data, per));
-  const repor = est.filter(e => e.sit === 'repor');
-  const aten = est.filter(e => e.sit === 'atencao');
-  const semCont = est.filter(e => !e.c || e.dias >= CFG.DIAS_SEM_CONTAGEM);
-  const semMin = est.filter(e => isNaN(minOf(e.p, e.u)));
-  const contPer = DB.contagens.filter(c => c.status !== 'cancelado' && us.includes(c.unidade) && inPer(c.data_hora, per));
-  const avaliados = est.filter(e => e.sit === 'ok' || e.sit === 'atencao' || e.sit === 'repor');
-  const pct = avaliados.length ? Math.round(avaliados.filter(e => e.sit !== 'repor').length / avaliados.length * 100) : null;
-  const sols = solAbertas().filter(s => us.includes(s.unidade)).sort((a, b) => String(a.data_hora).localeCompare(String(b.data_hora)));
-  const solPer = DB.solicitacoes.filter(s => us.includes(s.unidade) && inPer(s.data_hora, per) && s.status !== 'Cancelada');
-  const solAtend = solPer.filter(s => s.status === 'Atendida').length;
-  const obsImp = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && inPer(o.data_hora, per) && (o.impacto === 'Alto' || o.impacto === 'Crítico'))
-    .sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora)));
-  const desp = despDoPeriodo(us, per);
-  const despKg = somaKg(desp);
-  const despProd = agrupaDesp(desp, 'produto_nome').slice(0, 5);
-  const despCausa = agrupaDesp(desp, 'causa').slice(0, 5);
-  const fcPer = fcDoPeriodo(us, per);
-  const fcAcima = fcPer.filter(r => fcCalc(r).status === 'acima').length;
-  const perTxt = { hoje: 'hoje', semana: 'nos últimos 7 dias', mes: 'neste mês', custom: 'no período' }[F.per];
-  const ontem = addDays(today(), -1);
-  const prodHoje = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && r.data === today()).length;
-  const prodOntem = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && r.data === ontem).length;
-  const despOntem = somaKg(DB.desperdicios.filter(d => d.status !== 'cancelado' && us.includes(d.unidade) && String(d.data_hora).slice(0, 10) === ontem));
-  const varia = (a, b) => {
-    if (!b) return '';
-    const v = Math.round((a - b) / b * 100);
-    if (!v) return '<span class="var">igual a ontem</span>';
-    return `<span class="var ${v > 0 ? 'up' : 'down'}">${v > 0 ? '+' : ''}${v}% vs. ontem</span>`;
-  };
-  const kpi = (icone, rot, valor, extra, cls) => `<div class="kpi-card ${cls || ''}">
-    <div class="cab">${ico(icone, 17)}${rot}</div><b class="num">${valor}</b>${extra || '<span class="var">&nbsp;</span>'}</div>`;
-
-  return `
-  <h2 class="view">Visão geral</h2>
-  <p class="lead">${fmtD(today())}. O que pede atenção agora e o resumo ${perTxt}.</p>
-  ${filtros(true)}
-
-  <div class="kpis-topo">
-    ${kpi('producao', 'Produções hoje', prodHoje, varia(prodHoje, prodOntem))}
-    ${kpi('contagem', 'Itens para repor', repor.length, repor.length ? '<span class="var down">precisa de produção</span>' : '<span class="var up">nenhum item abaixo</span>', repor.length ? 'bad' : '')}
-    ${kpi('pedidos', 'Pedidos abertos', sols.length, solPer.length ? `<span class="var">${solAtend} de ${solPer.length} atendidos ${perTxt}</span>` : '')}
-    ${kpi('desperdicio', 'Desperdício ' + perTxt, fmtN(+despKg.toFixed(2)) + ' kg', varia(despKg, despOntem), despKg > despOntem && despOntem ? 'warn' : '')}
-  </div>
-
-  <div class="saude">
-    <div class="gauge">
-      ${gaugeSVG(pct)}
-      <div class="pct num">${pct === null ? '—' : pct}<sup>${pct === null ? '' : '%'}</sup></div>
-      <div class="g-lbl">Saúde do estoque</div>
-      <div class="g-sub">${avaliados.length ? `${avaliados.length - repor.length} de ${avaliados.length} itens acima do mínimo` : 'Defina mínimos e faça contagens para medir'}</div>
-    </div>
-    <div class="resumo-sit">
-      <button type="button" class="linha" data-act="goto" data-v="contagem"><span class="dot bad"></span><b class="num">${repor.length}</b>
-        <span>Estoque baixo<small>abaixo do mínimo, precisa produzir</small></span><span class="seta">›</span></button>
-      <button type="button" class="linha" data-act="goto" data-v="contagem"><span class="dot warn"></span><b class="num">${aten.length}</b>
-        <span>Quase no mínimo<small>vale programar produção</small></span><span class="seta">›</span></button>
-      <button type="button" class="linha" data-act="goto" data-v="contagem"><span class="dot"></span><b class="num">${semCont.length}</b>
-        <span>Sem contagem recente<small>há ${CFG.DIAS_SEM_CONTAGEM} dias ou mais</small></span><span class="seta">›</span></button>
-      <button type="button" class="linha" data-act="goto" data-v="fc"><span class="dot ${fcAcima ? 'bad' : ''}"></span><b class="num">${fcAcima}</b>
-        <span>Acima do FC padrão<small>pede acompanhamento na limpeza</small></span><span class="seta">›</span></button>
-      ${isManager() && semMin.length ? `<button type="button" class="linha" data-act="goto" data-v="cadastros"><span class="dot"></span><b class="num">${semMin.length}</b>
-        <span>Sem mínimo definido<small>o sistema não consegue avisar falta</small></span><span class="seta">›</span></button>` : ''}
-    </div>
-  </div>
-
-  <div class="quick">
-    <button type="button" class="btn" data-act="nova-prod">Registrar produção</button>
-    <button type="button" class="btn dark" data-act="goto" data-v="contagem">Fazer contagem</button>
-    <button type="button" class="btn ghost" data-act="goto" data-v="desperdicio">Registrar descarte</button>
-    <button type="button" class="btn ghost" data-act="nova-obs">Registrar observação</button>
-  </div>
-
-  <h3 class="sec">Precisa de atenção <span class="count">${repor.length + aten.length} ${repor.length + aten.length === 1 ? 'item' : 'itens'}</span></h3>
-  ${repor.length + aten.length ? `<div class="list">${repor.concat(aten).map(linhaEstoque).join('')}</div>` : '<div class="empty">Nenhum item abaixo ou perto do mínimo na última contagem.</div>'}
-
-  <h3 class="sec">Fila de produção <span class="count">${sols.length} ${sols.length === 1 ? 'pedido aberto' : 'pedidos abertos'}</span></h3>
-  ${sols.length ? `<div class="fila">${sols.map(cardSol).join('')}</div>` : '<div class="empty">Nenhum pedido de produção aberto.</div>'}
-
-  <div class="grid2" style="margin-top:8px">
-    <div>
-      <h3 class="sec">Desperdício <span class="count">${fmtN(+despKg.toFixed(3))} kg ${perTxt}</span></h3>
-      ${desp.length ? `<div class="list">${despProd.map(x => `<div class="row"><div class="row-main"><b>${esc(x.nome)}</b><small>${x.n} ${x.n === 1 ? 'registro' : 'registros'}</small></div><div class="row-num num"><b>${fmtN(+x.kg.toFixed(3))} kg</b></div></div>`).join('')}
-        ${despCausa.length ? `<div class="row"><div class="row-main"><small>Principal causa</small><b>${esc(despCausa[0].nome)}</b></div><div class="row-num num"><b>${despKg ? Math.round(despCausa[0].kg / despKg * 100) : 0}%</b></div></div>` : ''}</div>`
-        : '<div class="empty">Nenhum descarte registrado no período.</div>'}
-    </div>
-    <div>
-      <h3 class="sec">Observações críticas <span class="count">${obsImp.length}</span></h3>
-      ${obsImp.length ? `<div class="obs-grid">${obsImp.slice(0, 4).map(cardObs).join('')}</div>` : `<div class="empty">Nenhuma observação de impacto alto ou crítico ${perTxt}.</div>`}
-    </div>
-  </div>
-
-  ${semCont.length ? `<details class="more"><summary>Ver ${semCont.length} ${semCont.length === 1 ? 'item' : 'itens'} sem contagem recente</summary>
-    <div class="list">${semCont.map(e => `<div class="row">${imgProduto(e.p)}<div class="row-main"><b>${esc(e.p.nome)}</b><small>${UN[e.u].curto}</small></div><div class="row-num"><small>${e.c ? `última há ${e.dias} dia${e.dias === 1 ? '' : 's'}` : 'nunca contado'}</small></div></div>`).join('')}</div></details>` : ''}
-  ${isManager() && semMin.length ? `<details class="more"><summary>Ver ${semMin.length} ${semMin.length === 1 ? 'item' : 'itens'} sem estoque mínimo definido</summary>
-    <div class="list">${semMin.map(e => `<div class="row">${imgProduto(e.p)}<div class="row-main"><b>${esc(e.p.nome)}</b><small>${UN[e.u].curto}</small></div><button type="button" class="btn sm ghost" data-act="edit-prod-cad" data-id="${esc(e.p.id)}">Definir mínimo</button></div>`).join('')}</div></details>` : ''}
-  `;
-}
 
 /* =========================================================
    IMAGENS DOS PRODUTOS
    O arquivo fica em assets/. Se o cadastro não tiver imagem,
    o sistema tenta achar pelo nome do produto.
    ========================================================= */
-const IMAGENS_PRODUTO = ['Massa_de_Tteokbokki.jpg', 'Guioza_de_salmão.jpg', 'Corn_Dog.jpg', 'Karaage.jpg', 'Frango_Coreano.jpg',
+const IMAGENS_PRODUTO = ['Massa_de_Tteokbokki.jpg', 'Guioza_de_salmão.jpg', 'Guioza_de_lombo.jpg', 'Base_de_Tonkotsu.jpg', 'Corn_Dog.jpg', 'Karaage.jpg', 'Frango_Coreano.jpg',
   'Sushirrito.jpg', 'Salmao_Bao.jpg', 'Caldo_de_Porco.jpg', 'Molho_de_Yakisoba.jpg', 'Molho_de_Gyudon.jpg', 'Base_Shoyu.jpg',
   'Base_Misso.jpg', 'Legumes_de_Yakisoba.jpg', 'Legumes_de_Bibimbap.jpg', 'Legumes_de_Tteokbokki.jpg', 'Molho_Dragao.jpg',
   'Gohan.jpg', 'Macarrao_para_Yakisoba.jpg', 'Legumes_de_Katsu_Curry.jpg', 'Legumes_de_Teppan.jpg', 'Carne_de_Yakissoba.jpg',
@@ -995,7 +986,11 @@ const ICO = {
   cadastros: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
   pedidos: '<path d="M9 3h6l1 3H8z"/><path d="M5 6h14l-1.2 14.2A2 2 0 0 1 15.8 22H8.2a2 2 0 0 1-2-1.8z"/><path d="M9.5 11.5 12 14l2.5-2.5"/>',
   mais: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
-  alerta: '<path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.5" r=".6"/>'
+  alerta: '<path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.5" r=".6"/>',
+  local: '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>',
+  sino: '<path d="M18 8.5a6 6 0 1 0-12 0c0 6-2 7.5-2 7.5h16s-2-1.5-2-7.5"/><path d="M10.5 20a1.8 1.8 0 0 0 3 0"/>',
+  play: '<path d="M7 4.5 19 12 7 19.5z"/>',
+  check: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>'
 };
 const ico = (k, t = 22) => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICO[k] || ''}</svg>`;
 
@@ -1005,8 +1000,8 @@ const ico = (k, t = 22) => `<svg width="${t}" height="${t}" viewBox="0 0 24 24" 
 function navGrupos() {
   const operador = !isManager();
   const g = [];
-  if (operador) g.push({ t: '', itens: [['inicio', 'Início', 'inicio']] });
-  else g.push({ t: 'Visão', itens: [['geral', 'Visão geral', 'geral']] });
+  if (operador) g.push({ t: '', itens: [['inicio', 'Início', 'inicio'], ['alertas', 'Alertas', 'alerta']] });
+  else g.push({ t: 'Visão', itens: [['geral', 'Visão geral', 'geral'], ['alertas', 'Alertas', 'alerta']] });
   g.push({ t: 'Operação', itens: [['producao', 'Produção', 'producao'], ['contagem', 'Contagem', 'contagem'], ['desperdicio', 'Desperdício', 'desperdicio'], ['observacoes', 'Observações', 'observacoes']] });
   g.push({ t: 'Qualidade', itens: [['fc', 'Fator de correção', 'fc']] });
   if (isManager()) g.push({ t: 'Gestão', itens: [['relatorios', 'Relatórios', 'relatorios'], ['cadastros', 'Cadastros', 'cadastros']] });
@@ -1020,7 +1015,7 @@ function alertasAbertos() {
 }
 function renderNav() {
   const alertas = alertasAbertos();
-  const badge = k => (k === 'producao' && alertas) ? `<span class="badge">${alertas}</span>` : '';
+  const badge = k => (k === 'alertas' && alertas) ? `<span class="badge">${alertas}</span>` : '';
   $('#side').innerHTML = `
     <div class="side-logo">
       <img class="brand-logo" src="${ASSETS_URL + TEMAS.QF.logo}" alt="" onerror="this.style.display='none'">
@@ -1033,16 +1028,15 @@ function renderNav() {
       <b>${esc(USER.nome)}</b><span>${esc(PAPEIS[USER.papel] || '')}</span>
       <div class="acoes"><button type="button" data-act="logout">Trocar pessoa</button><a href="#" data-act="menu">Menu</a></div>
     </div>`;
-  const principais = isManager()
-    ? [['geral', 'Início', 'geral'], ['producao', 'Produção', 'producao'], ['contagem', 'Contagem', 'contagem'], ['relatorios', 'Relatórios', 'relatorios']]
-    : [['inicio', 'Início', 'inicio'], ['producao', 'Produção', 'producao'], ['contagem', 'Contagem', 'contagem'], ['desperdicio', 'Descarte', 'desperdicio']];
+  const principais = [[isManager() ? 'geral' : 'inicio', 'Início', 'inicio'], ['producao', 'Produção', 'producao'],
+    ['contagem', 'Contagem', 'contagem'], ['alertas', 'Alertas', 'alerta']];
   $('#bottom').innerHTML = principais.map(([k, t, i]) =>
-    `<button type="button" class="${VIEW === k ? 'on' : ''}" data-view="${k}">${ico(i, 21)}${k === 'producao' && alertas ? '<span class="pt"></span>' : ''}<span>${t}</span></button>`).join('') +
-    `<button type="button" class="${['observacoes', 'fc', 'cadastros', 'relatorios'].includes(VIEW) ? 'on' : ''}" data-act="mais">${ico('mais', 21)}<span>Mais</span></button>`;
+    `<button type="button" class="${VIEW === k ? 'on' : ''}" data-view="${k}">${ico(i, 21)}${k === 'alertas' && alertas ? `<span class="pt">${alertas > 9 ? '9+' : alertas}</span>` : ''}<span>${t}</span></button>`).join('') +
+    `<button type="button" class="${['observacoes', 'fc', 'cadastros', 'relatorios', 'desperdicio'].includes(VIEW) ? 'on' : ''}" data-act="mais">${ico('mais', 21)}<span>Mais</span></button>`;
 }
 function abrirMais() {
-  const extras = navItems().filter(([k]) => !['inicio', 'geral', 'producao', 'contagem', 'desperdicio'].includes(k));
-  const mapa = { observacoes: 'observacoes', fc: 'fc', relatorios: 'relatorios', cadastros: 'cadastros' };
+  const extras = navItems().filter(([k]) => !['inicio', 'geral', 'producao', 'contagem', 'alertas'].includes(k));
+  const mapa = { desperdicio: 'desperdicio', observacoes: 'observacoes', fc: 'fc', relatorios: 'relatorios', cadastros: 'cadastros' };
   openModal('Mais', `<div class="stack">
     ${extras.map(([k, t]) => `<button type="button" class="acao" style="flex-direction:row;align-items:center;gap:12px;min-height:0" data-view="${k}">${ico(mapa[k] || 'mais', 20)}<span>${t}</span></button>`).join('')}
     <button type="button" class="acao" style="flex-direction:row;align-items:center;gap:12px;min-height:0" data-act="menu">${ico('mais', 20)}<span>Voltar ao Menu</span></button>
@@ -1053,60 +1047,221 @@ function abrirMais() {
 /* =========================================================
    INÍCIO DO OPERADOR
    ========================================================= */
-function vInicio() {
+
+/* =========================================================
+   CABEÇALHO
+   ========================================================= */
+const iniciaisPessoa = n => semAcento(n || '?').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
+function renderTopo() {
   const us = myUnits();
-  const hora = new Date().getHours();
-  const saud = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-  const sols = solAbertas().filter(s => us.includes(s.unidade))
-    .sort((a, b) => (b.prioridade === 'Urgente') - (a.prioridade === 'Urgente') || String(a.data_hora).localeCompare(String(b.data_hora)));
+  const unNome = F.un === 'todas' ? 'Todas as unidades' : UN[F.un].nome;
+  const alertas = alertasAbertos();
+  $('#topo').innerHTML = `
+    <img class="top-logo brand-logo" id="topoLogo" src="${ASSETS_URL + TEMAS.QF.logo}" alt="" onerror="this.style.display='none'">
+    <div class="tit-area">
+      <span class="tit-ico">${ico('producao', 22)}</span>
+      <div><h1>Controle de Produção</h1><p id="brandSub">${esc(unNome)}</p></div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="pill-un">${ico('local', 18)}<div><label>Unidade</label>
+      <select data-f="un"><option value="todas">Todas as unidades</option>${us.map(u => `<option value="${u}" ${F.un === u ? 'selected' : ''}>${UN[u].nome}</option>`).join('')}</select></div></div>
+    <span class="sync" id="sync"><i></i><span class="sync-txt"></span></span>
+    <button type="button" class="sino" data-act="goto" data-v="alertas" aria-label="Alertas">${ico('sino', 20)}${alertas ? `<span class="n">${alertas}</span>` : ''}</button>
+    <div class="who"><span class="av">${esc(iniciaisPessoa(USER.nome))}</span>
+      <div class="who-txt"><b>${esc(USER.nome)}</b><span>${esc(PAPEIS[USER.papel] || '')}</span></div>
+      <button type="button" data-act="logout">Trocar</button></div>`;
+  updSync();
+}
+
+/* =========================================================
+   VISÃO GERAL (gestor)
+   ========================================================= */
+function donutSVG(ok, aten, baixo) {
+  const total = ok + aten + baixo;
+  const r = 66, c = 2 * Math.PI * r;
+  const seg = (v, cor, offset) => total ? `<circle cx="84" cy="84" r="${r}" fill="none" stroke="${cor}" stroke-width="18" stroke-linecap="butt"
+      stroke-dasharray="${(v / total * c).toFixed(1)} ${c.toFixed(1)}" stroke-dashoffset="${(-offset / total * c).toFixed(1)}"/>` : '';
+  const pct = total ? Math.round(ok / total * 100) : null;
+  return `<div class="donut"><svg viewBox="0 0 168 168">
+      <circle cx="84" cy="84" r="${r}" fill="none" stroke="var(--chip)" stroke-width="18"/>
+      ${seg(ok, '#1F9E6E', 0)}${seg(aten, '#E0A020', ok)}${seg(baixo, '#C23A2E', ok + aten)}
+    </svg><div class="centro"><b class="num">${pct === null ? '—' : pct + '%'}</b><span>estoque saudável</span></div></div>`;
+}
+function cardSol(s) {
+  const p = prodById(s.produto_id);
+  const pode = myUnits().includes(s.unidade);
+  const cls = s.prioridade === 'Urgente' ? 'urg' : s.status === 'Em produção' ? 'prog' : 'nor';
+  const rot = s.prioridade === 'Urgente' ? 'Urgente' : s.status === 'Em produção' ? 'Em produção' : 'Normal';
+  const h = daysBetween(s.data_hora, today());
+  const quando = h > 0 ? `há ${h} dia${h > 1 ? 's' : ''}` : `há ${Math.max(1, Math.round((Date.now() - new Date(String(s.data_hora).replace(' ', 'T')).getTime()) / 60000))} min`;
+  return `<div class="sol">
+    <span class="badge-prio ${cls}">${rot}</span>
+    <div class="linha-prod">${imgProduto(p || { nome: s.produto_nome }, 'g')}
+      <div><div class="t">${esc(s.produto_nome)}</div><div class="q num">${fmtN(s.qtd_sugerida)} ${esc(s.medida)}</div></div></div>
+    <div class="m">${ico('local', 14)}${UN[s.unidade] ? UN[s.unidade].nome : esc(s.unidade)}</div>
+    <div class="m">Pedido por ${esc(s.solicitante)}, ${quando}</div>
+    ${pode && p ? `<button type="button" class="btn" data-act="nova-prod" data-sol="${esc(s.id)}">${ico('play', 16)} Iniciar produção</button>
+      ${isManager() ? `<div class="actions">${s.status === 'Aberta' ? `<button type="button" class="btn sm ghost" data-act="sol-iniciar" data-id="${esc(s.id)}">Em produção</button>` : ''}<button type="button" class="btn sm danger" data-act="sol-cancelar" data-id="${esc(s.id)}">Cancelar</button></div>` : ''}` : ''}
+  </div>`;
+}
+function painelSinc() {
+  const fila = OUTBOX.length + fotosNaFila();
+  const offline = !navigator.onLine;
+  const okk = !offline && !fila;
+  return `<div class="painel"><header><span class="ic ${okk ? 'ok' : 'alerta'}">${ico(okk ? 'check' : 'alerta', 16)}</span><h3>${offline ? 'Sem internet' : fila ? 'Enviando' : 'Tudo sincronizado'}</h3></header>
+    <div style="font-weight:700;color:${okk ? 'var(--jade)' : 'var(--chili)'}">${offline ? 'Sem internet' : fila ? 'Enviando pendências' : 'Sistema sincronizado'}</div>
+    <p class="hint" style="margin:4px 0 12px">${!CFG.GAS_URL ? 'Modo de teste, sem servidor configurado.' : fila ? `${fila} ${fila === 1 ? 'item na fila' : 'itens na fila'}, sobem sozinhos quando houver internet.` : `Última sincronização ${SYNC.msg.replace('Sincronizado ', 'às ')}.`}</p>
+    <button type="button" class="btn ghost block" data-act="sincronizar">Sincronizar agora</button></div>`;
+}
+function vGeral() {
+  const per = periodo();
+  const us = myUnits().filter(unOk);
   const est = estoqueAtual(us);
-  const repor = est.filter(e => e.sit === 'repor').length;
-  const hoje = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && r.data === today()).length;
-  const destaque = sols[0];
-  const p = destaque ? prodById(destaque.produto_id) : null;
+  const repor = est.filter(e => e.sit === 'repor');
+  const aten = est.filter(e => e.sit === 'atencao');
+  const okItens = est.filter(e => e.sit === 'ok');
+  const semCont = est.filter(e => !e.c || e.dias >= CFG.DIAS_SEM_CONTAGEM);
+  const semMin = est.filter(e => isNaN(minOf(e.p, e.u)));
+  const sols = solAbertas().filter(s => us.includes(s.unidade)).sort((a, b) => (b.prioridade === 'Urgente') - (a.prioridade === 'Urgente') || String(a.data_hora).localeCompare(String(b.data_hora)));
+  const solPer = DB.solicitacoes.filter(s => us.includes(s.unidade) && inPer(s.data_hora, per) && s.status !== 'Cancelada');
+  const solAtend = solPer.filter(s => s.status === 'Atendida').length;
+  const desp = despDoPeriodo(us, per);
+  const despKg = somaKg(desp);
+  const despProd = agrupaDesp(desp, 'produto_nome').slice(0, 4);
+  const fcPer = fcDoPeriodo(us, per);
+  const fcAcima = fcPer.filter(r => fcCalc(r).status === 'acima').length;
+  const obsImp = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && inPer(o.data_hora, per) && (o.impacto === 'Alto' || o.impacto === 'Crítico'))
+    .sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora)));
+  const perTxt = { hoje: 'hoje', semana: 'nos últimos 7 dias', mes: 'neste mês', custom: 'no período' }[F.per];
+  const ontem = addDays(today(), -1);
+  const prodHoje = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && r.data === today()).length;
+  const prodOntem = DB.producoes.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && r.data === ontem).length;
+  const despOntem = somaKg(DB.desperdicios.filter(d => d.status !== 'cancelado' && us.includes(d.unidade) && String(d.data_hora).slice(0, 10) === ontem));
+  const varia = (a, b, inverso) => {
+    if (!b) return '<span class="var">sem base de ontem</span>';
+    const v = Math.round((a - b) / b * 100);
+    if (!v) return '<span class="var">igual a ontem</span>';
+    const bom = inverso ? v < 0 : v > 0;
+    return `<span class="var ${bom ? 'up' : 'down'}">${v > 0 ? '↑' : '↓'} ${Math.abs(v)}% vs. ontem</span>`;
+  };
+  const kpi = (icone, rot, valor, extra, cls) => `<div class="kpi-card ${cls || ''}">
+    <div class="cab">${ico(icone, 17)}${rot}</div><b class="num">${valor}</b>${extra || '<span class="var">&nbsp;</span>'}</div>`;
+
   return `
-  <h2 class="ola">${saud}, ${esc(String(USER.nome).split(' ')[0])}</h2>
-  <p class="ola-sub">O que você vai fazer agora?</p>
-  <button type="button" class="acao-grande" data-act="nova-prod">${ico('producao', 30)}Registrar produção<small>Item pronto? Registre aqui</small></button>
-  <div class="acoes-grid">
-    <button type="button" class="acao" data-act="goto" data-v="contagem">${ico('contagem', 24)}Contagem<small>Conferir o estoque</small></button>
-    <button type="button" class="acao" data-act="goto" data-v="desperdicio">${ico('desperdicio', 24)}Descarte<small>Pesar o que foi para o lixo</small></button>
-    <button type="button" class="acao" data-act="nova-obs">${ico('observacoes', 24)}Informar problema<small>Falta, perda, equipamento</small></button>
-    <button type="button" class="acao" data-act="goto" data-v="fc">${ico('fc', 24)}Peso e perda<small>Limpeza e pré-preparo</small></button>
+  ${filtros(true)}
+  <div class="kpis-topo">
+    ${kpi('producao', 'Produções hoje', prodHoje, varia(prodHoje, prodOntem))}
+    ${kpi('contagem', 'Itens para repor', repor.length, repor.length ? '<span class="var down">precisa de produção</span>' : '<span class="var up">nenhum item abaixo</span>', repor.length ? 'bad' : '')}
+    ${kpi('pedidos', 'Pedidos abertos', sols.length, solPer.length ? `<span class="var">${solAtend} de ${solPer.length} atendidos ${perTxt}</span>` : '')}
+    ${kpi('desperdicio', 'Desperdício ' + perTxt, fmtN(+despKg.toFixed(2)) + ' kg', varia(despKg, despOntem, true), despOntem && despKg > despOntem ? 'warn' : '')}
   </div>
 
-  <h3 class="sec">Seu dia <span class="count">${hoje} ${hoje === 1 ? 'produção registrada' : 'produções registradas'}${repor ? `, ${repor} ${repor === 1 ? 'item para repor' : 'itens para repor'}` : ''}</span></h3>
-  ${destaque ? `<div class="sol ${destaque.prioridade === 'Urgente' ? '' : 'prog'}">
-      <div class="meta">${destaque.prioridade === 'Urgente' ? '<span class="pill bad">Urgente</span>' : '<span class="pill info">Pedido aberto</span>'}<span>${esc(solNum(destaque))}</span></div>
-      <div style="display:flex;gap:12px;align-items:center">
-        ${imgProduto(p || { nome: destaque.produto_nome }, 'g')}
-        <div><div class="t">${esc(destaque.produto_nome)}</div>
-          <div class="m">Produzir <b>${fmtN(destaque.qtd_sugerida)} ${esc(destaque.medida)}</b> para ${UN[destaque.unidade] ? UN[destaque.unidade].nome : esc(destaque.unidade)}</div></div>
-      </div>
-      <button type="button" class="btn" data-act="nova-prod" data-sol="${esc(destaque.id)}" style="min-height:52px">Começar produção</button>
-      ${sols.length > 1 ? `<button type="button" class="btn ghost sm" data-act="goto" data-v="producao">Ver os outros ${sols.length - 1} pedidos</button>` : ''}
-    </div>` : '<div class="empty">Nenhum pedido de produção em aberto agora.</div>'}`;
+  <div class="grid-geral">
+    <div class="painel"><header><span class="ic ok">${ico('contagem', 16)}</span><h3>Saúde do estoque</h3></header>
+      <div class="donut-wrap">${donutSVG(okItens.length, aten.length, repor.length)}
+        <div class="legenda">
+          <div><i style="background:#1F9E6E"></i><span><b>Em nível adequado</b><small>${okItens.length} ${okItens.length === 1 ? 'item' : 'itens'}</small></span></div>
+          <div><i style="background:#E0A020"></i><span><b>Quase no mínimo</b><small>${aten.length} ${aten.length === 1 ? 'item' : 'itens'}</small></span></div>
+          <div><i style="background:#C23A2E"></i><span><b>Estoque baixo</b><small>${repor.length} ${repor.length === 1 ? 'item' : 'itens'}</small></span></div>
+          <div><i style="background:var(--chip)"></i><span><b>Sem contagem recente</b><small>${semCont.length} ${semCont.length === 1 ? 'item' : 'itens'}</small></span></div>
+        </div></div></div>
+
+    <div class="painel"><header><span class="ic alerta">${ico('alerta', 16)}</span><h3>Precisa de atenção</h3>
+      <button type="button" class="link" data-act="goto" data-v="alertas">Ver todos ›</button></header>
+      ${repor.length + aten.length + semCont.length ? `<div class="linhas">${repor.concat(aten).slice(0, 3).map(e => {
+        const f = fraseEstoque(e.p, e.u, e.c.qtd);
+        return `<button type="button" class="linha-item" data-act="solicitar" data-u="${e.u}" data-p="${esc(e.p.id)}">${imgProduto(e.p)}
+          <span><b>${esc(e.p.nome)}</b><small class="${f.cls}">${e.sit === 'repor' ? `Produzir ${fmtN(sugestao(e.p, e.u, e.c.qtd))} ${esc(e.p.medida)}` : ROTULO_SIT[e.sit]}</small></span><span class="seta">›</span></button>`;
+      }).join('') + (semCont.length ? `<button type="button" class="linha-item" data-act="goto" data-v="contagem">${imgProduto(semCont[0].p)}
+          <span><b>${esc(semCont[0].p.nome)}</b><small class="mute">Sem contagem recente</small></span><span class="seta">›</span></button>` : '')}</div>`
+        : '<div class="empty">Nenhum item abaixo ou perto do mínimo.</div>'}</div>
+
+    <div class="painel"><header><span class="ic alerta">${ico('observacoes', 16)}</span><h3>Observações críticas</h3>${obsImp.length ? `<span class="cont">${obsImp.length}</span>` : ''}</header>
+      ${obsImp.length ? obsImp.slice(0, 3).map(o => `<div class="obs-linha ${o.impacto === 'Alto' ? 'alto' : ''}">
+        <b>${esc(o.produto_nome || o.tipo)}</b><p>${esc(o.descricao)}</p><time>${fmtDH(o.data_hora)}, ${esc(o.responsavel)}</time></div>`).join('')
+        : `<div class="empty">Nenhuma observação crítica ${perTxt}.</div>`}</div>
+  </div>
+
+  <div class="grid-fila">
+    <div>
+      <div class="sub-sec"><h3>Fila de produção</h3><button type="button" data-act="goto" data-v="producao">Ver fila completa ›</button></div>
+      ${sols.length ? `<div class="fila">${sols.slice(0, 3).map(cardSol).join('')}</div>` : '<div class="empty">Nenhum pedido de produção aberto.</div>'}
+    </div>
+    <div><div class="sub-sec"><h3>Sincronização</h3></div>${painelSinc()}</div>
+  </div>
+
+  <div class="grid2" style="margin-top:18px">
+    <div class="painel"><header><span class="ic">${ico('desperdicio', 16)}</span><h3>Desperdício ${perTxt}</h3>
+      <button type="button" class="link" data-act="goto" data-v="desperdicio">Ver ›</button></header>
+      <b class="num" style="font-family:var(--display);font-size:28px">${fmtN(+despKg.toFixed(2))} kg</b>
+      ${desp.length ? `<div class="linhas" style="margin-top:8px">${despProd.map(x => `<div class="linha-item" style="cursor:default"><span><b>${esc(x.nome)}</b><small class="mute">${x.n} ${x.n === 1 ? 'registro' : 'registros'}</small></span><span class="seta num" style="color:var(--text);font-weight:700">${fmtN(+x.kg.toFixed(2))} kg</span></div>`).join('')}</div>` : '<p class="hint">Nenhum descarte registrado no período.</p>'}</div>
+    <div class="painel"><header><span class="ic">${ico('fc', 16)}</span><h3>Fator de correção</h3>
+      <button type="button" class="link" data-act="goto" data-v="fc">Ver ›</button></header>
+      <div class="linhas">
+        <div class="linha-item" style="cursor:default"><span><b>Registros no período</b></span><span class="seta num" style="color:var(--text);font-weight:700">${fcPer.length}</span></div>
+        <div class="linha-item" style="cursor:default"><span><b>Acima do FC padrão</b><small class="${fcAcima ? 'bad' : 'mute'}">${fcAcima ? 'pede acompanhamento na limpeza' : 'tudo dentro do padrão'}</small></span><span class="seta num" style="color:${fcAcima ? 'var(--chili)' : 'var(--text)'};font-weight:700">${fcAcima}</span></div>
+        ${isManager() && semMin.length ? `<button type="button" class="linha-item" data-act="goto" data-v="cadastros"><span><b>Sem mínimo definido</b><small class="mute">o sistema não consegue avisar falta</small></span><span class="seta num" style="color:var(--text);font-weight:700">${semMin.length}</span></button>` : ''}
+      </div></div>
+  </div>`;
+}
+
+/* =========================================================
+   ALERTAS
+   ========================================================= */
+function vAlertas() {
+  const us = myUnits().filter(unOk);
+  const est = estoqueAtual(us);
+  const repor = est.filter(e => e.sit === 'repor');
+  const aten = est.filter(e => e.sit === 'atencao');
+  const semCont = est.filter(e => !e.c || e.dias >= CFG.DIAS_SEM_CONTAGEM);
+  const sols = solAbertas().filter(s => us.includes(s.unidade));
+  const obsImp = DB.observacoes.filter(o => o.status !== 'cancelado' && us.includes(o.unidade) && (o.impacto === 'Alto' || o.impacto === 'Crítico'))
+    .sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora))).slice(0, 6);
+  const bloco = (lista, cls) => `<div class="linhas">${lista.map(e => {
+    const f = fraseEstoque(e.p, e.u, e.c ? e.c.qtd : '');
+    return `<button type="button" class="linha-item" ${e.c ? `data-act="solicitar" data-u="${e.u}" data-p="${esc(e.p.id)}"` : 'data-act="goto" data-v="contagem"'}>${imgProduto(e.p)}
+      <span><b>${esc(e.p.nome)}</b><small class="${cls}">${e.c ? f.texto : 'Nunca contado. Faça a primeira contagem.'}</small></span><span class="seta">›</span></button>`;
+  }).join('')}</div>`;
+  return `
+  <h2 class="view">Alertas</h2>
+  <p class="lead">O que precisa de decisão agora.</p>
+  ${filtros(false)}
+  <div class="painel" style="margin-bottom:14px"><header><span class="ic alerta">${ico('alerta', 16)}</span><h3>Estoque baixo</h3><span class="cont">${repor.length}</span></header>
+    ${repor.length ? bloco(repor, 'bad') : '<div class="empty">Nenhum item abaixo do mínimo.</div>'}</div>
+  <div class="painel" style="margin-bottom:14px"><header><span class="ic">${ico('contagem', 16)}</span><h3>Quase no mínimo</h3></header>
+    ${aten.length ? bloco(aten, 'warn') : '<div class="empty">Nenhum item perto do mínimo.</div>'}</div>
+  <div class="painel" style="margin-bottom:14px"><header><span class="ic">${ico('pedidos', 16)}</span><h3>Pedidos de produção abertos</h3><span class="cont">${sols.length}</span></header>
+    ${sols.length ? `<div class="fila">${sols.map(cardSol).join('')}</div>` : '<div class="empty">Nenhum pedido aberto.</div>'}</div>
+  <div class="painel" style="margin-bottom:14px"><header><span class="ic">${ico('observacoes', 16)}</span><h3>Observações de impacto alto e crítico</h3></header>
+    ${obsImp.length ? obsImp.map(o => `<div class="obs-linha ${o.impacto === 'Alto' ? 'alto' : ''}"><b>${esc(o.produto_nome || o.tipo)}</b><p>${esc(o.descricao)}</p><time>${fmtDH(o.data_hora)}, ${esc(o.responsavel)}</time></div>`).join('') : '<div class="empty">Nada registrado.</div>'}</div>
+  ${semCont.length ? `<details class="more"><summary>Ver ${semCont.length} ${semCont.length === 1 ? 'item sem contagem recente' : 'itens sem contagem recente'}</summary>${bloco(semCont, 'mute')}</details>` : ''}`;
+}
+
+/* =========================================================
+   INÍCIO DO OPERADOR (mockup)
+   ========================================================= */
+function vInicio() {
+  const us = myUnits();
+  const sols = solAbertas().filter(s => us.includes(s.unidade))
+    .sort((a, b) => (b.prioridade === 'Urgente') - (a.prioridade === 'Urgente') || String(a.data_hora).localeCompare(String(b.data_hora)));
+  const destaque = sols[0];
+  return `
+  <h2 class="ola">Bom turno, ${esc(String(USER.nome).split(' ')[0])} 👋</h2>
+  <p class="ola-sub">O que você vai fazer agora?</p>
+  <button type="button" class="acao-grande" data-act="nova-prod">${ico('producao', 30)}Registrar produção<small>Inicie uma nova produção</small></button>
+  <div class="acoes-grid">
+    <button type="button" class="acao" data-act="goto" data-v="contagem"><span class="ic v">${ico('contagem', 21)}</span>Contagem<small>Verificar estoque</small></button>
+    <button type="button" class="acao" data-act="goto" data-v="desperdicio"><span class="ic a">${ico('desperdicio', 21)}</span>Descarte<small>Registrar perda</small></button>
+    <button type="button" class="acao" data-act="nova-obs"><span class="ic z">${ico('observacoes', 21)}</span>Observação<small>Deixar um registro</small></button>
+    <button type="button" class="acao" data-act="goto" data-v="alertas"><span class="ic r">${ico('pedidos', 21)}</span>Pedidos<small>Ver solicitações</small></button>
+  </div>
+  <div class="sub-sec"><h3>Pedido em destaque</h3><button type="button" data-act="goto" data-v="producao">Ver todos ›</button></div>
+  ${destaque ? `<div class="fila">${cardSol(destaque)}</div>` : '<div class="empty">Nenhum pedido de produção em aberto agora.</div>'}`;
 }
 
 /* =========================================================
    PRODUÇÃO
    ========================================================= */
-function cardSol(s) {
-  const p = prodById(s.produto_id);
-  const pode = myUnits().includes(s.unidade);
-  return `<div class="sol ${s.status === 'Em produção' ? 'prog' : ''}">
-    <div class="meta"><span class="pill ${s.status === 'Em produção' ? 'info' : 'bad'}">${esc(s.status)}</span>${s.prioridade === 'Urgente' ? '<span class="pill bad">Urgente</span>' : ''}<span>${esc(solNum(s))}</span></div>
-    <div style="display:flex;gap:10px;align-items:center">${imgProduto(p || { nome: s.produto_nome }, 'g')}<div class="t">${esc(s.produto_nome)}</div></div>
-    <div class="m">Para ${UN[s.unidade] ? UN[s.unidade].nome : esc(s.unidade)}. Saldo ${fmtN(s.saldo)} ${esc(s.medida)}, mínimo ${fmtN(s.minimo)}.</div>
-    <div><span class="m">Produzir</span> <span class="q num">${fmtN(s.qtd_sugerida)} ${esc(s.medida)}</span></div>
-    <div class="m">Pedido por ${esc(s.solicitante)} em ${fmtDH(s.data_hora)}${s.obs ? `. ${esc(s.obs)}` : ''}</div>
-    ${pode && p ? `<div class="actions">
-      <button type="button" class="btn sm" data-act="nova-prod" data-sol="${esc(s.id)}">Registrar produção</button>
-      ${s.status === 'Aberta' ? `<button type="button" class="btn sm ghost" data-act="sol-iniciar" data-id="${esc(s.id)}">Começar a produzir</button>` : ''}
-      ${isManager() ? `<button type="button" class="btn sm danger" data-act="sol-cancelar" data-id="${esc(s.id)}">Cancelar</button>` : ''}
-    </div>` : ''}
-  </div>`;
-}
 function vProducao() {
   const us = myUnits();
   const dia = PROD_DIA || today();
@@ -3261,7 +3416,7 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
-const VIEWS = { inicio: vInicio, geral: vGeral, producao: vProducao, contagem: vContagem, fc: vFC, desperdicio: vDesperdicio, observacoes: vObservacoes, relatorios: vRelatorios, cadastros: vCadastros };
+const VIEWS = { inicio: vInicio, geral: vGeral, alertas: vAlertas, producao: vProducao, contagem: vContagem, fc: vFC, desperdicio: vDesperdicio, observacoes: vObservacoes, relatorios: vRelatorios, cadastros: vCadastros };
 const AFTER = {
   producao() {
     const d = $('#prodDia');
@@ -3295,6 +3450,7 @@ document.addEventListener('click', ev => {
     case 'logout': logout(); break;
     case 'menu': ev.preventDefault(); closeModal(); irParaMenu(); break;
     case 'mais': abrirMais(); break;
+    case 'sincronizar': toast('Sincronizando…'); flush(); flushFotos(); load(); break;
     case 'ct-modo': CT_MODO = el.dataset.v; CT_IDX = 0; render(); break;
     case 'atualizar': recarregar(); break;
     case 'close': closeModal(); break;
