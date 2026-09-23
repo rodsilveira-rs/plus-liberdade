@@ -145,6 +145,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--sky);outline:none}
 .tipo-btn{background:var(--card);border:1.5px solid var(--line);border-left:5px solid var(--brand);border-radius:var(--r-lg);padding:14px;text-align:left;cursor:pointer;font-weight:700;font-size:15px;line-height:1.2}
 .tipo-btn:hover{border-color:var(--brand)}
 .tipo-btn small{display:block;font-weight:500;font-size:12px;color:var(--mute);margin-top:4px}
+.fc-painel{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:var(--brand-soft);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px}
+.fc-painel .fc-n b{font-family:var(--display);font-weight:800;font-size:22px;line-height:1;display:block}
+.fc-painel .fc-n span{font-size:12px;color:var(--mute)}
+.fc-painel .fc-st{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.fc-painel .fc-st small{font-size:11.5px;color:var(--mute)}
+.fc-painel .fc-alerta{color:var(--chili);font-weight:700}
+.fc-vazio{color:var(--mute);font-size:13px}
 .quick .btn{flex:1;min-width:180px;padding:14px}
 
 .list{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
@@ -321,17 +328,12 @@ function aplicarTema(u) {
 }
 const MEDIDAS = ['un', 'kg', 'g', 'L', 'ml', 'porção', 'bandeja', 'pote'];
 const TIPOS_OBS = ['Falta de insumo', 'Qualidade', 'Equipamento', 'Equipe', 'Processo', 'Validade', 'Recebimento', 'Outro'];
-/* "Registro total" é para quando pesam tudo junto, sem separar por tipo.
-   Fica por último de propósito: os tipos específicos continuam sendo o caminho
-   normal, e o total é a saída para o dia corrido. */
-const TIPO_TOTAL = 'Registro total';
-const TIPOS_DESP = ['Resto de prato', 'Sobra limpa', 'Perda no preparo', 'Produto vencido', 'Produto avariado', TIPO_TOTAL];
-const normNome = s => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const TIPOS_DESP = ['Resto de prato', 'Sobra limpa', 'Perda no preparo', 'Produto vencido', 'Produto avariado'];
 const CAUSAS_DESP = ['Excesso de produção', 'Baixa saída', 'Porcionamento', 'Erro de preparo', 'Armazenamento', 'Equipamento', 'Qualidade do insumo', 'Outro'];
 const SETORES = ['Cozinha', 'Produção', 'Salão', 'Estoque', 'Recebimento', 'Higienização', 'Estrutura', 'Outro'];
 const IMPACTOS = ['Baixo', 'Médio', 'Alto', 'Crítico'];
 const PAPEIS = { alimentador: 'Registro diário', tecnico: 'Acompanhamento técnico', gestor: 'Coordenação', admin: 'Administrador' };
-const TABS = ['produtos', 'pessoas', 'producoes', 'contagens', 'observacoes', 'solicitacoes', 'desperdicios'];
+const TABS = ['produtos', 'pessoas', 'producoes', 'contagens', 'observacoes', 'solicitacoes', 'desperdicios', 'fc'];
 const SIT = {
   ok: { t: 'OK', c: 'ok' },
   atencao: { t: 'Atenção', c: 'warn' },
@@ -348,7 +350,7 @@ const SEED_PRODUTOS = [
   ['Legumes de Tteokbokki', 'kg'], ['Molho Dragão', 'L']
 ].map((p, i) => ({
   id: 'p-ml-' + String(i + 1).padStart(2, '0'), nome: p[0], medida: p[1], unidades: 'ML',
-  min_ML: '', min_GG: '', min_CP: '', margem: '20', validade: 'Sim', dias_validade: '', ficha: '', peso_medio: '', custo_kg: '', ativo: 'Sim', atualizado_em: ''
+  min_ML: '', min_GG: '', min_CP: '', margem: '20', validade: 'Sim', dias_validade: '', ficha: '', peso_medio: '', custo_kg: '', fc_padrao: '', ativo: 'Sim', atualizado_em: ''
 }));
 const SEED_PESSOAS = [
   ['Jadison Barbosa', '', 'alimentador'], ['Rozilda', '', 'alimentador'], ['Leonarda', '', 'alimentador'],
@@ -643,7 +645,7 @@ function logout() {
    NAVEGAÇÃO
    ========================================================= */
 function navItems() {
-  const it = [['geral', 'Visão geral'], ['producao', 'Produção'], ['contagem', 'Contagem'], ['desperdicio', 'Desperdício'], ['observacoes', 'Observações']];
+  const it = [['geral', 'Visão geral'], ['producao', 'Produção'], ['contagem', 'Contagem'], ['fc', 'Fator de correção'], ['desperdicio', 'Desperdício'], ['observacoes', 'Observações']];
   if (isManager()) it.push(['relatorios', 'Relatórios'], ['cadastros', 'Cadastros']);
   return it;
 }
@@ -723,6 +725,8 @@ function vGeral() {
   const despKg = somaKg(desp);
   const despProd = agrupaDesp(desp, 'produto_nome').slice(0, 5);
   const despCausa = agrupaDesp(desp, 'causa').slice(0, 5);
+  const fcPer = fcDoPeriodo(us, per);
+  const fcAcima = fcPer.filter(r => fcCalc(r).status === 'acima').length;
   const perTxt = { hoje: 'hoje', semana: 'nos últimos 7 dias', mes: 'neste mês', custom: 'no período' }[F.per];
 
   return `
@@ -745,6 +749,7 @@ function vGeral() {
         <div class="tile" data-act="goto" data-v="contagem"><b class="num">${contPer.length}</b><span>Itens contados ${perTxt}</span></div>
         <div class="tile ${semCont.length ? 'warn' : ''}" data-act="goto" data-v="contagem"><b class="num">${semCont.length}</b><span>Sem contagem há ${CFG.DIAS_SEM_CONTAGEM}+ dias</span></div>
         <div class="tile" data-act="goto" data-v="desperdicio"><b class="num">${fmtN(+despKg.toFixed(3))} kg</b><span>Descartados ${perTxt}</span></div>
+        <div class="tile ${fcAcima ? 'bad' : ''}" data-act="goto" data-v="fc"><b class="num">${fcAcima}</b><span>Acima do FC padrão</span></div>
       </div>
       <div class="quick">
         <button type="button" class="btn" data-act="nova-prod">Registrar produção</button>
@@ -866,14 +871,6 @@ function formProducao(r, sol) {
       ${r ? '<button type="button" class="btn danger" data-act="cancel-prod">Excluir registro</button>' : ''}
     </div>
   </form>`;
-}
-function fotoField(r) {
-  const v = r ? (r.evidencia || '') : '';
-  return `<div class="fld"><span>Foto</span>
-    <input type="file" accept="image/*" capture="environment" data-foto>
-    <input type="hidden" name="evidencia" value="${esc(v)}">
-    <span class="hint foto-st">${v ? fotoHTML(v) : 'A foto fica guardada no aparelho e sobe sozinha quando houver internet.'}</span>
-  </div>`;
 }
 function abrirProducao(r, solId) {
   const sol = solId ? DB.solicitacoes.find(s => s.id === solId) : null;
@@ -1240,10 +1237,8 @@ function abrirDesperdicio(r, tipoPre) {
       <label class="fld req"><span>O que foi descartado</span><select name="tipo">${opts(TIPOS_DESP, r ? r.tipo : (tipoPre || TIPOS_DESP[0]))}</select></label>
       <label class="fld req"><span>Causa provável</span><select name="causa"><option value="">Escolha a causa</option>${opts(CAUSAS_DESP, r ? r.causa : '')}</select></label>
     </div>
-    <label class="fld"><span>Produto relacionado</span>
-      <input type="text" name="produto_nome" list="listaProdDesp" autocomplete="off" placeholder="Escolha da lista ou escreva" value="${r ? esc(r.produto_nome || '') : ''}">
-      <datalist id="listaProdDesp"></datalist>
-      <span class="hint">Pode escolher da lista ou escrever o nome. Deixe em branco quando for lixo misturado de vários itens.</span></label>
+    <label class="fld"><span>Produto relacionado</span><select name="produto_id"></select>
+      <span class="hint">Deixe em Nenhum quando for lixo misturado de vários itens.</span></label>
     <div class="grid2">
       <label class="fld req"><span>Peso descartado</span><input type="text" inputmode="decimal" name="peso" value="${r ? fmtN(r.kg).replace(/\./g, '') : ''}" placeholder="0"></label>
       <label class="fld"><span>Unidade do peso</span><select name="und">${opts([{ v: 'kg', t: 'kg' }, { v: 'g', t: 'gramas' }], 'kg')}</select>
@@ -1264,17 +1259,13 @@ function abrirDesperdicio(r, tipoPre) {
     </div>
   </form>`, root => {
     const fm = $('#fDesp', root), f = fm.elements;
-    /* A lista traz todos os produtos ativos, sem filtrar por unidade: muita coisa
-       é produzida na Cozinha de Produção e descartada na Mercearia. Como é campo
-       de texto, também aceita item que ainda não está no cadastro. */
-    const dl = $('#listaProdDesp', root);
-    dl.innerHTML = ativos().sort(byNome).map(p => `<option value="${esc(p.nome)}"></option>`).join('');
-    /* No Registro total a causa vira opcional: pesando tudo junto, a causa
-       também é misturada, e exigir só geraria dado inventado. */
-    const labelCausa = f.causa.closest('.fld');
-    const ajustaCausa = () => { labelCausa.classList.toggle('req', f.tipo.value !== TIPO_TOTAL); };
-    ajustaCausa();
-    f.tipo.addEventListener('change', ajustaCausa);
+    const fill = () => {
+      const list = prodsDaUnidade(f.unidade.value);
+      const cur = r ? r.produto_id : '';
+      f.produto_id.innerHTML = '<option value="">Nenhum ou vários</option>' + list.map(p => `<option value="${esc(p.id)}" ${p.id === cur ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
+    };
+    fill();
+    f.unidade.addEventListener('change', fill);
     bindFoto(root);
     const del = $('#dDel', root);
     if (del) del.addEventListener('click', () => {
@@ -1288,23 +1279,254 @@ function abrirDesperdicio(r, tipoPre) {
       if (FOTO_BUSY) { err.textContent = 'Aguarde o envio da foto terminar.'; return; }
       const peso = num(f.peso.value);
       if (isNaN(peso) || peso <= 0) { err.textContent = 'Informe o peso descartado.'; return; }
-      if (!f.causa.value && f.tipo.value !== TIPO_TOTAL) { err.textContent = 'Escolha a causa provável.'; return; }
+      if (!f.causa.value) { err.textContent = 'Escolha a causa provável.'; return; }
       if (!f.evidencia.value) { err.textContent = 'Anexe a foto do descarte na balança.'; return; }
       const kg = +(f.und.value === 'g' ? peso / 1000 : peso).toFixed(3);
       if (kg <= 0) { err.textContent = 'Peso muito pequeno para registrar.'; return; }
-      /* Se o que foi escrito bate com um produto do cadastro, guarda o id junto.
-         Se não bate, guarda só o nome digitado, que serve igual no relatório. */
-      const digitado = f.produto_nome.value.trim();
-      const p = digitado ? ativos().find(x => normNome(x.nome) === normNome(digitado)) : null;
+      const p = prodById(f.produto_id.value);
       const row = {
         id: r ? r.id : uid('ds'), unidade: f.unidade.value, setor: f.setor.value, tipo: f.tipo.value, causa: f.causa.value,
-        produto_id: p ? p.id : '', produto_nome: p ? p.nome : digitado, kg, obs: f.obs.value.trim(),
+        produto_id: p ? p.id : '', produto_nome: p ? p.nome : '', kg, obs: f.obs.value.trim(),
         evidencia: f.evidencia.value, demanda_tecnica: f.demanda_tecnica.value, status: 'ativo'
       };
       if (!r) { row.data_hora = nowISO(); row.responsavel = USER.nome; row.criado_por = USER.nome; row.criado_em = nowISO(); }
       save('desperdicios', row, true);
       closeModal(); render();
       toast(r ? 'Descarte atualizado' : `Descarte de ${fmtN(kg)} kg registrado`);
+    });
+  });
+}
+
+/* =========================================================
+   FATOR DE CORREÇÃO (FC)
+   Pré-preparo: peso bruto -> peso líquido, aparas aproveitáveis e perda real.
+   ========================================================= */
+const DESTINOS_APARAS = ['Caldo ou fundo', 'Bolinho ou recheio', 'Molho', 'Outra preparação', 'Alimentação da equipe', 'Descartado'];
+const FC_TOLERANCIA = 5;     // diferença máxima aceita entre bruto e a soma das partes, em %
+const FC_MARGEM = 5;         // quanto o FC realizado pode passar do padrão antes de virar desvio
+
+function fcCalc(r) {
+  const bruto = num(r.bruto), liquido = num(r.liquido);
+  const aparas = isNaN(num(r.aparas)) ? 0 : num(r.aparas);
+  const perda = isNaN(num(r.perda)) ? 0 : num(r.perda);
+  const descartouAparas = r.destino_aparas === 'Descartado';
+  const perdaTotal = perda + (descartouAparas ? aparas : 0);
+  const fcReal = (bruto > 0 && liquido > 0) ? +(bruto / liquido).toFixed(3) : null;
+  const padrao = num(r.fc_padrao);
+  let status = 'sem';
+  if (fcReal !== null && !isNaN(padrao) && padrao > 0) {
+    if (fcReal <= padrao) status = 'ok';
+    else if (fcReal <= padrao * (1 + FC_MARGEM / 100)) status = 'atencao';
+    else status = 'acima';
+  }
+  return {
+    bruto, liquido, aparas, perda, perdaTotal, fcReal, padrao: isNaN(padrao) ? null : padrao, status,
+    aproveit: bruto > 0 ? +(liquido / bruto * 100).toFixed(1) : null,
+    aparasPct: bruto > 0 ? +(aparas / bruto * 100).toFixed(1) : null,
+    perdaPct: bruto > 0 ? +(perdaTotal / bruto * 100).toFixed(1) : null,
+    desvio: (fcReal !== null && !isNaN(padrao) && padrao > 0) ? +((fcReal / padrao - 1) * 100).toFixed(1) : null,
+    diferenca: +(bruto - (liquido + aparas + perda)).toFixed(3)
+  };
+}
+const FC_SIT = { ok: { t: 'Dentro do padrão', c: 'ok' }, atencao: { t: 'No limite', c: 'warn' }, acima: { t: 'Acima do padrão', c: 'bad' }, sem: { t: 'Sem padrão', c: 'mute' } };
+const fcDoPeriodo = (us, per) => DB.fc.filter(r => r.status !== 'cancelado' && us.includes(r.unidade) && inPer(r.data_hora, per));
+function fcAgrupa(lista, campo) {
+  const m = {};
+  lista.forEach(r => {
+    const k = r[campo] || '—';
+    const c = fcCalc(r);
+    m[k] = m[k] || { nome: k, n: 0, bruto: 0, liquido: 0, aparas: 0, perda: 0, acima: 0, padroes: [] };
+    m[k].n++; m[k].bruto += c.bruto || 0; m[k].liquido += c.liquido || 0;
+    m[k].aparas += c.aparas || 0; m[k].perda += c.perdaTotal || 0;
+    if (c.status === 'acima') m[k].acima++;
+    if (c.padrao) m[k].padroes.push(c.padrao);
+  });
+  return Object.values(m).map(x => ({
+    ...x,
+    fcMedio: x.liquido > 0 ? +(x.bruto / x.liquido).toFixed(3) : null,
+    padrao: x.padroes.length ? +(x.padroes.reduce((a, b) => a + b, 0) / x.padroes.length).toFixed(3) : null,
+    aproveit: x.bruto > 0 ? +(x.liquido / x.bruto * 100).toFixed(1) : null,
+    perdaPct: x.bruto > 0 ? +(x.perda / x.bruto * 100).toFixed(1) : null
+  })).sort((a, b) => b.bruto - a.bruto);
+}
+
+function vFC() {
+  const per = periodo();
+  const us = myUnits().filter(unOk);
+  const lista = fcDoPeriodo(us, per).sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora)));
+  const calc = lista.map(r => ({ r, c: fcCalc(r) }));
+  const bruto = calc.reduce((a, x) => a + (x.c.bruto || 0), 0);
+  const liquido = calc.reduce((a, x) => a + (x.c.liquido || 0), 0);
+  const aparas = calc.reduce((a, x) => a + (x.r.destino_aparas === 'Descartado' ? 0 : x.c.aparas || 0), 0);
+  const perda = calc.reduce((a, x) => a + (x.c.perdaTotal || 0), 0);
+  const acima = calc.filter(x => x.c.status === 'acima');
+  const porProduto = fcAgrupa(lista, 'produto_nome');
+  const porPessoa = fcAgrupa(lista, 'responsavel');
+  return `
+  <h2 class="view">Fator de correção</h2>
+  <p class="lead">Pesagem do pré-preparo: quanto entrou bruto, quanto sobrou limpo, o que virou subproduto aproveitável e o que foi perda de verdade. É o que separa rendimento de desperdício.</p>
+  <div class="quick" style="margin:0 0 18px"><button type="button" class="btn" data-act="novo-fc">Registrar fator de correção</button></div>
+  ${filtros(true)}
+  <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+    <div class="tile"><b class="num">${liquido > 0 ? fmtN(+(bruto / liquido).toFixed(3)) : '—'}</b><span>FC médio do período</span></div>
+    <div class="tile"><b class="num">${bruto > 0 ? fmtN(+(liquido / bruto * 100).toFixed(1)) + '%' : '—'}</b><span>Aproveitamento limpo</span></div>
+    <div class="tile"><b class="num">${fmtN(+aparas.toFixed(3))} kg</b><span>Subprodutos aproveitados</span></div>
+    <div class="tile ${perda ? 'warn' : ''}"><b class="num">${fmtN(+perda.toFixed(3))} kg</b><span>Perda real do pré-preparo</span></div>
+    <div class="tile ${acima.length ? 'bad' : ''}"><b class="num">${acima.length}</b><span>Acima do FC padrão</span></div>
+    <div class="tile"><b class="num">${lista.length}</b><span>Registros</span></div>
+  </div>
+
+  ${acima.length ? `<h3 class="sec">Acima do padrão <span class="count">pede acompanhamento na limpeza e no corte</span></h3>
+  <div class="list">${acima.map(({ r, c }) => `<div class="row">
+    <span class="dot bad"></span>
+    <div class="row-main"><b>${esc(r.produto_nome)}</b><small>${esc(r.responsavel)}, ${fmtDH(r.data_hora)}${r.treinamento === 'Sim' ? ', marcado para treinamento' : ''}</small></div>
+    <div class="row-num num"><b>FC ${fmtN(c.fcReal)}</b><small>padrão ${fmtN(c.padrao)}, ${c.desvio > 0 ? '+' : ''}${fmtN(c.desvio)}%</small></div>
+  </div>`).join('')}</div>` : ''}
+
+  <div class="grid2" style="margin-top:14px">
+    <div><h3 class="sec">Por produto</h3>
+      ${porProduto.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th class="r">FC padrão</th><th class="r">FC médio</th><th class="r">Aproveit.</th><th class="r">Reg.</th></tr></thead><tbody>
+        ${porProduto.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num">${fmtN(x.padrao)}</td>
+          <td class="r num">${x.padrao && x.fcMedio > x.padrao ? `<span class="pill bad">${fmtN(x.fcMedio)}</span>` : `<b>${fmtN(x.fcMedio)}</b>`}</td>
+          <td class="r num">${fmtN(x.aproveit)}%</td><td class="r num">${x.n}</td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="empty">Sem registros no período.</div>'}
+    </div>
+    <div><h3 class="sec">Por profissional</h3>
+      ${porPessoa.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Profissional</th><th class="r">FC médio</th><th class="r">Aproveit.</th><th class="r">Acima</th><th class="r">Reg.</th></tr></thead><tbody>
+        ${porPessoa.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num">${fmtN(x.fcMedio)}</td><td class="r num">${fmtN(x.aproveit)}%</td>
+          <td class="r num">${x.acima ? `<span class="pill bad">${x.acima}</span>` : '0'}</td><td class="r num">${x.n}</td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="empty">Sem registros no período.</div>'}
+    </div>
+  </div>
+
+  <h3 class="sec">Registros <span class="count">${lista.length}</span></h3>
+  ${lista.length ? `<div class="list">${calc.map(({ r, c }) => `<div class="rec">
+    <div style="flex:1;min-width:0">
+      <b>${esc(r.produto_nome)}</b> <span class="pill ${FC_SIT[c.status].c}">${FC_SIT[c.status].t}</span>
+      <div class="meta"><span>${UN[r.unidade] ? UN[r.unidade].curto : esc(r.unidade)}</span><span>${esc(r.responsavel)}</span><span>${fmtDH(r.data_hora)}</span>${r.treinamento === 'Sim' ? '<span class="pill warn">Treinamento</span>' : ''}</div>
+      <div class="obs">Bruto ${fmtN(c.bruto)} kg, limpo ${fmtN(c.liquido)} kg (${fmtN(c.aproveit)}%), aparas ${fmtN(c.aparas)} kg${r.destino_aparas ? ` para ${esc(r.destino_aparas.toLowerCase())}` : ''}, perda ${fmtN(c.perda)} kg</div>
+      ${r.obs ? `<div class="obs">${esc(r.obs)}</div>` : ''}
+      ${r.evidencia ? `<div class="obs">${fotoHTML(r.evidencia)}</div>` : ''}
+      ${podeEditar(r) ? `<button type="button" class="btn sm ghost" style="margin-top:8px" data-act="edit-fc" data-id="${esc(r.id)}">Editar</button>` : ''}
+    </div>
+    <div class="qty num">${fmtN(c.fcReal)}<small style="font-size:13px;display:block;font-weight:500">FC${c.padrao ? ` · padrão ${fmtN(c.padrao)}` : ''}</small></div>
+  </div>`).join('')}</div>` : '<div class="empty">Nenhum registro de fator de correção no período.</div>'}`;
+}
+
+function abrirFC(r) {
+  const us = myUnits();
+  const u0 = r ? r.unidade : (F.un !== 'todas' ? F.un : us[0]);
+  const resp = r ? r.responsavel : USER.nome;
+  openModal(r ? 'Editar fator de correção' : 'Registrar fator de correção', `<form id="fFC" class="stack" novalidate>
+    <div class="grid2">
+      <label class="fld req"><span>Data</span><input type="date" name="data" value="${r ? String(r.data_hora).slice(0, 10) : today()}" max="${today()}"></label>
+      <label class="fld req"><span>Unidade</span><select name="unidade">${opts(us.map(u => ({ v: u, t: UN[u].nome })), u0)}</select></label>
+    </div>
+    <label class="fld req"><span>Produto ou insumo</span><select name="produto_id"></select>
+      <span class="hint" id="fcPadraoHint"></span></label>
+    <label class="fld req"><span>Profissional responsável</span>${isManager() ? `<select name="responsavel">${opts(pessoasAtivas().map(p => p.nome).concat(pessoasAtivas().some(p => p.nome === resp) ? [] : [resp]), resp)}</select>` : `<input type="text" name="responsavel" value="${esc(resp)}" readonly>`}</label>
+    <div class="grid2">
+      <label class="fld req"><span>Peso bruto (kg)</span><input type="text" inputmode="decimal" name="bruto" value="${r ? fmtN(r.bruto).replace(/\./g, '') : ''}" placeholder="0"></label>
+      <label class="fld req"><span>Peso limpo (kg)</span><input type="text" inputmode="decimal" name="liquido" value="${r ? fmtN(r.liquido).replace(/\./g, '') : ''}" placeholder="0"></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>Aparas e subprodutos (kg)</span><input type="text" inputmode="decimal" name="aparas" value="${r ? fmtN(r.aparas).replace(/\./g, '').replace('—', '') : ''}" placeholder="0"></label>
+      <label class="fld"><span>Perda real, descarte (kg)</span><input type="text" inputmode="decimal" name="perda" value="${r ? fmtN(r.perda).replace(/\./g, '').replace('—', '') : ''}" placeholder="0"></label>
+    </div>
+    <label class="fld"><span>Destino das aparas</span><select name="destino_aparas"><option value="">Não houve aparas</option>${opts(DESTINOS_APARAS, r ? r.destino_aparas : '')}</select>
+      <span class="hint">Marcando "Descartado", o peso das aparas entra como perda real.</span></label>
+    <div id="fcPainel" class="fc-painel"></div>
+    <label class="fld"><span>Observação</span><textarea name="obs" placeholder="Ex.: peixe veio com muita nadadeira, limpeza rendeu menos">${r ? esc(r.obs || '') : ''}</textarea></label>
+    ${fotoField(r)}
+    <label class="fld"><span>Precisa de treinamento ou acompanhamento?</span><select name="treinamento">${opts(['Não', 'Sim'], r ? r.treinamento : 'Não')}</select>
+      <span class="hint">O sistema já sugere "Sim" quando o FC passa do padrão. Ajuste se for caso do insumo, e não da técnica.</span></label>
+    <div class="err-msg" id="fcErr"></div>
+    <div class="actions">
+      <button type="submit" class="btn" style="flex:1">${r ? 'Salvar alterações' : 'Registrar'}</button>
+      ${r ? '<button type="button" class="btn danger" id="fcDel">Excluir</button>' : ''}
+    </div>
+  </form>`, root => {
+    const fm = $('#fFC', root), f = fm.elements;
+    let trocouTreino = !!r;
+    f.treinamento.addEventListener('change', () => { trocouTreino = true; });
+
+    const fill = () => {
+      const list = prodsDaUnidade(f.unidade.value);
+      const cur = r ? r.produto_id : f.produto_id.value;
+      f.produto_id.innerHTML = '<option value="">Escolha o produto</option>' + list.map(p => `<option value="${esc(p.id)}" ${p.id === cur ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
+    };
+    const padraoDo = () => {
+      const p = prodById(f.produto_id.value);
+      const v = p ? num(p.fc_padrao) : NaN;
+      return isNaN(v) ? null : v;
+    };
+    const atualizar = () => {
+      const padrao = padraoDo();
+      $('#fcPadraoHint', root).textContent = padrao ? `FC padrão deste produto: ${fmtN(padrao)}` : 'Este produto ainda não tem FC padrão no cadastro.';
+      const c = fcCalc({ bruto: f.bruto.value, liquido: f.liquido.value, aparas: f.aparas.value, perda: f.perda.value, destino_aparas: f.destino_aparas.value, fc_padrao: padrao });
+      const painel = $('#fcPainel', root);
+      if (c.fcReal === null) { painel.innerHTML = '<div class="fc-vazio">Informe o peso bruto e o peso limpo para calcular.</div>'; return; }
+      const difAlta = Math.abs(c.diferenca) > (c.bruto * FC_TOLERANCIA / 100);
+      painel.innerHTML = `
+        <div class="fc-n"><b>${fmtN(c.fcReal)}</b><span>FC realizado</span></div>
+        <div class="fc-n"><b>${fmtN(c.aproveit)}%</b><span>Aproveitamento</span></div>
+        <div class="fc-n"><b>${fmtN(c.perdaPct)}%</b><span>Perda real</span></div>
+        <div class="fc-st"><span class="pill ${FC_SIT[c.status].c}">${FC_SIT[c.status].t}</span>
+          ${c.desvio !== null ? `<small>${c.desvio > 0 ? '+' : ''}${fmtN(c.desvio)}% sobre o padrão ${fmtN(c.padrao)}</small>` : ''}
+          ${c.diferenca ? `<small class="${difAlta ? 'fc-alerta' : ''}">Bruto menos as partes: ${fmtN(c.diferenca)} kg</small>` : ''}</div>`;
+      if (!trocouTreino) f.treinamento.value = c.status === 'acima' ? 'Sim' : 'Não';
+    };
+    fill(); atualizar();
+    f.unidade.addEventListener('change', () => { fill(); atualizar(); });
+    ['produto_id', 'bruto', 'liquido', 'aparas', 'perda', 'destino_aparas'].forEach(n => {
+      f[n].addEventListener('input', atualizar);
+      f[n].addEventListener('change', atualizar);
+    });
+    bindFoto(root);
+    const del = $('#fcDel', root);
+    if (del) del.addEventListener('click', () => {
+      if (!confirm('Excluir este registro de fator de correção?')) return;
+      save('fc', { id: r.id, status: 'cancelado' });
+      closeModal(); toast('Registro excluído');
+    });
+    fm.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const err = $('#fcErr', root);
+      if (FOTO_BUSY) { err.textContent = 'Aguarde o envio da foto terminar.'; return; }
+      const p = prodById(f.produto_id.value);
+      if (!p) { err.textContent = 'Escolha o produto.'; return; }
+      const bruto = num(f.bruto.value), liquido = num(f.liquido.value);
+      const aparas = f.aparas.value.trim() === '' ? 0 : num(f.aparas.value);
+      const perda = f.perda.value.trim() === '' ? 0 : num(f.perda.value);
+      if (isNaN(bruto) || bruto <= 0) { err.textContent = 'Informe o peso bruto.'; return; }
+      if (isNaN(liquido) || liquido <= 0) { err.textContent = 'Informe o peso limpo.'; return; }
+      if (liquido > bruto) { err.textContent = 'O peso limpo não pode ser maior que o bruto. Confira a balança.'; return; }
+      if (isNaN(aparas) || aparas < 0 || isNaN(perda) || perda < 0) { err.textContent = 'Aparas e perda precisam ser números válidos.'; return; }
+      if (aparas > 0 && !f.destino_aparas.value) { err.textContent = 'Informe o destino das aparas.'; return; }
+      const dif = bruto - (liquido + aparas + perda);
+      if (Math.abs(dif) > bruto * FC_TOLERANCIA / 100) {
+        err.textContent = `As partes não fecham com o bruto: sobra ${fmtN(+dif.toFixed(3))} kg. Confira as pesagens antes de salvar.`;
+        return;
+      }
+      const padrao = padraoDo();
+      const c = fcCalc({ bruto, liquido, aparas, perda, destino_aparas: f.destino_aparas.value, fc_padrao: padrao });
+      const row = {
+        id: r ? r.id : uid('fc'), unidade: f.unidade.value, produto_id: p.id, produto_nome: p.nome,
+        responsavel: f.responsavel.value, bruto, liquido, aparas, perda,
+        destino_aparas: f.destino_aparas.value, fc_padrao: padrao === null ? '' : padrao,
+        fc_real: c.fcReal, aproveitamento: c.aproveit, perda_pct: c.perdaPct, situacao: FC_SIT[c.status].t,
+        obs: f.obs.value.trim(), evidencia: f.evidencia.value, treinamento: f.treinamento.value, status: 'ativo'
+      };
+      if (!r) {
+        const hora = f.data.value === today() ? nowISO().slice(11) : '12:00:00';
+        row.data_hora = `${f.data.value} ${hora}`;
+        row.criado_por = USER.nome; row.criado_em = nowISO();
+      } else if (String(r.data_hora).slice(0, 10) !== f.data.value) {
+        row.data_hora = `${f.data.value} ${String(r.data_hora).slice(11) || '12:00:00'}`;
+      }
+      save('fc', row, true);
+      closeModal(); render();
+      toast(c.status === 'acima' ? `FC ${fmtN(c.fcReal)} acima do padrão ${fmtN(c.padrao)}` : `FC ${fmtN(c.fcReal)} registrado`);
     });
   });
 }
@@ -1373,6 +1595,18 @@ function dadosRelatorio() {
   });
   const pctDesp = prodKgTotal > 0 ? +(dKg / prodKgTotal * 100).toFixed(1) : null;
 
+  const fc = fcDoPeriodo(us, per).sort((a, b) => String(a.data_hora).localeCompare(String(b.data_hora)));
+  const fcCalcs = fc.map(r => ({ r, c: fcCalc(r) }));
+  const fcBruto = fcCalcs.reduce((a, x) => a + (x.c.bruto || 0), 0);
+  const fcLiquido = fcCalcs.reduce((a, x) => a + (x.c.liquido || 0), 0);
+  const fcAparas = fcCalcs.reduce((a, x) => a + (x.r.destino_aparas === 'Descartado' ? 0 : x.c.aparas || 0), 0);
+  const fcPerda = fcCalcs.reduce((a, x) => a + (x.c.perdaTotal || 0), 0);
+  const fcAcima = fcCalcs.filter(x => x.c.status === 'acima').length;
+  const fcMedio = fcLiquido > 0 ? +(fcBruto / fcLiquido).toFixed(3) : null;
+  const fcAproveit = fcBruto > 0 ? +(fcLiquido / fcBruto * 100).toFixed(1) : null;
+  const fcProduto = fcAgrupa(fc, 'produto_nome');
+  const fcPessoa = fcAgrupa(fc, 'responsavel');
+
   const tipos = {};
   obs.forEach(o => {
     tipos[o.tipo] = tipos[o.tipo] || { Baixo: 0, 'Médio': 0, Alto: 0, 'Crítico': 0, total: 0 };
@@ -1383,6 +1617,7 @@ function dadosRelatorio() {
 
   return { per, us, prods, conts, sols, obs, atend, tMed, pp, maxMed, pr, rp, est, avaliados, pct, tp,
     desp, dKg, dProd, dCausa, dTipo, prodKg, prodKgTotal, pctDesp,
+    fc, fcCalcs, fcBruto, fcLiquido, fcAparas, fcPerda, fcAcima, fcMedio, fcAproveit, fcProduto, fcPessoa,
     pctAtend: sols.length ? Math.round(atend.length / sols.length * 100) : null };
 }
 const fmtHoras = h => h === null ? '—' : (h < 1 ? Math.round(h * 60) + ' min' : fmtN(+h.toFixed(1)) + ' h');
@@ -1398,7 +1633,7 @@ function vRelatorios() {
   <div class="actions" style="margin:-4px 0 18px">
     <button type="button" class="btn" data-act="exp-xlsx">Baixar Excel</button>
     <button type="button" class="btn dark" data-act="exp-pdf">PDF de produção</button>
-    <button type="button" class="btn ghost" data-act="exp-desp">PDF de desperdício</button>
+    <button type="button" class="btn ghost" data-act="exp-desp">PDF de desperdício e FC</button>
   </div>
   <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
     <div class="tile"><b class="num">${prods.length}</b><span>Registros de produção</span></div>
@@ -1409,6 +1644,8 @@ function vRelatorios() {
     <div class="tile"><b class="num">${obs.length}</b><span>Observações</span></div>
     <div class="tile"><b class="num">${fmtN(+R.dKg.toFixed(3))} kg</b><span>Descartados</span></div>
     <div class="tile"><b class="num">${R.pctDesp === null ? '—' : fmtN(R.pctDesp) + '%'}</b><span>Descarte sobre a produção</span></div>
+    <div class="tile"><b class="num">${R.fcMedio === null ? '—' : fmtN(R.fcMedio)}</b><span>FC médio do pré-preparo</span></div>
+    <div class="tile ${R.fcAcima ? 'bad' : ''}"><b class="num">${R.fcAcima}</b><span>Registros acima do FC padrão</span></div>
   </div>
 
   <h3 class="sec">Produzido por produto</h3>
@@ -1446,6 +1683,21 @@ function vRelatorios() {
       ${R.dTipo.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num">${fmtN(+x.kg.toFixed(3))}</td><td class="r num">${R.dKg ? Math.round(x.kg / R.dKg * 100) : 0}%</td></tr>`).join('')}
     </tbody></table></div>
   </div>` : '<div class="empty">Nenhum descarte registrado no período.</div>'}
+
+  <h3 class="sec">Fator de correção por produto <span class="count">${R.fc.length ? `${fmtN(+R.fcBruto.toFixed(1))} kg brutos, ${fmtN(R.fcAproveit)}% de aproveitamento limpo, ${fmtN(+R.fcAparas.toFixed(1))} kg de subprodutos` : 'sem registros no período'}</span></h3>
+  ${R.fcProduto.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th class="r">FC padrão</th><th class="r">FC médio</th><th class="r">Desvio</th><th class="r">Bruto</th><th class="r">Limpo</th><th class="r">Aparas</th><th class="r">Perda real</th><th class="r">Reg.</th></tr></thead><tbody>
+    ${R.fcProduto.map(x => { const dv = (x.padrao && x.fcMedio) ? +((x.fcMedio / x.padrao - 1) * 100).toFixed(1) : null;
+      return `<tr><td>${esc(x.nome)}</td><td class="r num">${fmtN(x.padrao)}</td><td class="r num"><b>${fmtN(x.fcMedio)}</b></td>
+      <td class="r num">${dv === null ? '—' : `<span class="pill ${dv > 5 ? 'bad' : dv > 0 ? 'warn' : 'ok'}">${dv > 0 ? '+' : ''}${fmtN(dv)}%</span>`}</td>
+      <td class="r num">${fmtN(+x.bruto.toFixed(2))}</td><td class="r num">${fmtN(+x.liquido.toFixed(2))}</td>
+      <td class="r num">${fmtN(+x.aparas.toFixed(2))}</td><td class="r num">${fmtN(+x.perda.toFixed(2))}</td><td class="r num">${x.n}</td></tr>`; }).join('')}
+  </tbody></table></div>` : '<div class="empty">Nenhum registro de fator de correção no período.</div>'}
+
+  <h3 class="sec">Fator de correção por profissional <span class="count">quem precisa de acompanhamento na limpeza e no corte</span></h3>
+  ${R.fcPessoa.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Profissional</th><th class="r">FC médio</th><th class="r">Aproveitamento</th><th class="r">Perda real</th><th class="r">Acima do padrão</th><th class="r">Reg.</th></tr></thead><tbody>
+    ${R.fcPessoa.map(x => `<tr><td>${esc(x.nome)}</td><td class="r num">${fmtN(x.fcMedio)}</td><td class="r num">${fmtN(x.aproveit)}%</td>
+      <td class="r num">${fmtN(x.perdaPct)}%</td><td class="r num">${x.acima ? `<span class="pill bad">${x.acima}</span>` : '0'}</td><td class="r num">${x.n}</td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">Nenhum registro de fator de correção no período.</div>'}
 
   <h3 class="sec">Observações por tipo e impacto</h3>
   ${tp.length ? `<div class="tb-wrap"><table class="tb"><thead><tr><th>Tipo</th><th class="r">Baixo</th><th class="r">Médio</th><th class="r">Alto</th><th class="r">Crítico</th><th class="r">Total</th></tr></thead><tbody>
@@ -1574,10 +1826,14 @@ async function exportarExcel() {
       ['Itens sem contagem', R.est.filter(e => !e.c).length],
       ['Descartado no período (kg)', +R.dKg.toFixed(3)],
       ['Registros de descarte', R.desp.length],
-      ['Descarte sobre a produção (%)', R.pctDesp === null ? '' : R.pctDesp / 100]
+      ['Descarte sobre a produção (%)', R.pctDesp === null ? '' : R.pctDesp / 100],
+      ['FC médio do pré-preparo', R.fcMedio === null ? '' : R.fcMedio],
+      ['Aproveitamento limpo (%)', R.fcAproveit === null ? '' : R.fcAproveit / 100],
+      ['Subprodutos aproveitados (kg)', +R.fcAparas.toFixed(3)],
+      ['Registros acima do FC padrão', R.fcAcima]
     ]), 'Resumo');
   const wsR = wb.Sheets['Resumo'];
-  ['B9', 'B13', 'B18'].forEach(a => { if (wsR[a] && wsR[a].t === 'n') wsR[a].z = '0%'; });
+  ['B9', 'B13', 'B18', 'B20'].forEach(a => { if (wsR[a] && wsR[a].t === 'n') wsR[a].z = '0%'; });
 
   X.utils.book_append_sheet(wb, xlAba('Produzido por produto', sub,
     [{ h: 'Produto', w: 30, t: 's' }, { h: 'Medida', w: 10, t: 's' }, { h: 'Total produzido', w: 16, t: 'n' }, { h: 'Registros', w: 12, t: 'i' }, { h: 'Unidades de destino', w: 34, t: 's' }],
@@ -1631,6 +1887,21 @@ async function exportarExcel() {
     [{ h: 'Data e hora', w: 17, t: 'dt' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Origem', w: 14, t: 's' }, { h: 'Tipo', w: 18, t: 's' }, { h: 'Causa', w: 20, t: 's' }, { h: 'Produto', w: 26, t: 's' }, { h: 'Descartado (kg)', w: 15, t: 'n' }, { h: 'Responsável', w: 18, t: 's' }, { h: 'Observação', w: 40, t: 's' }, { h: 'Demanda técnica', w: 15, t: 's' }, { h: 'Foto', w: 30, t: 's' }],
     R.desp.map(d => [d.data_hora, un(d.unidade), d.setor, d.tipo, d.causa, d.produto_nome, numOuVazio(d.kg), d.responsavel, d.obs, d.demanda_tecnica, d.evidencia]),
     ['Total', '', '', '', '', '', 'SOMA']), 'Desperdício');
+
+  X.utils.book_append_sheet(wb, xlAba('Fator de correção por produto', sub,
+    [{ h: 'Produto', w: 30, t: 's' }, { h: 'FC padrão', w: 11, t: 'n' }, { h: 'FC médio', w: 11, t: 'n' }, { h: 'Desvio (%)', w: 11, t: 'n' }, { h: 'Bruto (kg)', w: 12, t: 'n' }, { h: 'Limpo (kg)', w: 12, t: 'n' }, { h: 'Aparas (kg)', w: 12, t: 'n' }, { h: 'Perda real (kg)', w: 14, t: 'n' }, { h: 'Aproveitamento (%)', w: 17, t: 'n' }, { h: 'Registros', w: 11, t: 'i' }],
+    R.fcProduto.map(x => [x.nome, x.padrao, x.fcMedio, (x.padrao && x.fcMedio) ? +((x.fcMedio / x.padrao - 1) * 100).toFixed(1) : '', +x.bruto.toFixed(3), +x.liquido.toFixed(3), +x.aparas.toFixed(3), +x.perda.toFixed(3), x.aproveit, x.n]),
+    ['Total', '', '', '', 'SOMA', 'SOMA', 'SOMA', 'SOMA', '', 'SOMA']), 'FC produto');
+
+  X.utils.book_append_sheet(wb, xlAba('Fator de correção por profissional', sub,
+    [{ h: 'Profissional', w: 26, t: 's' }, { h: 'FC médio', w: 11, t: 'n' }, { h: 'Aproveitamento (%)', w: 17, t: 'n' }, { h: 'Perda real (%)', w: 14, t: 'n' }, { h: 'Bruto (kg)', w: 12, t: 'n' }, { h: 'Acima do padrão', w: 15, t: 'i' }, { h: 'Registros', w: 11, t: 'i' }],
+    R.fcPessoa.map(x => [x.nome, x.fcMedio, x.aproveit, x.perdaPct, +x.bruto.toFixed(3), x.acima, x.n]),
+    ['Total', '', '', '', 'SOMA', 'SOMA', 'SOMA']), 'FC profissional');
+
+  X.utils.book_append_sheet(wb, xlAba('Fator de correção (detalhe)', sub,
+    [{ h: 'Data e hora', w: 17, t: 'dt' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Produto', w: 28, t: 's' }, { h: 'Profissional', w: 20, t: 's' }, { h: 'Bruto (kg)', w: 12, t: 'n' }, { h: 'Limpo (kg)', w: 12, t: 'n' }, { h: 'Aparas (kg)', w: 12, t: 'n' }, { h: 'Perda real (kg)', w: 14, t: 'n' }, { h: 'Destino das aparas', w: 22, t: 's' }, { h: 'FC padrão', w: 11, t: 'n' }, { h: 'FC realizado', w: 12, t: 'n' }, { h: 'Aproveitamento (%)', w: 17, t: 'n' }, { h: 'Perda (%)', w: 11, t: 'n' }, { h: 'Situação', w: 18, t: 's' }, { h: 'Treinamento', w: 12, t: 's' }, { h: 'Observação', w: 40, t: 's' }, { h: 'Foto', w: 30, t: 's' }],
+    R.fcCalcs.map(({ r, c }) => [r.data_hora, un(r.unidade), r.produto_nome, r.responsavel, numOuVazio(r.bruto), numOuVazio(r.liquido), numOuVazio(r.aparas), numOuVazio(r.perda), r.destino_aparas, numOuVazio(r.fc_padrao), c.fcReal, c.aproveit, c.perdaPct, FC_SIT[c.status].t, r.treinamento, r.obs, r.evidencia]),
+    ['Total', '', '', '', 'SOMA', 'SOMA', 'SOMA', 'SOMA']), 'FC');
 
   X.utils.book_append_sheet(wb, xlAba('Observações do período (detalhe)', sub,
     [{ h: 'Data e hora', w: 17, t: 'dt' }, { h: 'Unidade', w: 22, t: 's' }, { h: 'Setor', w: 14, t: 's' }, { h: 'Tipo', w: 16, t: 's' }, { h: 'Impacto', w: 10, t: 's', cor: corImpacto }, { h: 'Produto', w: 24, t: 's' }, { h: 'Descrição', w: 50, t: 's' }, { h: 'Responsável', w: 18, t: 's' }, { h: 'Demanda técnica', w: 15, t: 's' }, { h: 'Foto', w: 30, t: 's' }],
@@ -1868,8 +2139,20 @@ function relatorioDespHTML(R) {
     [`${fmtN(+(R.dKg / dias).toFixed(2))} kg`, 'Média por dia'],
     [R.desp.length, 'Registros de descarte'],
     [causaTop ? causaTop.nome : '—', 'Principal causa'],
-    [`${comFoto} de ${R.desp.length}`, 'Registros com foto']
+    [`${comFoto} de ${R.desp.length}`, 'Registros com foto'],
+    [R.fcMedio === null ? '—' : fmtN(R.fcMedio), 'FC médio do pré-preparo'],
+    [R.fcAproveit === null ? '—' : `${fmtN(R.fcAproveit)}%`, 'Aproveitamento limpo'],
+    [`${fmtN(+R.fcAparas.toFixed(2))} kg`, 'Subprodutos aproveitados']
   ].map(k => `<div class="kpi"><b>${esc(String(k[0]))}</b><span>${k[1]}</span></div>`).join('');
+
+  const fcProdTab = R.fcProduto.map(x => {
+    const dv = (x.padrao && x.fcMedio) ? +((x.fcMedio / x.padrao - 1) * 100).toFixed(1) : null;
+    return `<tr><td>${esc(x.nome)}</td><td class="r">${fmtN(x.padrao)}</td><td class="r"><b>${fmtN(x.fcMedio)}</b></td>
+      <td class="r">${dv === null ? '—' : `<span class="pill" style="background:${dv > 5 ? '#FBE4E1' : dv > 0 ? '#FBF0D6' : '#E2F1EA'};color:${dv > 5 ? '#B0281D' : dv > 0 ? '#9A6A05' : '#1A6E52'}">${dv > 0 ? '+' : ''}${fmtN(dv)}%</span>`}</td>
+      <td class="r">${fmtN(x.aproveit)}%</td></tr>`;
+  }).join('');
+  const fcPessoaTab = R.fcPessoa.map(x => `<tr><td>${esc(x.nome)}</td><td class="r">${fmtN(x.fcMedio)}</td><td class="r">${fmtN(x.aproveit)}%</td>
+    <td class="r">${x.acima ? `<b style="color:#B0281D">${x.acima}</b>` : '0'}</td><td class="r">${x.n}</td></tr>`).join('');
 
   const cards = R.dProd.slice(0, 4).map(x => {
     const pk = R.prodKg[x.nome];
@@ -1902,7 +2185,7 @@ function relatorioDespHTML(R) {
   const vazio = t => `<div class="vazio">${t}</div>`;
 
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
-<title>Relatório de Desperdício ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</title>
+<title>Desperdício e Aproveitamento ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1962,7 +2245,7 @@ h2.sec small{font-family:'Figtree';font-weight:500;font-size:7.8pt;color:${T.mut
 </style></head><body>
 <div class="head">
   <div class="logo"><img src="${ASSETS_URL + L.logo}" alt="${esc(L.alt)}" onerror="this.style.display='none'"></div>
-  <div><h1>Relatório de Desperdício</h1><div class="sub">${esc(nomeUnidades(R.us))} · ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</div></div>
+  <div><h1>Desperdício e Aproveitamento</h1><div class="sub">${esc(nomeUnidades(R.us))} · ${fmtD(R.per[0])} a ${fmtD(R.per[1])}</div></div>
   <div class="right"><b>Q Food Group</b>Gerado por ${esc(USER.nome)} · ${fmtDH(nowISO())}</div>
 </div>
 
@@ -1995,6 +2278,14 @@ ${tProd ? '<div class="nota">O índice compara o descarte com a produção do me
     <div class="box" style="margin-bottom:0"><h2>Quem registrou <span>controle da rotina de pesagem</span></h2>
       ${tResp ? `<table><thead><tr><th>Responsável</th><th class="r">kg</th><th class="r">Reg.</th></tr></thead><tbody>${tResp}</tbody></table>` : vazio('Sem registros.')}</div>
   </div>
+</div>
+
+<h2 class="sec" style="margin-top:14px">Fator de correção <small>pré-preparo: o que virou rendimento e o que foi perda de verdade</small></h2>
+<div class="grid">
+  <div class="box" style="margin-bottom:0"><h2>Por produto <span>FC realizado contra o padrão</span></h2>
+    ${fcProdTab ? `<table><thead><tr><th>Produto</th><th class="r">Padrão</th><th class="r">Realiz.</th><th class="r">Desvio</th><th class="r">Aproveit.</th></tr></thead><tbody>${fcProdTab}</tbody></table>` : vazio('Nenhum registro de fator de correção.')}</div>
+  <div class="box" style="margin-bottom:0"><h2>Por profissional <span>quem precisa de acompanhamento</span></h2>
+    ${fcPessoaTab ? `<table><thead><tr><th>Profissional</th><th class="r">FC médio</th><th class="r">Aproveit.</th><th class="r">Acima</th><th class="r">Reg.</th></tr></thead><tbody>${fcPessoaTab}</tbody></table>` : vazio('Nenhum registro de fator de correção.')}</div>
 </div>
 
 <div class="box" style="margin-top:10px"><h2>Registros do período <span>${R.desp.length} ${R.desp.length === 1 ? 'descarte' : 'descartes'}, ${comFoto} com foto</span></h2>
@@ -2032,7 +2323,7 @@ function imprimirHTML(html, nome) {
 async function exportarDespPDF() {
   const R = dadosRelatorio();
   toast('Preparando o relatório de desperdício…');
-  imprimirHTML(relatorioDespHTML(R), `Relatorio_Desperdicio_${R.per[0]}_a_${R.per[1]}`);
+  imprimirHTML(relatorioDespHTML(R), `Relatorio_Desperdicio_Aproveitamento_${R.per[0]}_a_${R.per[1]}`);
 }
 async function exportar(tipo) {
   if (!isManager()) { toast('Relatórios disponíveis só para acompanhamento e coordenação.', true); return; }
@@ -2056,13 +2347,14 @@ function vCadastros() {
   if (CAD_TAB === 'produtos') {
     const list = DB.produtos.slice().sort((a, b) => (a.ativo === 'Não') - (b.ativo === 'Não') || byNome(a, b));
     body = `<div class="actions" style="margin-bottom:12px"><button type="button" class="btn" data-act="novo-produto">Novo produto</button></div>
-    <div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th>Medida</th><th>Unidades</th><th class="r">Mín. Mercearia</th><th class="r">Mín. Gogui</th><th class="r">Mín. Cozinha</th><th class="r">Validade</th><th class="r">Peso médio</th><th>Ativo</th></tr></thead><tbody>
+    <div class="tb-wrap"><table class="tb"><thead><tr><th>Produto</th><th>Medida</th><th>Unidades</th><th class="r">Mín. Mercearia</th><th class="r">Mín. Gogui</th><th class="r">Mín. Cozinha</th><th class="r">Validade</th><th class="r">Peso médio</th><th class="r">FC padrão</th><th>Ativo</th></tr></thead><tbody>
     ${list.map(p => `<tr class="click" data-act="edit-prod-cad" data-id="${esc(p.id)}" style="${p.ativo === 'Não' ? 'opacity:.5' : ''}">
       <td><b>${esc(p.nome)}</b>${p.ficha ? '<br><small class="hint">com ficha técnica</small>' : ''}</td><td>${esc(p.medida)}</td>
       <td><div class="chips">${split(p.unidades).map(u => `<span class="chip">${UN[u] ? UN[u].curto : esc(u)}</span>`).join('')}</div></td>
       ${UN_IDS.map(u => `<td class="r num">${split(p.unidades).includes(u) ? fmtN(p['min_' + u]) : ''}</td>`).join('')}
       <td class="r">${p.validade === 'Não' ? 'Não controla' : (p.dias_validade ? p.dias_validade + ' dias' : 'Informar')}</td>
       <td class="r num">${p.medida === 'kg' ? '—' : (p.peso_medio ? fmtN(p.peso_medio) + ' kg' : '')}</td>
+      <td class="r num">${p.fc_padrao ? fmtN(p.fc_padrao) : ''}</td>
       <td>${p.ativo === 'Não' ? 'Não' : 'Sim'}</td></tr>`).join('')}
     </tbody></table></div>`;
   } else {
@@ -2104,6 +2396,8 @@ function abrirProdutoCad(p) {
       <label class="fld"><span>Custo por kg</span><input type="text" inputmode="decimal" name="custo_kg" value="${p ? esc(p.custo_kg ?? '') : ''}" placeholder="R$">
         <span class="hint">Opcional. Guardado para o relatório financeiro de desperdício mais adiante.</span></label>
     </div>
+    <label class="fld"><span>Fator de correção padrão</span><input type="text" inputmode="decimal" name="fc_padrao" value="${p ? esc(p.fc_padrao ?? '') : ''}" placeholder="Ex.: 1,25">
+      <span class="hint">Referência de pré-preparo do insumo. Quando o FC realizado passar deste valor, o registro é sinalizado.</span></label>
     <label class="fld"><span>Ficha técnica</span><input type="text" name="ficha" value="${p ? esc(p.ficha || '') : ''}" placeholder="Link ou código da ficha, se existir"></label>
     <label class="fld"><span>Ativo</span><select name="ativo">${opts(['Sim', 'Não'], p ? (p.ativo === 'Não' ? 'Não' : 'Sim') : 'Sim')}</select></label>
     <div class="err-msg" id="pcErr"></div>
@@ -2124,7 +2418,7 @@ function abrirProdutoCad(p) {
       if (!nome) { err.textContent = 'Informe o nome.'; return; }
       if (DB.produtos.some(x => x.nome.toLowerCase() === nome.toLowerCase() && (!p || x.id !== p.id))) { err.textContent = 'Já existe um produto com esse nome.'; return; }
       if (!unis.length) { err.textContent = 'Marque pelo menos uma unidade.'; return; }
-      const row = { id: p ? p.id : uid('p'), nome, medida: f.medida.value, unidades: unis.join(','), margem: isNaN(num(f.margem.value)) ? '20' : String(num(f.margem.value)), validade: f.validade.value, dias_validade: isNaN(num(f.dias_validade.value)) ? '' : String(Math.round(num(f.dias_validade.value))), ficha: f.ficha.value.trim(), peso_medio: isNaN(num(f.peso_medio.value)) ? '' : String(num(f.peso_medio.value)), custo_kg: isNaN(num(f.custo_kg.value)) ? '' : String(num(f.custo_kg.value)), ativo: f.ativo.value };
+      const row = { id: p ? p.id : uid('p'), nome, medida: f.medida.value, unidades: unis.join(','), margem: isNaN(num(f.margem.value)) ? '20' : String(num(f.margem.value)), validade: f.validade.value, dias_validade: isNaN(num(f.dias_validade.value)) ? '' : String(Math.round(num(f.dias_validade.value))), ficha: f.ficha.value.trim(), peso_medio: isNaN(num(f.peso_medio.value)) ? '' : String(num(f.peso_medio.value)), custo_kg: isNaN(num(f.custo_kg.value)) ? '' : String(num(f.custo_kg.value)), fc_padrao: isNaN(num(f.fc_padrao.value)) ? '' : String(num(f.fc_padrao.value)), ativo: f.ativo.value };
       for (const u of UN_IDS) {
         const v = f['min_' + u].value.trim();
         if (v === '') { row['min_' + u] = ''; continue; }
@@ -2195,7 +2489,7 @@ function fotoHTML(v, classe) {
   if (fotoPendente(v)) return '<span class="pill warn">Foto guardada, aguardando internet</span>';
   return `<a href="${esc(v)}" target="_blank" rel="noopener"${classe ? ` class="${classe}"` : ''}>Ver foto</a>`;
 }
-const TABS_COM_FOTO = ['producoes', 'observacoes', 'desperdicios'];
+const TABS_COM_FOTO = ['producoes', 'observacoes', 'desperdicios', 'fc'];
 const fotosNaFila = () => TABS_COM_FOTO.reduce((n, t) => n + DB[t].filter(r => r.status !== 'cancelado' && fotoPendente(r.evidencia)).length, 0);
 
 async function compressImg(file) {
@@ -2213,6 +2507,14 @@ async function enviarFoto(foto) {
   const r = await api({ action: 'upload', name: foto.nome, mime: 'image/jpeg', data: foto.data.split(',')[1] });
   if (!r || !r.ok) throw new Error((r && r.error) || 'Falha no envio da foto');
   return r.url;
+}
+function fotoField(r) {
+  const v = r ? (r.evidencia || '') : '';
+  return `<div class="fld"><span>Foto</span>
+    <input type="file" accept="image/*" capture="environment" data-foto>
+    <input type="hidden" name="evidencia" value="${esc(v)}">
+    <span class="hint foto-st">${v ? fotoHTML(v) : 'A foto fica guardada no aparelho e sobe sozinha quando houver internet.'}</span>
+  </div>`;
 }
 function bindFoto(root) {
   const inp = $('[data-foto]', root);
@@ -2366,16 +2668,6 @@ function registrarServiceWorker() {
 }
 
 /* =========================================================
-   VOLTAR AO MENU
-   ========================================================= */
-function irParaMenu() {
-  const pend = Object.values(CONT_DRAFT).some(d => Object.values(d).some(x => x.qtd !== '' && x.qtd !== undefined));
-  if (pend && !confirm('Há uma contagem preenchida e não salva. Sair mesmo assim?')) return;
-  CONT_DRAFT = {};
-  window.location.href = CFG.MENU_URL;
-}
-
-/* =========================================================
    MODAL E EVENTOS
    ========================================================= */
 function openModal(title, html, mount) {
@@ -2393,7 +2685,7 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
-const VIEWS = { geral: vGeral, producao: vProducao, contagem: vContagem, desperdicio: vDesperdicio, observacoes: vObservacoes, relatorios: vRelatorios, cadastros: vCadastros };
+const VIEWS = { geral: vGeral, producao: vProducao, contagem: vContagem, fc: vFC, desperdicio: vDesperdicio, observacoes: vObservacoes, relatorios: vRelatorios, cadastros: vCadastros };
 const AFTER = {
   producao() {
     const d = $('#prodDia');
@@ -2427,6 +2719,8 @@ document.addEventListener('click', ev => {
     case 'goto': VIEW = el.dataset.v; render(); window.scrollTo(0, 0); break;
     case 'nova-prod': abrirProducao(null, el.dataset.sol); break;
     case 'edit-prod': abrirProducao(DB.producoes.find(r => r.id === id)); break;
+    case 'novo-fc': abrirFC(null); break;
+    case 'edit-fc': abrirFC(DB.fc.find(r => r.id === id)); break;
     case 'novo-desp': abrirDesperdicio(null, el.dataset.t); break;
     case 'edit-desp': abrirDesperdicio(DB.desperdicios.find(d => d.id === id)); break;
     case 'nova-obs': abrirObs(null); break;
