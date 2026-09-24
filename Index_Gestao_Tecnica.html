@@ -1314,6 +1314,22 @@ function noCtx(r) {
   return true;
 }
 
+/* Sem empresa e unidade não dá para abrir chamado nem cadastrar ativo.
+   Acontece no primeiro acesso do aparelho, antes da planilha chegar. */
+const faltamCadastros = () => !DB.empresas.length || !DB.unidades.length;
+function avisarSemCadastros() {
+  openModal('Ainda carregando os cadastros', `
+    <div class="empty" style="text-align:left">
+      <b>As empresas e unidades ainda não chegaram neste aparelho</b>
+      Elas vêm da planilha na primeira vez que o sistema abre. Toque em sincronizar e aguarde alguns segundos.
+      Se estiver sem internet, conecte e tente de novo: depois da primeira carga, o sistema funciona offline.
+    </div>
+    <div class="det-box" style="margin-top:12px"><h4>Situação agora</h4><p class="js-sync"></p></div>`,
+    () => updSync(),
+    { foot: `<div class="linha"><button type="button" class="btn ghost" data-act="close">Fechar</button>
+      <button type="button" class="btn" data-act="sincronizar">Sincronizar agora</button></div>` });
+}
+
 /* ---------- Permissões ----------
    Perfil e liberação de patrimônio vêm da aba USRR, lida no roster. */
 function euNoRoster() {
@@ -1519,7 +1535,15 @@ function render() {
   if (!permitidas.includes(VIEW)) VIEW = 'inicio';
   if (VIEW === 'mais' && window.matchMedia('(min-width:900px)').matches) VIEW = 'inicio';
   renderCasca();
-  $('#view').innerHTML = bannerSemBackend() + VIEWS[VIEW]();
+  $('#view').innerHTML = bannerSemBackend() + bannerCarregando() + VIEWS[VIEW]();
+}
+/* Enquanto os cadastros não chegam, o aviso fica na tela: é melhor do que a
+   pessoa descobrir isso só quando tentar abrir um chamado. */
+function bannerCarregando() {
+  if (!faltamCadastros()) return '';
+  return `<div class="banner" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <span>${ic('sync', 'sm')} Carregando empresas e unidades da planilha. Sem isso não dá para abrir chamado.</span>
+    <button type="button" class="btn sm" data-act="sincronizar">Sincronizar agora</button></div>`;
 }
 function bannerSemBackend() {
   return CFG.GAS_URL ? '' : '<div class="banner">Modo de teste: os registros ficam só neste aparelho.</div>';
@@ -2979,6 +3003,7 @@ const PASSOS_CH = [
   { t: 'Confira antes de abrir', s: 'Depois de aberto, o responsável precisa confirmar o recebimento.' }
 ];
 function abrirNovoChamado(pre) {
+  if (faltamCadastros()) { avisarSemCadastros(); return; }
   pre = pre || {};
   const plano = pre.plano ? planoById(pre.plano) : null;
   let ativo = pre.ativo ? ativoById(pre.ativo) : (plano && plano.ativo_id ? ativoById(plano.ativo_id) : null);
@@ -3057,7 +3082,7 @@ function abrirNovoChamado(pre) {
     bindFoto(body);
 
     const encherUnidades = () => {
-      const unis = unidadesDe(f.empresa.value);
+      const unis = unidadesDe(f.empresa.value).length ? unidadesDe(f.empresa.value) : DB.unidades;
       f.unidade.innerHTML = opts(unis.map(u => ({ v: u.unidade_id, t: u.nome })), uniIni || (unis[0] || {}).unidade_id);
     };
     f.empresa.addEventListener('change', encherUnidades);
@@ -3237,6 +3262,7 @@ function abrirNovoChamado(pre) {
    CADASTRO DE ATIVO
    ========================================================================= */
 function abrirCadastroAtivo(pre, aoSalvar) {
+  if (faltamCadastros()) { avisarSemCadastros(); return; }
   pre = pre || {};
   const a = pre.ativo_id ? ativoById(pre.ativo_id) : null;
   const L = n => (DB.listas && DB.listas[n] ? DB.listas[n].itens : []);
