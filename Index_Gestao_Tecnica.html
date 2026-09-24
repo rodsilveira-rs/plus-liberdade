@@ -1516,12 +1516,14 @@ function renderCasca() {
   $('#sideNav').innerHTML = itensLaterais().map(x =>
     `<button type="button" data-view="${x.v}" class="${VIEW === x.v ? 'on' : ''}">${ic(x.i)}<span>${esc(x.t)}</span>${x.n ? `<span class="n">${x.n}</span>` : ''}</button>`).join('');
 
-  const sub = ['preventivas', 'cadastros', 'demandas', 'hoje', 'minhas', 'todas', 'entrada', 'recorrencias', 'relatorios'];
+  const sub = ['ativos', 'preventivas', 'cadastros'];
   const b = (v, t, i, n) => `<button type="button" data-view="${v}" class="${VIEW === v || (v === 'mais' && sub.includes(VIEW)) ? 'on' : ''}">${ic(i)}<span>${t}</span>${n ? `<span class="bdg">${n}</span>` : ''}</button>`;
   $('#bnav').className = 'bnav';
+  /* Demandas fica na barra: é o módulo que a cozinha usa todo dia. Ativos entra
+     pelo Mais e pelo próprio formulário de chamado, que é onde ele é usado. */
   $('#bnav').innerHTML = b('inicio', 'Início', 'casa') + b('chamados', 'Chamados', 'doc', c.chAbertos) +
     `<div class="fab-wrap"><button type="button" class="fab" data-act="novo-ch" aria-label="Novo chamado">${ic('mais2')}</button></div>` +
-    b('ativos', 'Ativos', 'caixa') + b('mais', 'Mais', 'mais', c.prevVencidas);
+    b('demandas', 'Demandas', 'linhas', c.aceitar) + b('mais', 'Mais', 'mais', c.prevVencidas);
 
   /* Seletor de empresa: foto, nome e, dentro, as unidades */
   $$('.js-unitbox').forEach(el => {
@@ -2055,17 +2057,19 @@ function vCadastros() {
 function vMais() {
   const c = contadores();
   const s = syncInfo();
-  const item = (v, t, i, n, sub) => `<div class="row" data-view="${v}" role="button" tabindex="0">${ic(i)}<div class="row-main"><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</div>${n ? `<span class="n">${n}</span>` : ''}</div>`;
+  const item = (v, t, i, n, sub, alerta) => `<div class="row" data-view="${v}" role="button" tabindex="0">${ic(i)}
+    <div class="row-main"><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</div>
+    ${n ? `<span class="n"${alerta ? '' : ' style="background:var(--slate)"'}>${n}</span>` : ''}${ic('chev')}</div>`;
   return `
   <h2 class="view">Mais</h2>
   <div class="list mais-list" style="margin-top:12px">
-    ${ehGestor() ? item('entrada', 'Entrada da produção', 'entrada', c.entrada, 'Registros esperando virar demanda') : ''}
-    ${item('recorrencias', 'Problemas recorrentes', 'recorr', 0, 'O que voltou a acontecer')}
-    ${ehGestor() ? item('relatorios', 'Relatórios', 'relat', 0, 'Por pessoa, categoria e unidade') : ''}
-    ${ehGestor() ? item('cadastros', 'Cadastros', 'cadast', 0, 'Categorias e pessoas') : ''}
+    ${item('ativos', 'Ativos', 'caixa', 0, 'Equipamentos, patrimônio e histórico')}
+    ${item('preventivas', 'Preventivas', 'sync', c.prevVencidas, 'O que precisa ser feito antes de quebrar', true)}
+    ${item('demandas', 'Demandas técnicas', 'linhas', c.aceitar, 'Processo, pessoas e boas práticas', true)}
+    ${podeCadastrar() ? item('cadastros', 'Cadastros', 'cadast', 0, 'Empresas, unidades, setores e fornecedores') : ''}
   </div>
   <h3 class="sec">Sincronização</h3>
-  <div class="card"><span class="st ${s.c}">${ic(s.i)}${esc(s.t)}</span>
+  <div class="card"><span class="sync ${s.c}">${ic(s.i)}<i></i>${esc(s.t)}</span>
     ${CFG.GAS_URL ? `<div class="actions" style="margin-top:12px"><button type="button" class="btn ghost sm" data-act="sincronizar">${ic('sync', 'sm')}Sincronizar agora</button></div>` : ''}</div>
   <h3 class="sec">Sua conta</h3>
   <div class="list">
