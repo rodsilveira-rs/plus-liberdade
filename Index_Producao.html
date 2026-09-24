@@ -375,8 +375,9 @@ table.tb tr.click:hover td{background:#F7F9F6}
 .who .av{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:14px;flex:none}
 .who-txt b{display:block;font-size:13.5px;line-height:1.2}
 .who-txt span{font-size:11.5px;color:var(--mute)}
-.who button{background:none;border:0;color:var(--mute);cursor:pointer;font-size:12.5px;font-weight:600;padding:4px 6px;border-radius:8px}
-.who button:hover{background:var(--chip);color:var(--text)}
+.who{cursor:pointer;text-align:left}
+.who:hover{background:var(--chip)}
+.who .chev{color:var(--mute);font-size:15px;line-height:1}
 .sino{position:relative;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--text);flex:none}
 .sino .n{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;border-radius:99px;background:var(--chili);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px}
 .top-logo{height:34px;max-width:112px;object-fit:contain;background:var(--logo-bg);border-radius:8px;padding:2px 4px}
@@ -451,7 +452,10 @@ table.tb tr.click:hover td{background:#F7F9F6}
 .sub-sec button{margin-left:auto;background:none;border:0;color:var(--mute);font-size:12.5px;font-weight:600;cursor:pointer}
 @media (max-width:1023px){
   .top-in{padding:9px 12px;gap:8px}
-  .tit-area,.who{display:none}
+  .tit-area{display:none}
+  .who{padding:0;border:0;background:none}
+  .who-txt,.who .chev{display:none}
+  .who .av{width:38px;height:38px}
   .pill-un{flex:1;min-width:0;padding:5px 9px}
   .pill-un label{display:none}
   .pill-un select{font-size:13.5px}
@@ -1034,6 +1038,16 @@ function renderNav() {
     `<button type="button" class="${VIEW === k ? 'on' : ''}" data-view="${k}">${ico(i, 21)}${k === 'alertas' && alertas ? `<span class="pt">${alertas > 9 ? '9+' : alertas}</span>` : ''}<span>${t}</span></button>`).join('') +
     `<button type="button" class="${['observacoes', 'fc', 'cadastros', 'relatorios', 'desperdicio'].includes(VIEW) ? 'on' : ''}" data-act="mais">${ico('mais', 21)}<span>Mais</span></button>`;
 }
+function abrirConta() {
+  const item = (act, icone, titulo, sub) => `<button type="button" class="acao" style="flex-direction:row;align-items:center;gap:12px;min-height:0" data-act="${act}">
+    ${ico(icone, 20)}<span style="display:block">${titulo}${sub ? `<small style="display:block;font-weight:500;font-size:12px;color:var(--mute)">${sub}</small>` : ''}</span></button>`;
+  openModal(USER.nome, `<div class="stack">
+    <p class="hint" style="margin:0">${esc(PAPEIS[USER.papel] || '')}${F.un === 'todas' ? '' : ' · ' + esc(UN[F.un].nome)}</p>
+    ${item('menu', 'inicio', 'Voltar ao Menu', 'Sai do Controle de Produção')}
+    ${item('logout', 'mais', 'Trocar de pessoa', 'Para outra pessoa registrar')}
+    ${item('atualizar-app', 'check', 'Atualizar o aplicativo', 'versão ' + esc(CFG.VERSAO))}
+  </div>`);
+}
 function abrirMais() {
   const extras = navItems().filter(([k]) => !['inicio', 'geral', 'producao', 'contagem', 'alertas'].includes(k));
   const mapa = { desperdicio: 'desperdicio', observacoes: 'observacoes', fc: 'fc', relatorios: 'relatorios', cadastros: 'cadastros' };
@@ -1067,9 +1081,9 @@ function renderTopo() {
       <select data-f="un"><option value="todas">Todas as unidades</option>${us.map(u => `<option value="${u}" ${F.un === u ? 'selected' : ''}>${UN[u].nome}</option>`).join('')}</select></div></div>
     <span class="sync" id="sync"><i></i><span class="sync-txt"></span></span>
     <button type="button" class="sino" data-act="goto" data-v="alertas" aria-label="Alertas">${ico('sino', 20)}${alertas ? `<span class="n">${alertas}</span>` : ''}</button>
-    <div class="who"><span class="av">${esc(iniciaisPessoa(USER.nome))}</span>
-      <div class="who-txt"><b>${esc(USER.nome)}</b><span>${esc(PAPEIS[USER.papel] || '')}</span></div>
-      <button type="button" data-act="logout">Trocar</button></div>`;
+    <button type="button" class="who" data-act="conta" aria-label="Conta, menu e sair"><span class="av">${esc(iniciaisPessoa(USER.nome))}</span>
+      <span class="who-txt"><b>${esc(USER.nome)}</b><span>${esc(PAPEIS[USER.papel] || '')}</span></span>
+      <span class="chev">⌄</span></button>`;
   updSync();
 }
 
@@ -3450,6 +3464,7 @@ document.addEventListener('click', ev => {
     case 'logout': logout(); break;
     case 'menu': ev.preventDefault(); closeModal(); irParaMenu(); break;
     case 'mais': abrirMais(); break;
+    case 'conta': abrirConta(); break;
     case 'sincronizar': toast('Sincronizando…'); flush(); flushFotos(); load(); break;
     case 'ct-modo': CT_MODO = el.dataset.v; CT_IDX = 0; render(); break;
     case 'atualizar': recarregar(); break;
