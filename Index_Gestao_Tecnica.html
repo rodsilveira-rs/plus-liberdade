@@ -420,6 +420,63 @@ details.mais-ind>summary::-webkit-details-marker{display:none}
 .notif .ponto.visto{background:transparent;border:1.5px solid var(--line)}
 .notif b{display:block}
 
+/* =========================================================
+   SELETOR DE EMPRESA E ATIVOS
+   ========================================================= */
+.ctx-btn{display:flex;align-items:center;gap:10px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 5px;min-height:46px;font-weight:600;font-size:14.5px;color:var(--text)}
+.ctx-btn:hover{border-color:#C9CCD1}
+.ctx-foto{width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--slate-soft);display:flex;align-items:center;justify-content:center;flex:none;font-weight:700;color:var(--slate-ink)}
+.ctx-foto img{width:100%;height:100%;object-fit:cover}
+.ctx-nome{flex:1;min-width:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (min-width:900px){.dtop .unit-sel,.dtop .js-unitbox{width:268px}}
+.unit-sel{border:0;background:none;height:auto;padding:0}
+
+.sel-lista{display:flex;flex-direction:column;gap:2px}
+.sel-emp{display:flex;align-items:center;gap:12px;width:100%;border:1px solid transparent;background:var(--card);border-radius:10px;padding:10px 12px;text-align:left}
+.sel-emp:hover{background:var(--slate-soft)}
+.sel-emp.on{border-color:var(--brand);background:var(--card)}
+.sel-emp.sub{margin-left:26px;padding:8px 12px}
+.sel-foto{width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--slate-soft);display:flex;align-items:center;justify-content:center;flex:none;font-weight:700;color:var(--slate-ink)}
+.sel-foto.pequena{width:32px;height:32px;font-size:13px}
+.sel-foto img{width:100%;height:100%;object-fit:cover}
+.sel-txt{flex:1;min-width:0}
+.sel-txt b{display:block;font-size:14.5px;font-weight:600}
+.sel-txt small{display:block;color:var(--mute);font-size:12.5px}
+.sel-emp>.ic{color:var(--brand)}
+
+.ativo-card .ativo-linha{display:flex;gap:12px;align-items:center}
+.ativo-foto{width:52px;height:52px;border-radius:10px;overflow:hidden;background:var(--slate-soft);display:flex;align-items:center;justify-content:center;flex:none;color:var(--slate);font-weight:700}
+.ativo-foto img{width:100%;height:100%;object-fit:cover}
+.ativo-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ativo-sel{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+.ativo-sel.click{cursor:pointer}
+.ativo-sel.click:hover{border-color:#C9CCD1}
+.ativo-sel div{flex:1;min-width:0}
+.ativo-sel b{display:block;font-size:14.5px}
+.ativo-sel small{display:block;color:var(--mute);font-size:12.5px}
+
+.escolha{display:flex;gap:8px;flex-wrap:wrap}
+.escolha .btn{flex:1 1 160px}
+.escolha .btn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.linha-busca{display:flex;gap:8px}
+.linha-busca input{flex:1;min-width:0}
+.linha-busca .btn{flex:none}
+.dem-l.warn{color:var(--amber-ink)}
+.dem-l.warn .ic{color:var(--amber)}
+
+/* Câmera lendo o código de barras */
+.leitor{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3}
+.leitor video{width:100%;height:100%;object-fit:cover;display:block}
+.leitor .mira{position:absolute;left:10%;right:10%;top:38%;height:24%;border:2px solid rgba(255,255,255,.9);border-radius:8px;box-shadow:0 0 0 2000px rgba(0,0,0,.35)}
+
+.camwrap{position:fixed;inset:0;z-index:95;background:#0C0F10;color:#fff;display:flex;flex-direction:column;gap:14px;padding:calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+.camwrap .camhead{display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:700}
+.camwrap .camhead .icon-btn{color:#fff}
+.camwrap .leitor{flex:1;aspect-ratio:auto}
+.camwrap .camhint{margin:0;font-size:13.5px;color:rgba(255,255,255,.75);text-align:center}
+.camwrap .btn.ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.2)}
+@media (min-width:760px){.camwrap{inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,92vw);height:min(640px,88vh);border-radius:16px}}
+
 /* Portaria */
 .login{min-height:100vh;background:var(--side);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 18px 40px;text-align:center}
 .login .wm{font-size:44px;justify-content:center}
@@ -483,7 +540,7 @@ details.mais-ind>summary::-webkit-details-marker{display:none}
             <button type="button" class="icon-btn" data-act="notif" aria-label="Avisos"><svg class="ic" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 004 0"/></svg><span class="bell-dot js-bell hidden"></span></button>
             <button type="button" class="avatar js-inicial" data-act="conta" aria-label="Minha conta" aria-haspopup="true"></button>
           </div>
-          <button type="button" class="btn js-nova" data-act="nova-dem"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nova demanda</button>
+          <button type="button" class="btn js-nova" data-act="novo-ch"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo chamado</button>
         </div>
       </div>
       <div id="view"></div>
@@ -513,6 +570,15 @@ details.mais-ind>summary::-webkit-details-marker{display:none}
     <div class="sheet-b" id="mBody"></div>
     <div class="sheet-f hidden" id="mFoot"></div>
   </div>
+</div>
+
+<!-- Leitura do código de barras: camada própria, por cima do formulário -->
+<div class="camwrap hidden" id="camBox" role="dialog" aria-modal="true" aria-label="Ler código de barras">
+  <div class="camhead"><b>Ler código de barras</b>
+    <button type="button" class="icon-btn" data-act="cam-fechar" aria-label="Fechar"><svg class="ic lg" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="leitor"><video id="camVideo" playsinline muted></video><div class="mira"></div></div>
+  <p class="camhint" id="camErr">Aponte para o código de barras da placa. A leitura é automática.</p>
+  <button type="button" class="btn ghost" data-act="cam-fechar">Digitar o número</button>
 </div>
 
 <div class="lightbox hidden" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto">
@@ -601,7 +667,11 @@ const ICON = {
   chev: '<path d="M9 6l6 6-6 6"/>',
   chevd: '<path d="M6 9l6 6 6-6"/>',
   nuvem: '<path d="M7 18h10a4 4 0 00.6-8 6 6 0 00-11.5 1.8A3.2 3.2 0 007 18z"/>',
-  barras: '<path d="M6 20v-6M12 20V8M18 20v-10"/>'
+  barras: '<path d="M6 20v-6M12 20V8M18 20v-10"/>',
+  caixa: '<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  codigo: '<path d="M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12"/>',
+  escudo: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  estrutura: '<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M4 12h16"/>'
 };
 const ic = (n, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n] || ''}</svg>`;
 
@@ -663,8 +733,10 @@ const SEED_CATEGORIAS = [
   'Equipamento', 'Manutenção', 'Compra', 'Estrutura', 'Cardápio coreano', 'Outro'
 ].map((n, i) => ({ id: 'cat-' + String(i + 1).padStart(2, '0'), nome: n, responsavel_padrao: '', ativo: 'Sim', atualizado_em: '' }));
 
-const TABS_GRAVA = ['demandas', 'andamento', 'categorias'];
-const TABS_LEITURA = ['observacoes', 'desperdicios', 'produtos'];
+const TABS_GRAVA = ['demandas', 'andamento', 'categorias',
+  'empresas', 'unidades', 'setores', 'ativos', 'chamados', 'eventos', 'orcamentos',
+  'fornecedores', 'garantias', 'anexos', 'planos'];
+const TABS_LEITURA = ['observacoes', 'desperdicios', 'produtos', 'parametros'];
 const TABS = TABS_GRAVA.concat(TABS_LEITURA);
 
 /* =========================================================
@@ -711,10 +783,11 @@ function tempoHumano(h) {
    ESTADO E SINCRONIZAÇÃO
    ========================================================= */
 let DB = {}; TABS.forEach(t => DB[t] = []);
+DB.listas = {};   // listas de seleção da planilha, chegam junto com o load
 let OUTBOX = [];
 let USER = null;          // quem está logado, vindo da sessão do Index_Menu
 let ROSTER = [];          // pessoas com acesso à Gestão Técnica, vindas da USRR
-let VIEW = 'hoje';
+let VIEW = 'inicio';   // a tela inicial agora é a Visão Geral dos chamados
 const F_PADRAO = { un: 'todas', st: 'abertas', prio: 'todas', resp: 'todos', per: 'semana', de: '', ate: '', q: '' };
 const F = { ...F_PADRAO };
 let SYNC = { state: 'local', hora: '' };
@@ -735,13 +808,25 @@ function restore() {
   } catch (e) { OUTBOX = []; }
   if (!CFG.GAS_URL && !DB.categorias.length) { DB.categorias = SEED_CATEGORIAS.map(c => ({ ...c })); persist(); }
 }
+/* Cada aba tem a sua coluna de identificação. As antigas usam id; as novas,
+   ativo_id, chamado_id e assim por diante. Sem isso, um chamado novo cairia
+   em cima de outro registro, porque os dois teriam id vazio. */
+const CHAVES = {
+  empresas: 'empresa_id', unidades: 'unidade_id', setores: 'setor_id', ativos: 'ativo_id',
+  chamados: 'chamado_id', eventos: 'evento_id', orcamentos: 'orcamento_id',
+  fornecedores: 'fornecedor_id', garantias: 'garantia_id', anexos: 'anexo_id',
+  planos: 'plano_id', parametros: 'chave'
+};
+const chaveTab = t => CHAVES[t] || 'id';
 function upsertLocal(tab, row) {
+  const k = chaveTab(tab);
   const arr = DB[tab];
-  const i = arr.findIndex(r => r.id === row.id);
+  const i = row[k] ? arr.findIndex(r => r[k] && String(r[k]) === String(row[k])) : -1;
   if (i >= 0) arr[i] = { ...arr[i], ...row }; else arr.push({ ...row });
   return i >= 0 ? arr[i] : arr[arr.length - 1];
 }
 function save(tab, row, silent) {
+  if (!row[chaveTab(tab)]) { console.warn('Registro sem identificador em', tab); return null; }
   row.atualizado_em = nowISO();
   const merged = upsertLocal(tab, row);
   OUTBOX.push({ tab, row: { ...merged } });
@@ -786,7 +871,11 @@ async function flush() {
     if (!r || !r.ok) throw new Error((r && r.error) || 'Falha no envio');
     OUTBOX.splice(0, batch.length);
     /* O número DEM-0048 é atribuído pelo servidor, dentro do lock. Ele volta aqui. */
-    if (r.numeros) Object.keys(r.numeros).forEach(id => upsertLocal('demandas', { id, numero: r.numeros[id] }));
+    /* O número vem do servidor. Pode ser de uma demanda (DEM-) ou de um chamado (CH-). */
+    if (r.numeros) Object.keys(r.numeros).forEach(id => {
+      if (DB.demandas.some(d => d.id === id)) upsertLocal('demandas', { id: id, numero: r.numeros[id] });
+      else upsertLocal('chamados', { chamado_id: id, numero: r.numeros[id] });
+    });
     persist();
     ok = true;
     setSync('ok');
@@ -807,6 +896,7 @@ async function load() {
     const j = await res.json();
     if (!j.ok) throw new Error(j.error || 'Falha na leitura');
     TABS.forEach(t => { DB[t] = Array.isArray(j.data[t]) ? j.data[t] : []; });
+    DB.listas = j.data.listas || DB.listas || {};
     OUTBOX.forEach(({ tab, row }) => upsertLocal(tab, row));
     persist();
     setSync('ok');
@@ -870,6 +960,7 @@ function rosterDoCSV(txt) {
   const head = rows[0].map(h => String(h || '').trim());
   const col = n => head.findIndex(h => h.toLowerCase() === n.toLowerCase());
   const iEmail = col('email'), iNome = col('nome'), iNivel = col(CFG.COL_NIVEL);
+  const iPerfil = col('perfil'), iPat = col('Patrimonio');
   if (iEmail < 0 || iNivel < 0) return [];
   const out = [];
   for (let r = 1; r < rows.length; r++) {
@@ -878,7 +969,13 @@ function rosterDoCSV(txt) {
     const email = String(row[iEmail] || '').trim().toLowerCase();
     const bruto = String(row[iNivel] || '').trim().toLowerCase();
     if (!email || !bruto) continue;
-    out.push({ email, nome: String(iNome >= 0 ? row[iNome] : '').trim() || email, nivel: bruto === 'executor' ? 'executor' : 'gestor' });
+    out.push({
+      email, nome: String(iNome >= 0 ? row[iNome] : '').trim() || email,
+      nivel: bruto === 'executor' ? 'executor' : 'gestor',
+      /* perfil manda no direito de cadastrar; a coluna Patrimonio, no de vincular placa */
+      perfil: String(iPerfil >= 0 ? row[iPerfil] : '').trim(),
+      patrimonio: String(iPat >= 0 ? row[iPat] : '').trim()
+    });
   }
   return out.sort(byNome);
 }
@@ -1134,27 +1231,231 @@ function marcarVistos(lista) {
   try { localStorage.setItem(CFG.VISTOS_KEY, JSON.stringify(Array.from(v).slice(-400))); } catch (e) { }
 }
 const naoVistos = () => { const v = vistos(); return notificacoes().filter(n => !v.has(n.k)); };
+/* =========================================================================
+   GESTÃO DE ATIVOS E CHAMADOS — parte 1
+   Empresa e unidade deixam de ser fixas no código: vêm das abas EMPRESAS e
+   UNIDADES. O módulo de demandas antigo continua funcionando ao lado, sem
+   alteração: ele só recebe a unidade equivalente do contexto escolhido.
+   ========================================================================= */
+
+/* Foto de cada empresa e unidade. O padrão está aqui; se existir uma linha
+   foto_EMP-XX na aba CONFIG, ela manda. */
+const FOTOS_PADRAO = {
+  'EMP-QF': 'qfood-logo.png',
+  'EMP-ST': 'Sushi_Trip.jpg',
+  'EMP-ML': 'Mercearia_Liberdade.jpg',
+  'EMP-GG': 'gogui-logo.jpg',
+  'EMP-PS': 'Prime_sushi.jpg',
+  'EMP-PF': 'Prime_Fish.jpg',
+  'EMP-CP': 'Cozinha_ind_QFGroup.jpg',
+  'UNI-ML-VIX': 'Mercearia_Liberdade.jpg',
+  'UNI-ML-VV': 'Mercearia_Liberdade_VV.jpg'
+};
+/* As demandas antigas gravam a unidade como ML, GG ou CP. O contexto novo
+   traduz para esses códigos, para o módulo antigo continuar filtrando certo. */
+const LEGADO = { 'UNI-ML-VIX': 'ML', 'UNI-GG-01': 'GG', 'UNI-CP-01': 'CP' };
+const LEGADO_EMP = { 'EMP-ML': 'ML', 'EMP-GG': 'GG', 'EMP-CP': 'CP' };
+
+/* Contexto: o que está selecionado no topo. Vale para o sistema inteiro. */
+const CTX = { empresa: 'todas', unidade: 'todas' };
+
+const param = (chave, padrao) => {
+  const r = DB.parametros.find(p => p.chave === chave);
+  return r && r.valor !== '' ? r.valor : padrao;
+};
+const empresas = () => DB.empresas.filter(e => e.ativo !== 'Não');
+const unidadesDe = emp => DB.unidades.filter(u => u.ativo !== 'Não' && (!emp || emp === 'todas' || u.empresa_id === emp));
+const empById = id => DB.empresas.find(e => e.empresa_id === id);
+const uniById = id => DB.unidades.find(u => u.unidade_id === id);
+const nomeEmp = id => (empById(id) || {}).nome || '—';
+const nomeUni = id => (uniById(id) || {}).nome || '—';
+const fotoDe = id => ASSETS_URL + param('foto_' + id, FOTOS_PADRAO[id] || '');
+const corDaEmpresa = id => (empById(id) || {}).cor_primaria || '#C8161F';
+
+function tituloContexto() {
+  if (CTX.unidade !== 'todas') return nomeUni(CTX.unidade);
+  if (CTX.empresa !== 'todas') return nomeEmp(CTX.empresa);
+  return 'Q Food Group';
+}
+function fotoContexto() {
+  if (CTX.unidade !== 'todas' && FOTOS_PADRAO[CTX.unidade]) return fotoDe(CTX.unidade);
+  if (CTX.empresa !== 'todas') return fotoDe(CTX.empresa);
+  return ASSETS_URL + 'qfood-logo.png';
+}
+/* A cor da empresa entra como acento. Vermelho, âmbar e verde continuam
+   significando urgência, atenção e concluído — identidade não vira semáforo. */
+function aplicarAcento() {
+  const cor = CTX.empresa === 'todas' ? '#C8161F' : corDaEmpresa(CTX.empresa);
+  document.documentElement.style.setProperty('--brand', cor);
+  document.documentElement.style.setProperty('--red-q', cor);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', '#FFFFFF');
+  /* O módulo antigo de demandas filtra por ML, GG ou CP. */
+  F.un = LEGADO[CTX.unidade] || LEGADO_EMP[CTX.empresa] || 'todas';
+}
+function definirContexto(empresa, unidade) {
+  CTX.empresa = empresa || 'todas';
+  CTX.unidade = unidade || 'todas';
+  try { localStorage.setItem('gt_ctx_v1', JSON.stringify(CTX)); } catch (e) { }
+  aplicarAcento();
+}
+function restaurarContexto() {
+  try {
+    const c = JSON.parse(localStorage.getItem('gt_ctx_v1') || 'null');
+    if (c) { CTX.empresa = c.empresa || 'todas'; CTX.unidade = c.unidade || 'todas'; }
+  } catch (e) { }
+  aplicarAcento();
+}
+/* Um registro entra no contexto atual? */
+function noCtx(r) {
+  if (!r) return false;
+  if (CTX.unidade !== 'todas') return r.unidade_id === CTX.unidade;
+  if (CTX.empresa !== 'todas') return r.empresa_id === CTX.empresa;
+  return true;
+}
+
+/* ---------- Permissões ----------
+   Perfil e liberação de patrimônio vêm da aba USRR, lida no roster. */
+function euNoRoster() {
+  if (!USER) return null;
+  return ROSTER.find(p => p.email === USER.email) || null;
+}
+function podeCadastrar() {
+  const bloqueados = String(param('perfis_sem_cadastro', 'vendedor')).toLowerCase().split(',').map(x => x.trim());
+  const eu = euNoRoster();
+  const perfil = String((eu && eu.perfil) || '').toLowerCase();
+  return !perfil || bloqueados.indexOf(perfil) < 0;
+}
+function podePatrimonio() {
+  const eu = euNoRoster();
+  return !!(eu && String(eu.patrimonio || '').trim());
+}
+
+/* =========================================================================
+   ATIVOS
+   ========================================================================= */
+const ativos = () => DB.ativos.filter(a => a.status !== 'Baixado' && a.status !== 'Descartado');
+const ativoById = id => DB.ativos.find(a => a.ativo_id === id);
+const ativoPorPatrimonio = cod => {
+  const c = String(cod || '').trim().replace(/^0+/, '');
+  if (!c) return null;
+  return DB.ativos.find(a => String(a.codigo_patrimonio || '').trim().replace(/^0+/, '') === c) || null;
+};
+const ativoPendente = a => a && a.dados_pendentes === 'Sim';
+function buscarAtivos(q) {
+  const t = normal(q);
+  const lista = ativos().filter(noCtx);
+  if (!t) return lista.sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+  return lista.filter(a => normal([a.codigo_patrimonio, a.nome, a.marca, a.modelo, a.categoria, a.subcategoria, a.local].join(' ')).includes(t));
+}
+/* Tudo o que já se gastou com o equipamento, e o que isso representa. */
+function custoDoAtivo(id) {
+  const chs = chamadosDoAtivo(id);
+  const gasto = chs.reduce((s, c) => s + (Number(String(c.valor_final || c.valor_aprovado || '0').replace(',', '.')) || 0), 0);
+  const valor = Number(String((ativoById(id) || {}).valor_aquisicao || '0').replace(',', '.')) || 0;
+  return { gasto: gasto, valor: valor, pct: valor ? Math.round(gasto / valor * 100) : null, chamados: chs.length };
+}
+const LIMITE_TROCA = () => Number(param('indice_troca_alerta', '70')) || 70;
+
+/* =========================================================================
+   CHAMADOS
+   ========================================================================= */
+const ST_CH = {
+  'Aguardando aceite': { c: 'warn', i: 'entrada', aberto: true },
+  'Em análise': { c: 'info', i: 'lupa', aberto: true },
+  'Aguardando orçamento': { c: 'roxo', i: 'doc', aberto: true },
+  'Aguardando aprovação': { c: 'roxo', i: 'relogio', aberto: true },
+  'Aprovado': { c: 'ok', i: 'check', aberto: true },
+  'Em execução': { c: 'info', i: 'ferramenta', aberto: true },
+  'Bloqueada': { c: 'bad', i: 'cadeado', aberto: true },
+  'Aguardando terceiro': { c: 'roxo', i: 'relogio', aberto: true },
+  'Aguardando validação': { c: 'warn', i: 'bandeira', aberto: true },
+  'Concluída': { c: 'ok', i: 'check', aberto: false },
+  'Cancelada': { c: 'mute', i: 'x', aberto: false }
+};
+const chAberto = s => !!(ST_CH[s] && ST_CH[s].aberto);
+const chPill = s => { const x = ST_CH[s] || { c: 'mute', i: 'traco' }; return `<span class="st ${x.c}">${ic(x.i)}${esc(s || '—')}</span>`; };
+const chamados = () => DB.chamados.filter(c => c.status !== 'Cancelada' || ehGestor());
+const chById = id => DB.chamados.find(c => c.chamado_id === id);
+const chNum = c => c && c.numero ? c.numero : 'Aguardando número';
+const chamadosDoAtivo = id => DB.chamados.filter(c => c.ativo_id === id && c.status !== 'Cancelada')
+  .sort((a, b) => String(b.aberto_em).localeCompare(String(a.aberto_em)));
+const eventosDo = id => DB.eventos.filter(e => e.chamado_id === id)
+  .sort((a, b) => String(a.data_hora).localeCompare(String(b.data_hora)));
+const chAtrasado = c => chAberto(c.status) && c.previsao_conclusao && String(c.previsao_conclusao).slice(0, 10) < today();
+const chUrgente = c => chAberto(c.status) && (c.prioridade === 'Emergencial' || c.impacto === 'Crítico');
+
+function rankCh(c) {
+  if (c.prioridade === 'Emergencial') return 0;
+  if (chAtrasado(c)) return 1;
+  if (c.status === 'Aguardando aceite') return 2;
+  if (c.status === 'Aguardando aprovação') return 3;
+  if (c.status === 'Bloqueada' || c.status === 'Aguardando terceiro') return 4;
+  if (c.status === 'Aguardando orçamento') return 5;
+  return 6;
+}
+const ordenarCh = (a, b) => (rankCh(a) - rankCh(b)) ||
+  String(a.previsao_conclusao || '9999').localeCompare(String(b.previsao_conclusao || '9999'));
+
+/* =========================================================================
+   GARANTIAS E PREVENTIVAS
+   ========================================================================= */
+const garantiasDo = id => DB.garantias.filter(g => g.ativo_id === id);
+function garantiaVigente(ativoId) {
+  const hoje = today();
+  return garantiasDo(ativoId).find(g => g.status !== 'Cancelada' && g.fim && String(g.fim).slice(0, 10) >= hoje) || null;
+}
+const planos = () => DB.planos.filter(p => p.ativo !== 'Não');
+const planoById = id => DB.planos.find(p => p.plano_id === id);
+/* Quantos dias faltam. Negativo é atraso. Plano sem data entra como vencido. */
+function diasDaPreventiva(p) {
+  if (!p.proxima_execucao) return 0;
+  return daysBetween(today(), String(p.proxima_execucao).slice(0, 10));
+}
+function situacaoPreventiva(p) {
+  const d = diasDaPreventiva(p);
+  const tol = Number(p.tolerancia_dias) || 0;
+  if (d < 0) return { t: `Vencida há ${plural(-d, 'dia')}`, c: 'bad', i: 'alerta', ordem: 0 };
+  if (d === 0) return { t: 'Vence hoje', c: 'bad', i: 'alerta', ordem: 1 };
+  if (d <= tol) return { t: `Faltam ${plural(d, 'dia')}`, c: 'warn', i: 'relogio', ordem: 2 };
+  return { t: `Em ${plural(d, 'dia')}`, c: 'mute', i: 'cal', ordem: 3 };
+}
+const planosNoCtx = () => planos().filter(p => !p.unidade_id || noCtx(p));
+const preventivasVencidas = () => planosNoCtx().filter(p => diasDaPreventiva(p) <= 0);
+
+/* Anexos de qualquer registro, já com miniatura. */
+const anexosDe = (origem, id) => DB.anexos.filter(a => a.origem === origem && a.origem_id === id && a.url);
+function miniaturas(origem, id) {
+  const lista = anexosDe(origem, id);
+  if (!lista.length) return '';
+  return `<div class="thumbs">${lista.map(a => `<button type="button" class="thumb" data-act="foto" data-url="${esc(a.url)}" data-id="${esc(a.drive_file_id)}" title="${esc(a.tipo || 'Anexo')}">
+    <img src="${esc(a.thumb_url || '')}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('Abrir'))"></button>`).join('')}</div>`;
+}
 /* =========================================================
    CASCA: barra lateral, navegação inferior, cabeçalhos
    ========================================================= */
 function contadores() {
   const minhas = DB.demandas.filter(d => stAberto(d.status) && minhaDemanda(d));
+  const chs = chamados().filter(noCtx);
   return {
     aceitar: minhas.filter(aguardaMeuAceite).length,
     minhas: minhas.length,
     entrada: ehGestor() ? origensPendentes().length : 0,
-    avisos: naoVistos().length
+    avisos: naoVistos().length,
+    chAbertos: chs.filter(c => chAberto(c.status)).length,
+    prevVencidas: preventivasVencidas().length
   };
 }
 function itensLaterais() {
   const c = contadores();
   const it = [
-    { v: 'hoje', t: ehGestor() ? 'Painel' : 'Hoje', i: 'casa' },
-    { v: 'minhas', t: 'Minhas demandas', i: 'linhas', n: c.aceitar }
+    { v: 'inicio', t: 'Visão Geral', i: 'casa' },
+    { v: 'chamados', t: 'Chamados', i: 'doc', n: c.chAbertos },
+    { v: 'ativos', t: 'Ativos', i: 'caixa' },
+    { v: 'preventivas', t: 'Preventivas', i: 'sync', n: c.prevVencidas, alerta: true },
+    { v: 'demandas', t: 'Demandas', i: 'linhas', n: c.aceitar }
   ];
-  if (ehGestor()) it.push({ v: 'entrada', t: 'Entrada', i: 'entrada', n: c.entrada });
-  it.push({ v: 'todas', t: 'Todas', i: 'doc' }, { v: 'recorrencias', t: 'Recorrências', i: 'sync' });
-  if (ehGestor()) it.push({ v: 'relatorios', t: 'Relatórios', i: 'barras' });
+  if (podeCadastrar()) it.push({ v: 'cadastros', t: 'Cadastros', i: 'cadast' });
   return it;
 }
 function renderCasca() {
@@ -1162,18 +1463,18 @@ function renderCasca() {
   $('#sideNav').innerHTML = itensLaterais().map(x =>
     `<button type="button" data-view="${x.v}" class="${VIEW === x.v ? 'on' : ''}">${ic(x.i)}<span>${esc(x.t)}</span>${x.n ? `<span class="n">${x.n}</span>` : ''}</button>`).join('');
 
-  const fab = ehGestor();
-  const sub = ['entrada', 'recorrencias', 'relatorios', 'cadastros'];
+  const sub = ['preventivas', 'cadastros', 'demandas', 'hoje', 'minhas', 'todas', 'entrada', 'recorrencias', 'relatorios'];
   const b = (v, t, i, n) => `<button type="button" data-view="${v}" class="${VIEW === v || (v === 'mais' && sub.includes(VIEW)) ? 'on' : ''}">${ic(i)}<span>${t}</span>${n ? `<span class="bdg">${n}</span>` : ''}</button>`;
-  $('#bnav').className = 'bnav' + (fab ? '' : ' sem-fab');
-  $('#bnav').innerHTML = b('hoje', 'Hoje', 'casa') + b('minhas', 'Minhas', 'linhas', c.aceitar) +
-    (fab ? `<div class="fab-wrap"><button type="button" class="fab" data-act="nova-dem" aria-label="Nova demanda">${ic('mais2')}</button></div>` : '') +
-    b('todas', 'Todas', 'doc') + b('mais', 'Mais', 'mais', c.entrada);
+  $('#bnav').className = 'bnav';
+  $('#bnav').innerHTML = b('inicio', 'Início', 'casa') + b('chamados', 'Chamados', 'doc', c.chAbertos) +
+    `<div class="fab-wrap"><button type="button" class="fab" data-act="novo-ch" aria-label="Novo chamado">${ic('mais2')}</button></div>` +
+    b('ativos', 'Ativos', 'caixa') + b('mais', 'Mais', 'mais', c.prevVencidas);
 
-  /* Seletor de unidade: a mesma caixa no celular e no computador */
-  const optsUn = [{ v: 'todas', t: 'Todas as unidades' }].concat(UN_IDS.map(u => ({ v: u, t: UN[u].nome })));
+  /* Seletor de empresa: foto, nome e, dentro, as unidades */
   $$('.js-unitbox').forEach(el => {
-    el.innerHTML = `${ic('loja', 'a')}<select class="js-unit" aria-label="Unidade">${opts(optsUn, F.un)}</select>${ic('chevd', 'b')}`;
+    el.innerHTML = `<button type="button" class="ctx-btn" data-act="seletor">
+      <span class="ctx-foto"><img src="${esc(fotoContexto())}" alt="" onerror="this.replaceWith(document.createTextNode('Q'))"></span>
+      <span class="ctx-nome">${esc(tituloContexto())}</span>${ic('chevd')}</button>`;
   });
   $$('.js-nome').forEach(el => { el.textContent = USER.nome; });
   $$('.js-email').forEach(el => { el.textContent = USER.email; });
@@ -1181,17 +1482,23 @@ function renderCasca() {
   $$('.js-inicial').forEach(el => { el.textContent = inicial(USER.nome); });
   $$('.js-ola').forEach(el => { el.textContent = `${saudacao()}, ${primeiroNome(USER.nome)}`; });
   $$('.js-ola-s').forEach(el => { el.textContent = fraseDoDia(); });
-  $$('.js-nova').forEach(el => el.classList.toggle('hidden', !ehGestor()));
-  $$('.js-so-gestor').forEach(el => el.classList.toggle('hidden', !ehGestor()));
+  $$('.js-nova').forEach(el => el.classList.toggle('hidden', false));
+  $$('.js-so-gestor').forEach(el => el.classList.toggle('hidden', !podeCadastrar()));
   atualizarSino(c.avisos);
   updSync();
 }
 /* Frase abaixo da saudação: honesta com o que está acontecendo. */
 function fraseDoDia() {
-  const ab = DB.demandas.filter(d => stAberto(d.status) && naUnidade(d));
-  const urg = ab.filter(d => d.prioridade === 'Emergencial' || atrasada(d)).length;
-  if (urg) return `${plural(urg, 'ponto pede', 'pontos pedem')} atenção agora${F.un !== 'todas' ? ' em ' + unNome(F.un) : ''}.`;
-  return 'Tudo sob controle para manter nossas unidades funcionando bem.';
+  const abertos = chamados().filter(c => noCtx(c) && chAberto(c.status));
+  const urg = abertos.filter(c => chUrgente(c) || chAtrasado(c)).length;
+  const prev = preventivasVencidas().length;
+  if (urg || prev) {
+    const partes = [];
+    if (urg) partes.push(plural(urg, 'chamado urgente ou atrasado', 'chamados urgentes ou atrasados'));
+    if (prev) partes.push(plural(prev, 'preventiva vencida', 'preventivas vencidas'));
+    return `Aqui está o resumo de ${tituloContexto()}: ${partes.join(' e ')}.`;
+  }
+  return `Aqui está o resumo da gestão técnica de ${tituloContexto()}.`;
 }
 function atualizarSino(n) {
   $$('.js-bell').forEach(el => el.classList.toggle('hidden', !n));
@@ -1207,9 +1514,10 @@ function render() {
   if (!USER) { renderPortaria(); return; }
   $('#app').classList.remove('hidden');
   $('#login').classList.add('hidden');
-  const permitidas = ['hoje', 'minhas', 'todas', 'recorrencias', 'mais'].concat(ehGestor() ? ['entrada', 'relatorios', 'cadastros'] : []);
-  if (!permitidas.includes(VIEW)) VIEW = 'hoje';
-  if (VIEW === 'mais' && window.matchMedia('(min-width:900px)').matches) VIEW = 'hoje';
+  const permitidas = ['inicio', 'chamados', 'ativos', 'preventivas', 'demandas', 'hoje', 'minhas', 'todas', 'recorrencias', 'mais']
+    .concat(ehGestor() ? ['entrada', 'relatorios'] : []).concat(podeCadastrar() ? ['cadastros'] : []);
+  if (!permitidas.includes(VIEW)) VIEW = 'inicio';
+  if (VIEW === 'mais' && window.matchMedia('(min-width:900px)').matches) VIEW = 'inicio';
   renderCasca();
   $('#view').innerHTML = bannerSemBackend() + VIEWS[VIEW]();
 }
@@ -1312,6 +1620,20 @@ function comigo() {
 }
 
 function vHoje() { return ehGestor() ? vPainelGestor() : vHojeExecutor(); }
+
+/* O módulo de demandas continua inteiro, agora dentro de uma tela só, com as
+   suas telas antigas como abas. Nada mudou no funcionamento dele. */
+let SUB_DEM = 'hoje';
+function vDemandas() {
+  const abas = [['hoje', ehGestor() ? 'Painel' : 'Hoje'], ['minhas', 'Minhas'], ['todas', 'Todas']]
+    .concat(ehGestor() ? [['entrada', 'Entrada'], ['recorrencias', 'Recorrências'], ['relatorios', 'Relatórios']] : [['recorrencias', 'Recorrências']]);
+  const corpo = { hoje: vHoje, minhas: vMinhas, todas: vTodas, entrada: vEntrada, recorrencias: vRecorrencias, relatorios: vRelatorios };
+  return `<h2 class="view">Demandas técnicas</h2>
+    <p class="lead">Processo, pessoas e boas práticas. Equipamento e estrutura ficam em Chamados.</p>
+    <div class="seg" style="margin-bottom:16px;flex-wrap:wrap">${abas.map(([v, t]) =>
+      `<button type="button" data-act="sub-dem" data-s="${v}" class="${SUB_DEM === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+    ${(corpo[SUB_DEM] || vHoje)()}`;
+}
 
 function vHojeExecutor() {
   const lista = comigo();
@@ -1732,6 +2054,287 @@ function abrirAvisos() {
     </div>`).join('')}</div>` : '<div class="empty"><b>Nenhum aviso</b>Você é avisado aqui quando receber, tiver prazo vencendo ou alguém pedir sua validação.</div>');
   marcarVistos(lista);
   atualizarSino(0);
+}
+/* =========================================================================
+   SELETOR DE EMPRESA
+   Foto, nome e, dentro de cada empresa, as unidades. Escolher filtra o
+   sistema inteiro e troca a cor de destaque.
+   ========================================================================= */
+function abrirSeletor() {
+  const linha = (id, nome, sub, foto, ativo, unidade) => `
+    <button type="button" class="sel-emp${ativo ? ' on' : ''}" data-act="ctx" data-e="${esc(id)}" data-u="${esc(unidade || 'todas')}">
+      <span class="sel-foto">${foto ? `<img src="${esc(foto)}" alt="" onerror="this.replaceWith(document.createTextNode('${esc(inicial(nome))}'))">` : esc(inicial(nome))}</span>
+      <span class="sel-txt"><b>${esc(nome)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>
+      ${ativo ? ic('check') : ''}
+    </button>`;
+  const corpo = `
+    <div class="sel-lista">
+      ${linha('todas', 'Q Food Group', 'Todas as empresas', ASSETS_URL + 'qfood-logo.png', CTX.empresa === 'todas')}
+      ${empresas().map(e => {
+        const unis = unidadesDe(e.empresa_id);
+        const varias = unis.length > 1;
+        return linha(e.empresa_id, e.nome, varias ? plural(unis.length, 'unidade') : (unis[0] || {}).cidade || '',
+          fotoDe(e.empresa_id), CTX.empresa === e.empresa_id && CTX.unidade === 'todas') +
+          (varias ? unis.map(u => `
+            <button type="button" class="sel-emp sub${CTX.unidade === u.unidade_id ? ' on' : ''}" data-act="ctx" data-e="${esc(e.empresa_id)}" data-u="${esc(u.unidade_id)}">
+              <span class="sel-foto pequena">${FOTOS_PADRAO[u.unidade_id] ? `<img src="${esc(fotoDe(u.unidade_id))}" alt="" onerror="this.replaceWith(document.createTextNode('${esc(inicial(u.nome))}'))">` : esc(inicial(u.nome))}</span>
+              <span class="sel-txt"><b>${esc(u.nome)}</b>${u.cidade ? `<small>${esc(u.cidade)}</small>` : ''}</span>
+              ${CTX.unidade === u.unidade_id ? ic('check') : ''}
+            </button>`).join('') : '');
+      }).join('')}
+    </div>`;
+  openModal('Escolher empresa', corpo);
+}
+
+/* =========================================================================
+   CARTÃO DE CHAMADO
+   ========================================================================= */
+function motivoCh(c) {
+  if (chAberto(c.status) && c.prioridade === 'Emergencial') return { t: 'Urgente', c: 'urg', i: 'alerta' };
+  if (chAtrasado(c)) return { t: 'Atrasado', c: 'warn', i: 'relogio' };
+  const x = ST_CH[c.status] || { c: 'mute', i: 'traco' };
+  return { t: c.status, c: x.c, i: x.i };
+}
+function cartaoChamado(c) {
+  const m = motivoCh(c);
+  const a = c.ativo_id ? ativoById(c.ativo_id) : null;
+  const valor = c.valor_aprovado || c.valor_final;
+  return `<article class="dem" data-act="abrir-ch" data-id="${esc(c.chamado_id)}" tabindex="0" role="button" aria-label="${esc(chNum(c) + ', ' + c.titulo)}">
+    <div class="dem-top"><span class="st ${m.c}">${ic(m.i)}${esc(m.t)}</span><span class="grow"></span><span class="dem-num">${esc(chNum(c))}</span>${ic('chev')}</div>
+    <div class="dem-tit">${esc(c.titulo)}</div>
+    <div class="dem-l">${ic('loja')}<span>${esc(nomeUni(c.unidade_id))}${c.local ? ', ' + esc(c.local) : ''}</span></div>
+    ${a ? `<div class="dem-l">${ic('caixa')}<span>${esc(a.codigo_patrimonio ? 'Patrimônio ' + a.codigo_patrimonio + ', ' : '')}${esc(a.nome)}</span></div>` : ''}
+    <div class="dem-duo">
+      <div class="dem-l">${ic('pessoa')}<span>${esc(c.responsavel || 'Sem responsável')}</span></div>
+      <div class="dem-l ${chAtrasado(c) ? 'red' : ''}">${ic('cal')}<span>${c.previsao_conclusao ? fmtD(c.previsao_conclusao) : 'Sem prazo'}</span></div>
+    </div>
+    ${valor ? `<div class="dem-l fraco">${ic('doc', 'sm')}<span>${esc(dinheiro(valor))}${c.status === 'Aguardando aprovação' ? ', aguardando aprovação' : ''}</span></div>` : ''}
+    ${!chAberto(c.status) ? '' : chPill(c.status) === '' ? '' : ''}
+  </article>`;
+}
+const dinheiro = v => {
+  const n = Number(String(v || '0').replace(/\./g, '').replace(',', '.')) || 0;
+  return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+/* =========================================================================
+   INÍCIO
+   ========================================================================= */
+function vInicio() {
+  const meus = chamados().filter(noCtx);
+  const abertos = meus.filter(c => chAberto(c.status));
+  const urgentes = abertos.filter(chUrgente);
+  const semAceite = abertos.filter(c => c.status === 'Aguardando aceite');
+  const venc = preventivasVencidas();
+  const fila = abertos.slice().sort(ordenarCh);
+  const k = (cls, icone, rotulo, n, act, extra) => `
+    <button type="button" class="k4 ${cls}" data-act="${act}" ${extra || ''}>
+      <span class="circ">${ic(icone)}</span>
+      <span class="t"><span>${rotulo}</span><b class="num">${n}</b></span>${ic('chev')}</button>`;
+  return `
+    <div class="kpi4">
+      ${k('aceite', 'doc', 'Chamados abertos', abertos.length, 'goto', 'data-v="chamados"')}
+      ${k('emerg', 'alerta', 'Urgentes', urgentes.length, 'ir-ch', 'data-f="urgentes"')}
+      ${k('atras', 'sync', 'Preventivas vencidas', venc.length, 'goto', 'data-v="preventivas"')}
+      ${k('valid', 'check', 'Sem aceite', semAceite.length, 'ir-ch', 'data-f="aceite"')}
+    </div>
+    ${caixa('Precisa da sua atenção',
+      fila.length ? `<div class="dem-grid">${fila.slice(0, 6).map(cartaoChamado).join('')}</div>`
+        : '<div class="empty"><b>Nenhum chamado aberto</b>Toque no + para abrir o primeiro.</div>',
+      fila.length > 6 ? `<button type="button" class="link" data-act="goto" data-v="chamados">Ver todos</button>` : '')}
+    ${venc.length ? caixa('Preventivas vencidas', `<div class="list">${venc.slice(0, 5).map(p => {
+      const s = situacaoPreventiva(p);
+      return `<div class="row click" data-act="prev-abrir" data-id="${esc(p.plano_id)}">
+        <div class="row-main"><b>${esc(p.nome)}</b><small>${meta(esc(p.especialidade || ''), 'a cada ' + plural(Number(p.periodicidade_dias) || 0, 'dia'))}</small></div>
+        <span class="st ${s.c}">${ic(s.i)}${esc(s.t)}</span></div>`;
+    }).join('')}</div>`, `<button type="button" class="link" data-act="goto" data-v="preventivas">Ver todas</button>`) : ''}
+    ${caixa('Últimas movimentações', ultimasMovimentacoes())}`;
+}
+function ultimasMovimentacoes() {
+  const evs = DB.eventos.slice().sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora))).slice(0, 8);
+  if (!evs.length) return '<div class="empty">Nada registrado ainda.</div>';
+  const rotulo = { CHAMADO_CRIADO: 'Chamado aberto', SERVICO_CONCLUIDO: 'Serviço concluído', GARANTIA_REGISTRADA: 'Garantia registrada', ORCAMENTO_APROVADO: 'Orçamento aprovado', ACEITE: 'Recebimento confirmado', COMENTARIO: 'Comentário', STATUS_ALTERADO: 'Situação alterada', ATIVO_CADASTRADO: 'Ativo cadastrado' };
+  return `<div class="list">${evs.map(e => {
+    const c = chById(e.chamado_id);
+    return `<div class="row${c ? ' click' : ''}" ${c ? `data-act="abrir-ch" data-id="${esc(e.chamado_id)}"` : ''}>
+      <div class="row-main"><b>${esc(rotulo[e.tipo_evento] || e.tipo_evento)}</b><small>${meta(c ? esc(chNum(c)) : '', esc(e.descricao || ''), esc(e.usuario || ''))}</small></div>
+      <div class="row-num"><small>${fmtDH(e.data_hora)}</small></div></div>`;
+  }).join('')}</div>`;
+}
+
+/* =========================================================================
+   CHAMADOS
+   ========================================================================= */
+let F_CH = { q: '', filtro: 'abertos' };
+function vChamados() {
+  const base = chamados().filter(noCtx);
+  const q = normal(F_CH.q);
+  let lista = base.filter(c => {
+    if (F_CH.filtro === 'abertos' && !chAberto(c.status)) return false;
+    if (F_CH.filtro === 'urgentes' && !chUrgente(c)) return false;
+    if (F_CH.filtro === 'aceite' && c.status !== 'Aguardando aceite') return false;
+    if (F_CH.filtro === 'concluidos' && c.status !== 'Concluída') return false;
+    if (q && !normal([c.numero, c.titulo, c.descricao, c.responsavel, c.local, c.codigo_patrimonio, nomeUni(c.unidade_id)].join(' ')).includes(q)) return false;
+    return true;
+  }).sort(ordenarCh);
+  const aba = (v, t) => `<button type="button" data-act="ch-filtro" data-f="${v}" class="${F_CH.filtro === v ? 'on' : ''}">${t}</button>`;
+  return `
+    <h2 class="view">Chamados</h2>
+    <p class="lead">${esc(tituloContexto())}</p>
+    <div class="fbar">
+      <label class="busca">${ic('busca', 'sm')}<span class="sr">Buscar</span>
+        <input type="search" id="chBusca" placeholder="Número, problema, patrimônio, responsável" value="${esc(F_CH.q)}"></label>
+      <span class="seg">${aba('abertos', 'Abertos')}${aba('urgentes', 'Urgentes')}${aba('aceite', 'Sem aceite')}${aba('concluidos', 'Concluídos')}${aba('todos', 'Todos')}</span>
+    </div>
+    <h3 class="sec" style="margin-top:0">Resultado <span class="count">${plural(lista.length, 'chamado')}</span></h3>
+    ${lista.length ? `<div class="dem-grid">${lista.map(cartaoChamado).join('')}</div>`
+      : '<div class="empty"><b>Nada por aqui</b>Mude o filtro ou abra um chamado novo.</div>'}`;
+}
+
+/* =========================================================================
+   ATIVOS
+   ========================================================================= */
+let F_AT = { q: '' };
+function vAtivos() {
+  const lista = buscarAtivos(F_AT.q);
+  const pendentes = lista.filter(ativoPendente).length;
+  return `
+    <h2 class="view">Ativos</h2>
+    <p class="lead">${esc(tituloContexto())}${pendentes ? `, ${plural(pendentes, 'equipamento')} com marca ou modelo a confirmar` : ''}</p>
+    <div class="fbar">
+      <label class="busca">${ic('busca', 'sm')}<span class="sr">Buscar</span>
+        <input type="search" id="atBusca" placeholder="Patrimônio, nome, marca ou local" value="${esc(F_AT.q)}"></label>
+      <button type="button" class="btn ghost sm" data-act="ler-codigo" data-destino="busca">${ic('codigo', 'sm')}Ler código</button>
+      ${podeCadastrar() ? `<button type="button" class="btn sm" data-act="novo-ativo">${ic('mais2', 'sm')}Novo ativo</button>` : ''}
+    </div>
+    <h3 class="sec" style="margin-top:0">${plural(lista.length, 'ativo')}</h3>
+    ${lista.length ? `<div class="dem-grid">${lista.map(cartaoAtivo).join('')}</div>`
+      : '<div class="empty"><b>Nenhum ativo encontrado</b>Tente outro termo ou cadastre o equipamento.</div>'}`;
+}
+function cartaoAtivo(a) {
+  const c = custoDoAtivo(a.ativo_id);
+  const gar = garantiaVigente(a.ativo_id);
+  const foto = anexosDe('ATIVO', a.ativo_id)[0];
+  return `<article class="dem ativo-card" data-act="abrir-ativo" data-id="${esc(a.ativo_id)}" tabindex="0" role="button">
+    <div class="dem-top">
+      <span class="st ${a.criticidade === 'Crítica' ? 'bad' : a.criticidade === 'Alta' ? 'warn' : 'mute'}">${ic('alerta')}${esc(a.criticidade || 'Média')}</span>
+      <span class="grow"></span>
+      <span class="dem-num">${a.codigo_patrimonio ? 'Patrimônio ' + esc(a.codigo_patrimonio) : 'Sem placa'}</span>${ic('chev')}
+    </div>
+    <div class="ativo-linha">
+      <span class="ativo-foto">${foto ? `<img src="${esc(foto.thumb_url)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${esc(inicial(a.nome))}'))">` : ic('caixa', 'lg')}</span>
+      <span class="ativo-info">
+        <span class="dem-tit">${esc(a.nome)}</span>
+        <span class="dem-l">${ic('loja')}<span>${esc(nomeUni(a.unidade_id))}${a.local ? ', ' + esc(a.local) : ''}</span></span>
+      </span>
+    </div>
+    <div class="dem-duo">
+      <div class="dem-l">${ic('ferramenta')}<span>${plural(c.chamados, 'chamado')}</span></div>
+      ${c.gasto ? `<div class="dem-l ${c.pct !== null && c.pct >= LIMITE_TROCA() ? 'red' : ''}">${ic('barras')}<span>${esc(dinheiro(c.gasto))}${c.pct !== null ? ` (${c.pct}%)` : ''}</span></div>` : ''}
+    </div>
+    ${gar ? `<div class="dem-l fraco">${ic('escudo', 'sm')}<span>Garantia até ${fmtD(gar.fim)}</span></div>` : ''}
+    ${ativoPendente(a) ? `<div class="dem-l warn">${ic('alerta', 'sm')}<span>Marca e modelo a confirmar</span></div>` : ''}
+  </article>`;
+}
+
+function abrirAtivo(id) {
+  const a = ativoById(id);
+  if (!a) { toast('Ativo não encontrado.', true); return; }
+  const c = custoDoAtivo(id);
+  const gar = garantiaVigente(id);
+  const chs = chamadosDoAtivo(id);
+  const alerta = c.pct !== null && c.pct >= LIMITE_TROCA();
+  const html = `
+    <div class="det-cab">
+      <h2>${esc(a.nome)}</h2>
+      <div class="dem-sts">
+        <span class="st mute">${ic('caixa')}${a.codigo_patrimonio ? 'Patrimônio ' + esc(a.codigo_patrimonio) : 'Sem placa'}</span>
+        <span class="st ${a.status === 'Em operação' ? 'ok' : 'warn'}">${ic('check')}${esc(a.status || '—')}</span>
+        ${gar ? `<span class="st ok">${ic('escudo')}Garantia até ${fmtD(gar.fim)}</span>` : ''}
+      </div>
+    </div>
+    ${miniaturas('ATIVO', id)}
+    ${alerta ? `<div class="det-box alerta"><h4>Avaliação recomendada</h4>
+      <p>Este ativo já acumulou <b>${esc(dinheiro(c.gasto))}</b> em manutenção, ${c.pct}% do valor de aquisição. Vale comparar com o preço de um novo antes do próximo conserto.</p></div>` : ''}
+    <div class="perf4" style="margin:12px 0">
+      <div class="p4"><span><b class="num">${c.valor ? esc(dinheiro(c.valor)) : '—'}</b><span>valor do ativo</span></span></div>
+      <div class="p4"><span><b class="num">${esc(dinheiro(c.gasto))}</b><span>em manutenção</span></span></div>
+      <div class="p4"><span><b class="num">${c.pct === null ? '—' : c.pct + '%'}</b><span>relação</span></span></div>
+      <div class="p4"><span><b class="num">${c.chamados}</b><span>${c.chamados === 1 ? 'chamado' : 'chamados'}</span></span></div>
+    </div>
+    <dl class="det-kv">
+      <dt>Empresa</dt><dd>${esc(nomeEmp(a.empresa_id))}</dd>
+      <dt>Unidade</dt><dd>${esc(nomeUni(a.unidade_id))}${a.local ? ', ' + esc(a.local) : ''}</dd>
+      <dt>Categoria</dt><dd>${esc(a.categoria || '—')}${a.subcategoria ? ', ' + esc(a.subcategoria) : ''}</dd>
+      <dt>Marca</dt><dd>${esc(a.marca || '—')}${a.modelo ? ' ' + esc(a.modelo) : ''}</dd>
+      ${a.numero_serie ? `<dt>Número de série</dt><dd>${esc(a.numero_serie)}</dd>` : ''}
+      <dt>Voltagem</dt><dd>${esc(a.voltagem || '—')}</dd>
+      <dt>Criticidade</dt><dd>${esc(a.criticidade || '—')}</dd>
+      ${a.data_aquisicao ? `<dt>Comprado em</dt><dd>${fmtD(a.data_aquisicao)}</dd>` : ''}
+      ${a.placa_registrada_por ? `<dt>Placa registrada</dt><dd>por ${esc(a.placa_registrada_por)}${a.placa_registrada_em ? ' em ' + fmtD(a.placa_registrada_em) : ''}</dd>` : ''}
+    </dl>
+    ${ativoPendente(a) ? `<div class="det-box alerta"><h4>Dados pendentes</h4><p>Marca, modelo ou subcategoria ainda não foram confirmados. O sistema vai pedir no próximo chamado deste equipamento.</p></div>` : ''}
+    <div class="det-sec">Histórico do ativo</div>
+    ${chs.length ? `<div class="list">${chs.map(x => `<div class="row click" data-act="abrir-ch" data-id="${esc(x.chamado_id)}">
+      <div class="row-main"><b>${esc(x.titulo)}</b><small>${meta(esc(chNum(x)), fmtD(x.aberto_em), esc(x.modalidade || ''))}</small></div>
+      <div class="row-num">${x.valor_final || x.valor_aprovado ? `<b>${esc(dinheiro(x.valor_final || x.valor_aprovado))}</b>` : ''}<small>${esc(x.status)}</small></div></div>`).join('')}</div>`
+      : '<div class="empty">Nenhum chamado para este equipamento ainda.</div>'}`;
+  const rodape = `<div class="linha">
+    ${podeCadastrar() ? `<button type="button" class="btn ghost" data-act="editar-ativo" data-id="${esc(id)}">Editar</button>` : ''}
+    <button type="button" class="btn" data-act="novo-ch" data-ativo="${esc(id)}">Abrir chamado</button></div>`;
+  openModal(a.codigo_patrimonio ? 'Patrimônio ' + a.codigo_patrimonio : 'Ativo', html, null, { full: true, foot: rodape });
+}
+
+/* =========================================================================
+   PREVENTIVAS
+   ========================================================================= */
+function vPreventivas() {
+  const lista = planosNoCtx().slice().sort((a, b) => situacaoPreventiva(a).ordem - situacaoPreventiva(b).ordem ||
+    diasDaPreventiva(a) - diasDaPreventiva(b));
+  return `
+    <h2 class="view">Preventivas</h2>
+    <p class="lead">Cada plano diz o que se repete e de quanto em quanto tempo. Concluir o chamado preventivo é o que move a próxima data.</p>
+    ${lista.length ? `<div class="dem-grid">${lista.map(p => {
+      const s = situacaoPreventiva(p);
+      const a = p.ativo_id ? ativoById(p.ativo_id) : null;
+      return `<article class="dem">
+        <div class="dem-top"><span class="st ${s.c}">${ic(s.i)}${esc(s.t)}</span><span class="grow"></span>
+          <span class="dem-num">a cada ${plural(Number(p.periodicidade_dias) || 0, 'dia')}</span></div>
+        <div class="dem-tit">${esc(p.nome)}</div>
+        ${a ? `<div class="dem-l">${ic('caixa')}<span>${esc(a.nome)}</span></div>` : ''}
+        <div class="dem-l">${ic('loja')}<span>${p.unidade_id ? esc(nomeUni(p.unidade_id)) : 'Todas as unidades'}${p.local ? ', ' + esc(p.local) : ''}</span></div>
+        <div class="dem-duo">
+          <div class="dem-l">${ic('relogio')}<span>Última: ${p.ultima_execucao ? fmtD(p.ultima_execucao) : 'nunca'}</span></div>
+          <div class="dem-l">${ic('cal')}<span>${p.proxima_execucao ? fmtD(p.proxima_execucao) : 'hoje'}</span></div>
+        </div>
+        ${p.instrucoes ? `<div class="dem-l fraco">${ic('lista', 'sm')}<span>${esc(p.instrucoes)}</span></div>` : ''}
+        <div class="dem-acoes"><button type="button" class="btn sm" data-act="prev-abrir" data-id="${esc(p.plano_id)}">${ic('mais2')}Abrir chamado</button></div>
+      </article>`;
+    }).join('')}</div>` : '<div class="empty"><b>Nenhum plano preventivo</b>Cadastre os planos na aba PLANOS_PREVENTIVOS da planilha.</div>'}`;
+}
+
+/* =========================================================================
+   CADASTROS
+   ========================================================================= */
+function vCadastrosNovo() {
+  if (!podeCadastrar()) return '<div class="empty"><b>Sem permissão</b>Seu perfil não permite cadastrar. Fale com o Rodrigo.</div>';
+  const bloco = (titulo, lista, act, corpo) => caixa(titulo,
+    lista.length ? `<div class="list">${corpo}</div>` : '<div class="empty">Nada cadastrado ainda.</div>',
+    `<button type="button" class="link" data-act="${act}">Adicionar</button>`);
+  return `
+    <h2 class="view">Cadastros</h2>
+    <p class="lead">Empresas, unidades, setores e fornecedores. Categorias, marcas e locais são criados na hora, dentro do formulário.</p>
+    ${bloco('Empresas', DB.empresas, 'nova-empresa', DB.empresas.map(e => `<div class="row">
+      <span class="sel-foto pequena"><img src="${esc(fotoDe(e.empresa_id))}" alt="" onerror="this.replaceWith(document.createTextNode('${esc(inicial(e.nome))}'))"></span>
+      <div class="row-main"><b>${esc(e.nome)}</b><small>${plural(unidadesDe(e.empresa_id).length, 'unidade')}</small></div>
+      <span class="st ${e.ativo === 'Não' ? 'mute' : 'ok'}">${e.ativo === 'Não' ? 'Inativa' : 'Ativa'}</span></div>`).join(''))}
+    ${bloco('Unidades', DB.unidades, 'nova-unidade', DB.unidades.map(u => `<div class="row">
+      <div class="row-main"><b>${esc(u.nome)}</b><small>${meta(esc(nomeEmp(u.empresa_id)), esc(u.cidade || ''))}</small></div>
+      <span class="st ${u.ativo === 'Não' ? 'mute' : 'ok'}">${u.ativo === 'Não' ? 'Inativa' : 'Ativa'}</span></div>`).join(''))}
+    ${bloco('Setores', DB.setores, 'novo-setor', DB.setores.map(s => `<div class="row">
+      <div class="row-main"><b>${esc(s.nome)}</b><small>${esc(nomeUni(s.unidade_id))}</small></div></div>`).join(''))}
+    ${bloco('Fornecedores', DB.fornecedores, 'novo-fornecedor', DB.fornecedores.map(f => `<div class="row">
+      <div class="row-main"><b>${esc(f.nome_fantasia)}</b><small>${meta(esc(f.especialidades || ''), esc(f.telefone || ''))}</small></div></div>`).join(''))}`;
 }
 /* =========================================================
    DETALHE DA DEMANDA
@@ -2293,6 +2896,617 @@ function abrirCategoria(c) {
     $('[data-f-acao=ok]', foot).addEventListener('click', ok);
   }, { foot: '<button type="button" class="btn block" data-f-acao="ok">Salvar categoria</button>' });
 }
+/* =========================================================================
+   GRAVAÇÃO
+   ========================================================================= */
+function evento(chamadoId, tipo, dados) {
+  dados = dados || {};
+  return save('eventos', {
+    evento_id: uid('ev'), chamado_id: chamadoId || '', ativo_id: dados.ativo_id || '',
+    tipo_evento: tipo, usuario: USER.nome, data_hora: nowISO(),
+    descricao: dados.descricao || '', valor: dados.valor || '', de: dados.de || '', para: dados.para || ''
+  }, true);
+}
+function anexar(origem, origemId, tipo, url) {
+  if (!url || fotoPendente(url)) return;
+  const id = driveId(url);
+  save('anexos', {
+    anexo_id: uid('anx'), origem: origem, origem_id: origemId, tipo: tipo,
+    nome_arquivo: '', pasta: '', drive_file_id: id, url: url,
+    thumb_url: id ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : '',
+    mime: 'image/jpeg', enviado_por: USER.nome, enviado_em: nowISO(), status: 'Ligado'
+  }, true);
+}
+
+/* =========================================================================
+   LEITURA DO CÓDIGO DE BARRAS
+   Usa o leitor nativo do navegador. Onde ele não existe (iPhone), o campo
+   para digitar continua do lado, então ninguém fica travado.
+   ========================================================================= */
+const temLeitor = () => typeof window !== 'undefined' && 'BarcodeDetector' in window;
+let CAM = null;
+function pararCamera() {
+  if (CAM) { CAM.getTracks().forEach(t => t.stop()); CAM = null; }
+}
+let LEITURA = null;
+async function lerCodigo(aoLer) {
+  const box = $('#camBox'), video = $('#camVideo'), err = $('#camErr');
+  if (!temLeitor()) {
+    toast('Este aparelho não lê código pela câmera. Digite o número da placa.', true);
+    return;
+  }
+  LEITURA = aoLer;
+  box.classList.remove('hidden');
+  err.textContent = 'Aponte para o código de barras da placa. A leitura é automática.';
+  try {
+    CAM = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = CAM;
+    await video.play();
+    const det = new window.BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'itf'] });
+    const tick = async () => {
+      if (!CAM || box.classList.contains('hidden')) return;
+      try {
+        const achou = await det.detect(video);
+        if (achou && achou.length) {
+          const valor = String(achou[0].rawValue || '').trim();
+          const cb = LEITURA;
+          fecharCamera();
+          if (cb) cb(valor);
+          return;
+        }
+      } catch (e) { /* quadro ruim, tenta o próximo */ }
+      setTimeout(tick, 300);
+    };
+    tick();
+  } catch (e) {
+    err.textContent = 'Não consegui abrir a câmera. Libere a permissão no navegador ou digite o número da placa.';
+  }
+}
+function fecharCamera() {
+  pararCamera();
+  LEITURA = null;
+  const v = $('#camVideo'); if (v) v.srcObject = null;
+  $('#camBox').classList.add('hidden');
+}
+
+/* =========================================================================
+   NOVO CHAMADO — três etapas e o resumo
+   ========================================================================= */
+const PASSOS_CH = [
+  { t: 'Onde aconteceu', s: 'Empresa, unidade e o equipamento, quando houver.' },
+  { t: 'O que aconteceu', s: 'Descreva como a operação vê o problema.' },
+  { t: 'Direcionamento', s: 'Quem resolve e até quando.' },
+  { t: 'Confira antes de abrir', s: 'Depois de aberto, o responsável precisa confirmar o recebimento.' }
+];
+function abrirNovoChamado(pre) {
+  pre = pre || {};
+  const plano = pre.plano ? planoById(pre.plano) : null;
+  let ativo = pre.ativo ? ativoById(pre.ativo) : (plano && plano.ativo_id ? ativoById(plano.ativo_id) : null);
+  let passo = 0;
+  const nomes = nomesResponsaveis();
+  const L = n => (DB.listas && DB.listas[n] ? DB.listas[n].itens : []);
+  const empIni = ativo ? ativo.empresa_id : (CTX.empresa !== 'todas' ? CTX.empresa : (empresas()[0] || {}).empresa_id);
+  const uniIni = ativo ? ativo.unidade_id : (CTX.unidade !== 'todas' ? CTX.unidade : '');
+
+  const html = `
+    <div class="passos" aria-hidden="true">${[0, 1, 2].map(i => `<i data-p="${i}"></i>`).join('')}</div>
+    <div class="passo-t" id="chT"></div><div class="passo-s" id="chS"></div>
+    ${plano ? `<div class="banner">Preventiva: ${esc(plano.nome)}${plano.instrucoes ? '. ' + esc(plano.instrucoes) : ''}</div>` : ''}
+    <form id="fCh" novalidate>
+      <div class="stack" data-passo="0">
+        <div class="grid2">
+          <label class="fld req"><span>Empresa</span><select name="empresa">${opts(empresas().map(e => ({ v: e.empresa_id, t: e.nome })), empIni)}</select></label>
+          <label class="fld req"><span>Unidade</span><select name="unidade"></select></label>
+        </div>
+        <div class="fld"><span>É sobre um equipamento?</span>
+          <div class="escolha">
+            <button type="button" class="btn ghost" data-eq="sim">${ic('caixa')}Sim, equipamento</button>
+            <button type="button" class="btn ghost" data-eq="nao">${ic('estrutura')}Não, estrutura ou serviço</button>
+          </div>
+        </div>
+        <div id="boxAtivo" hidden>
+          <div class="fld"><span>Patrimônio</span>
+            <div class="linha-busca">
+              <input type="text" name="patrimonio" inputmode="numeric" placeholder="Número da placa" autocomplete="off">
+              <button type="button" class="btn ghost" data-act="ler-codigo" data-destino="form">${ic('codigo')}Ler código</button>
+            </div>
+            <span class="hint">Leia o código de barras da placa ou digite o número. Sem placa, busque pelo nome.</span>
+          </div>
+          <label class="fld"><span>Buscar pelo nome</span><input type="search" name="buscaAtivo" placeholder="Ex.: freezer, ar-condicionado" autocomplete="off"></label>
+          <div id="resultAtivo"></div>
+        </div>
+        <div id="boxLocal" hidden>
+          <div class="grid2">
+            <label class="fld"><span>Setor</span><input type="text" name="setor" list="lSetores" autocomplete="off" placeholder="Ex.: Cozinha"></label>
+            <label class="fld"><span>Local</span><input type="text" name="local" list="lLocais" autocomplete="off" placeholder="Ex.: Banheiro 2º piso"></label>
+          </div>
+        </div>
+      </div>
+      <div class="stack" data-passo="1" hidden>
+        <label class="fld req"><span>Título curto</span><input type="text" name="titulo" maxlength="90" value="${esc(plano ? plano.nome : '')}" placeholder="Ex.: Ar-condicionado não está gelando"></label>
+        <label class="fld req"><span>O que está acontecendo</span><textarea name="descricao">${esc(plano ? plano.instrucoes || '' : '')}</textarea></label>
+        ${campoFoto()}
+        <div class="grid2">
+          <label class="fld req"><span>Natureza</span><select name="natureza">${opts(L('natureza'), plano ? plano.natureza : 'Equipamento')}</select></label>
+          <label class="fld req"><span>Especialidade</span><input type="text" name="especialidade" list="lEsp" autocomplete="off" value="${esc(plano ? plano.especialidade || '' : '')}" placeholder="Ex.: Climatização"></label>
+        </div>
+        <div class="grid2">
+          <label class="fld req"><span>Modalidade</span><select name="modalidade">${opts(L('modalidade'), plano ? 'Preventiva' : 'Corretiva')}</select></label>
+          <label class="fld req"><span>Prioridade</span><select name="prioridade">${opts(L('prioridade'), plano ? plano.prioridade || 'Normal' : 'Normal')}</select></label>
+        </div>
+        <label class="fld"><span>Impacto na operação</span><select name="impacto">${opts(L('impacto'), 'Médio')}</select></label>
+      </div>
+      <div class="stack" data-passo="2" hidden>
+        <div class="grid2">
+          <label class="fld req"><span>Responsável</span><select name="responsavel"><option value="">Escolha</option>${opts(nomes, plano ? plano.responsavel : '')}</select></label>
+          <label class="fld req"><span>Prazo</span><input type="date" name="prazo"></label>
+        </div>
+        <label class="fld"><span>Vai precisar de orçamento?</span><select name="orcamento">${opts(['Não', 'Sim'], 'Não')}</select>
+          <span class="hint">Com Sim, o chamado nasce aguardando orçamento.</span></label>
+      </div>
+      <div data-passo="3" hidden><div id="chResumo"></div></div>
+      <div class="err-msg" id="chErr" style="margin-top:12px"></div>
+      <datalist id="lSetores">${DB.setores.map(s => `<option value="${esc(s.nome)}"></option>`).join('')}</datalist>
+      <datalist id="lLocais">${L('local').map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+      <datalist id="lEsp">${L('especialidade').map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+    </form>`;
+
+  openModal('Novo chamado', html, (body, foot) => {
+    const f = $('#fCh', body).elements, err = $('#chErr', body);
+    let ehEquip = !!ativo;
+    bindFoto(body);
+
+    const encherUnidades = () => {
+      const unis = unidadesDe(f.empresa.value);
+      f.unidade.innerHTML = opts(unis.map(u => ({ v: u.unidade_id, t: u.nome })), uniIni || (unis[0] || {}).unidade_id);
+    };
+    f.empresa.addEventListener('change', encherUnidades);
+    encherUnidades();
+
+    const mostrarAtivo = () => {
+      $('#resultAtivo', body).innerHTML = ativo ? `
+        <div class="ativo-sel">
+          <span class="ativo-foto">${ic('caixa', 'lg')}</span>
+          <div><b>${esc(ativo.nome)}</b><small>${esc(ativo.codigo_patrimonio ? 'Patrimônio ' + ativo.codigo_patrimonio : 'Sem placa')}${ativo.local ? ', ' + esc(ativo.local) : ''}</small></div>
+          <button type="button" class="btn ghost sm" data-limpar-ativo>Trocar</button>
+        </div>
+        ${garantiaVigente(ativo.ativo_id) ? `<div class="det-box alerta"><h4>Equipamento em garantia</h4>
+          <p>Existe garantia vigente até <b>${fmtD(garantiaVigente(ativo.ativo_id).fim)}</b>. Antes de contratar serviço, vale acionar quem executou.</p></div>` : ''}
+        ${ativoPendente(ativo) ? `<div class="det-box"><h4>Confirme os dados deste equipamento</h4>
+          <div class="grid2" style="margin-top:8px">
+            <label class="fld"><span>Marca</span><input type="text" name="marcaPend" list="lMarcas" value="${esc(ativo.marca || '')}"></label>
+            <label class="fld"><span>Modelo</span><input type="text" name="modeloPend" value="${esc(ativo.modelo || '')}"></label>
+          </div>
+          <datalist id="lMarcas">${L('marca').map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+          <span class="hint">Pedimos uma vez só. Depois disso o equipamento fica completo.</span></div>` : ''}` : '';
+    };
+    const selecionarAtivo = a => { ativo = a; if (a) { f.empresa.value = a.empresa_id || f.empresa.value; encherUnidades(); f.unidade.value = a.unidade_id || f.unidade.value; } mostrarAtivo(); };
+
+    const modoEquip = sim => {
+      ehEquip = sim;
+      $('#boxAtivo', body).hidden = !sim;
+      $('#boxLocal', body).hidden = sim;
+      $$('[data-eq]', body).forEach(b => b.classList.toggle('on', (b.dataset.eq === 'sim') === sim));
+      if (!sim) { ativo = null; mostrarAtivo(); }
+    };
+    $$('[data-eq]', body).forEach(b => b.addEventListener('click', () => modoEquip(b.dataset.eq === 'sim')));
+    modoEquip(!!ativo || !!pre.equipamento);
+    mostrarAtivo();
+
+    /* Digitou o patrimônio: acha na hora, ou oferece cadastrar. */
+    const buscarPorPatrimonio = () => {
+      const cod = f.patrimonio.value.trim();
+      if (!cod) return;
+      const a = ativoPorPatrimonio(cod);
+      if (a) { selecionarAtivo(a); toast('Equipamento encontrado'); }
+      else {
+        $('#resultAtivo', body).innerHTML = `<div class="det-box alerta"><h4>Patrimônio ${esc(cod)} não cadastrado</h4>
+          <p>${podeCadastrar() ? 'Você pode cadastrar o equipamento agora e seguir com o chamado.' : 'Peça a alguém com permissão para cadastrar este equipamento.'}</p>
+          ${podeCadastrar() ? `<div class="actions" style="margin-top:10px"><button type="button" class="btn sm" data-cadastrar-ativo="${esc(cod)}">Cadastrar equipamento</button></div>` : ''}</div>`;
+      }
+    };
+    f.patrimonio.addEventListener('change', buscarPorPatrimonio);
+    f.patrimonio.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); buscarPorPatrimonio(); } });
+    window.__lerCodigoNoForm = valor => { f.patrimonio.value = valor; buscarPorPatrimonio(); };
+
+    f.buscaAtivo.addEventListener('input', () => {
+      const t = f.buscaAtivo.value.trim();
+      if (t.length < 2) { mostrarAtivo(); return; }
+      const achados = buscarAtivos(t).slice(0, 6);
+      $('#resultAtivo', body).innerHTML = achados.length
+        ? `<div class="list">${achados.map(a => `<div class="row click" data-escolher="${esc(a.ativo_id)}">
+            <div class="row-main"><b>${esc(a.nome)}</b><small>${meta(a.codigo_patrimonio ? 'Patrimônio ' + esc(a.codigo_patrimonio) : 'Sem placa', esc(nomeUni(a.unidade_id)))}</small></div>${ic('chev')}</div>`).join('')}</div>`
+        : `<div class="empty">Nenhum equipamento com esse nome.${podeCadastrar() ? ' <button type="button" class="link" data-cadastrar-ativo="">Cadastrar novo</button>' : ''}</div>`;
+    });
+    body.addEventListener('click', ev => {
+      const esc1 = ev.target.closest('[data-escolher]');
+      if (esc1) { selecionarAtivo(ativoById(esc1.dataset.escolher)); f.buscaAtivo.value = ''; return; }
+      if (ev.target.closest('[data-limpar-ativo]')) { selecionarAtivo(null); return; }
+      const cad = ev.target.closest('[data-cadastrar-ativo]');
+      if (cad) {
+        abrirCadastroAtivo({ patrimonio: cad.dataset.cadastrarAtivo, empresa: f.empresa.value, unidade: f.unidade.value },
+          novo => { abrirNovoChamado({ ativo: novo.ativo_id, plano: pre.plano }); });
+      }
+    });
+
+    /* Prazo sugerido pela prioridade. */
+    const prazos = { Emergencial: 1, Alta: 3, Normal: 7, Baixa: 15 };
+    const sugerirPrazo = () => { if (!f.prazo.dataset.mexeu) f.prazo.value = addDays(today(), prazos[f.prioridade.value] || 7); };
+    f.prioridade.addEventListener('change', sugerirPrazo);
+    f.prazo.addEventListener('change', () => { f.prazo.dataset.mexeu = '1'; });
+    sugerirPrazo();
+
+    const valida = p => {
+      if (p === 0) {
+        if (!f.unidade.value) return 'Escolha a unidade.';
+        if (ehEquip && !ativo) return 'Selecione o equipamento pelo patrimônio ou pelo nome.';
+      }
+      if (p === 1) {
+        if (!f.titulo.value.trim()) return 'Escreva um título curto.';
+        if (!f.descricao.value.trim()) return 'Descreva o que está acontecendo.';
+        if (!f.especialidade.value.trim()) return 'Informe a especialidade.';
+      }
+      if (p === 2) {
+        if (!f.responsavel.value) return 'Escolha o responsável.';
+        if (!f.prazo.value) return 'Informe o prazo.';
+      }
+      return '';
+    };
+    const resumo = () => {
+      const anteriores = ativo ? chamadosDoAtivo(ativo.ativo_id) : [];
+      const gar = ativo ? garantiaVigente(ativo.ativo_id) : null;
+      $('#chResumo', body).innerHTML = `
+        ${gar ? `<div class="det-box alerta"><h4>Ainda em garantia</h4><p>Serviço com garantia até ${fmtD(gar.fim)}. Se o problema for o mesmo, acione a garantia em vez de contratar de novo.</p></div>` : ''}
+        ${anteriores.length ? `<div class="det-box"><h4>Histórico do equipamento</h4><p>${plural(anteriores.length, 'chamado')} antes deste. Último: ${esc(anteriores[0].titulo)}, em ${fmtD(anteriores[0].aberto_em)}.</p></div>` : ''}
+        <dl class="resumo">
+          <dt>Onde</dt><dd>${esc(nomeEmp(f.empresa.value))}, ${esc(nomeUni(f.unidade.value))}${!ehEquip && f.local.value ? ', ' + esc(f.local.value) : ''}</dd>
+          ${ativo ? `<dt>Equipamento</dt><dd><b>${esc(ativo.nome)}</b>${ativo.codigo_patrimonio ? ', patrimônio ' + esc(ativo.codigo_patrimonio) : ''}</dd>` : ''}
+          <dt>Problema</dt><dd><b>${esc(f.titulo.value)}</b><br>${esc(f.descricao.value)}</dd>
+          <dt>Classificação</dt><dd>${esc(f.natureza.value)}, ${esc(f.especialidade.value)}, ${esc(f.modalidade.value)}</dd>
+          <dt>Prioridade</dt><dd>${esc(f.prioridade.value)}, impacto ${esc(f.impacto.value)}</dd>
+          <dt>Responsável</dt><dd><b>${esc(f.responsavel.value)}</b>, até ${fmtD(f.prazo.value)}</dd>
+          <dt>Orçamento</dt><dd>${f.orcamento.value === 'Sim' ? 'Vai precisar' : 'Não precisa'}</dd>
+          <dt>Foto</dt><dd>${f.evidencia.value ? 'Anexada' : 'Sem foto'}</dd>
+        </dl>`;
+    };
+    const irPara = p => {
+      passo = p;
+      $$('[data-passo]', body).forEach(el => { el.hidden = Number(el.dataset.passo) !== p; });
+      $$('.passos i', body).forEach((el, i) => el.classList.toggle('on', i <= Math.min(p, 2)));
+      $('#chT', body).textContent = p < 3 ? `Etapa ${p + 1} de 3: ${PASSOS_CH[p].t}` : PASSOS_CH[3].t;
+      $('#chS', body).textContent = PASSOS_CH[p].s;
+      if (p === 3) resumo();
+      foot.innerHTML = `<div class="linha">
+        ${p > 0 ? '<button type="button" class="btn ghost" data-ch="voltar">Voltar</button>' : ''}
+        ${p < 3 ? '<button type="button" class="btn" data-ch="seguir">Continuar</button>' : '<button type="button" class="btn" data-ch="salvar">Abrir chamado</button>'}</div>`;
+      err.textContent = '';
+      $('#mBody').scrollTop = 0;
+    };
+    foot.addEventListener('click', ev => {
+      const b = ev.target.closest('[data-ch]'); if (!b) return;
+      if (b.dataset.ch === 'voltar') { irPara(passo - 1); return; }
+      if (FOTO_BUSY) { err.textContent = 'Aguarde a foto terminar de carregar.'; return; }
+      const e = valida(passo);
+      if (e) { err.textContent = e; return; }
+      if (b.dataset.ch === 'seguir') irPara(passo + 1); else salvar();
+    });
+    $('#fCh', body).addEventListener('submit', ev => ev.preventDefault());
+
+    const salvar = () => {
+      for (let p = 0; p < 3; p++) { const e = valida(p); if (e) { irPara(p); err.textContent = e; return; } }
+      /* Marca e modelo confirmados na hora ficam gravados no ativo. */
+      if (ativo && ativoPendente(ativo) && f.marcaPend) {
+        const marca = f.marcaPend.value.trim(), modelo = f.modeloPend.value.trim();
+        if (marca || modelo) {
+          save('ativos', {
+            ativo_id: ativo.ativo_id, marca: marca || ativo.marca, modelo: modelo || ativo.modelo,
+            dados_pendentes: (marca && modelo) ? 'Não' : 'Sim', observacao: '',
+            atualizado_por: USER.nome, atualizado_em: nowISO()
+          }, true);
+        }
+      }
+      const id = uid('ch');
+      const gar = ativo ? garantiaVigente(ativo.ativo_id) : null;
+      const row = {
+        chamado_id: id, numero: '', empresa_id: f.empresa.value, unidade_id: f.unidade.value,
+        setor_id: '', local: ehEquip ? (ativo.local || '') : f.local.value.trim(),
+        ativo_id: ativo ? ativo.ativo_id : '', codigo_patrimonio: ativo ? ativo.codigo_patrimonio || '' : '',
+        natureza: f.natureza.value, especialidade: f.especialidade.value.trim(), modalidade: f.modalidade.value,
+        titulo: f.titulo.value.trim(), descricao: f.descricao.value.trim(),
+        impacto: f.impacto.value, prioridade: f.prioridade.value,
+        status: f.orcamento.value === 'Sim' ? 'Aguardando orçamento' : 'Aguardando aceite',
+        aberto_por: USER.nome, aberto_em: nowISO(), responsavel: f.responsavel.value, aceito_em: '',
+        necessita_orcamento: f.orcamento.value, orcamento_aprovado_id: '', fornecedor_executante_id: '',
+        previsao_conclusao: f.prazo.value, inicio_real: '', conclusao_real: '',
+        causa: '', solucao: '', valor_aprovado: '', valor_final: '',
+        gerou_garantia: 'Não', garantia_id: '', aberto_com_garantia_ativa: gar ? 'Sim' : 'Não',
+        validado_por: '', plano_id: plano ? plano.plano_id : '', origem_id: '', atualizado_em: nowISO()
+      };
+      save('chamados', row, true);
+      evento(id, 'CHAMADO_CRIADO', { ativo_id: row.ativo_id, descricao: row.titulo, para: row.responsavel });
+      if (f.evidencia.value) anexar('CHAMADO', id, 'Foto do problema', f.evidencia.value);
+      render();
+      toast(gar ? 'Chamado aberto. Atenção: equipamento em garantia.' : 'Chamado aberto');
+      abrirChamado(id);
+    };
+    irPara(0);
+  }, { foot: ' ' });
+}
+
+/* =========================================================================
+   CADASTRO DE ATIVO
+   ========================================================================= */
+function abrirCadastroAtivo(pre, aoSalvar) {
+  pre = pre || {};
+  const a = pre.ativo_id ? ativoById(pre.ativo_id) : null;
+  const L = n => (DB.listas && DB.listas[n] ? DB.listas[n].itens : []);
+  const lista = (nome, rotulo, valor, obrig) => `<label class="fld ${obrig ? 'req' : ''}"><span>${rotulo}</span>
+    <input type="text" name="${nome}" list="l_${nome}" autocomplete="off" value="${esc(valor || '')}">
+    <datalist id="l_${nome}">${L(nome === 'categoria' ? 'categoria_ativo' : nome === 'subcategoria' ? 'subcategoria_ativo' : nome).map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>
+    <span class="hint">Escolha da lista ou escreva um valor novo.</span></label>`;
+  openModal(a ? 'Editar ativo' : 'Novo ativo', `<form id="fAt" class="stack" novalidate>
+    <label class="fld req"><span>Nome do equipamento</span><input type="text" name="nome" value="${esc(a ? a.nome : '')}" placeholder="Ex.: Freezer horizontal 500L"></label>
+    <div class="fld"><span>Tem placa de patrimônio?</span>
+      <div class="linha-busca">
+        <input type="text" name="patrimonio" inputmode="numeric" value="${esc(a ? a.codigo_patrimonio : pre.patrimonio || '')}" placeholder="Número da placa" ${podePatrimonio() ? '' : 'disabled'}>
+        ${podePatrimonio() ? `<button type="button" class="btn ghost" data-act="ler-codigo" data-destino="cadastro">${ic('codigo')}Ler</button>` : ''}
+      </div>
+      <span class="hint">${podePatrimonio() ? 'Deixe vazio se o equipamento ainda não tem plaqueta.' : 'Só quem tem liberação pode vincular placa. Cadastre sem, e peça para vincularem depois.'}</span>
+    </div>
+    <div class="grid2">
+      <label class="fld req"><span>Empresa</span><select name="empresa">${opts(empresas().map(e => ({ v: e.empresa_id, t: e.nome })), a ? a.empresa_id : pre.empresa)}</select></label>
+      <label class="fld req"><span>Unidade</span><select name="unidade"></select></label>
+    </div>
+    ${lista('local', 'Local', a ? a.local : '')}
+    <div class="grid2">${lista('categoria', 'Categoria', a ? a.categoria : '', true)}${lista('subcategoria', 'Tipo', a ? a.subcategoria : '')}</div>
+    <div class="grid2">${lista('marca', 'Marca', a ? a.marca : '')}
+      <label class="fld"><span>Modelo</span><input type="text" name="modelo" value="${esc(a ? a.modelo : '')}"></label></div>
+    <div class="grid2">
+      <label class="fld"><span>Número de série</span><input type="text" name="serie" value="${esc(a ? a.numero_serie : '')}"></label>
+      <label class="fld"><span>Voltagem</span><select name="voltagem">${opts(L('voltagem'), a ? a.voltagem : 'Não possui')}</select></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>Valor de aquisição</span><input type="text" name="valor" inputmode="decimal" value="${esc(a ? a.valor_aquisicao : '')}" placeholder="Ex.: 5200,00"></label>
+      <label class="fld"><span>Criticidade</span><select name="criticidade">${opts(L('criticidade'), a ? a.criticidade : 'Média')}</select></label>
+    </div>
+    ${campoFoto()}
+    <div class="err-msg" id="atErr"></div>
+  </form>`, (body, foot) => {
+    const f = $('#fAt', body).elements, err = $('#atErr', body);
+    bindFoto(body);
+    const encher = () => {
+      const unis = unidadesDe(f.empresa.value);
+      f.unidade.innerHTML = opts(unis.map(u => ({ v: u.unidade_id, t: u.nome })), a ? a.unidade_id : pre.unidade);
+    };
+    f.empresa.addEventListener('change', encher); encher();
+    window.__lerCodigoNoCadastro = v => { f.patrimonio.value = v; };
+    $('[data-f-acao=ok]', foot).addEventListener('click', () => {
+      const nome = f.nome.value.trim();
+      if (!nome) { err.textContent = 'Informe o nome do equipamento.'; return; }
+      if (!f.categoria.value.trim()) { err.textContent = 'Informe a categoria.'; return; }
+      const cod = podePatrimonio() ? f.patrimonio.value.trim() : (a ? a.codigo_patrimonio : '');
+      if (cod) {
+        const outro = ativoPorPatrimonio(cod);
+        if (outro && (!a || outro.ativo_id !== a.ativo_id)) { err.textContent = `Patrimônio ${cod} já está em ${outro.nome}.`; return; }
+      }
+      const id = a ? a.ativo_id : uid('at');
+      const marca = f.marca.value.trim(), modelo = f.modelo.value.trim();
+      const row = {
+        ativo_id: id, codigo_patrimonio: cod, tem_placa: cod ? 'Sim' : 'Não',
+        empresa_id: f.empresa.value, unidade_id: f.unidade.value, setor_id: '', local: f.local.value.trim(),
+        categoria: f.categoria.value.trim(), subcategoria: f.subcategoria.value.trim(), nome: nome,
+        marca: marca, modelo: modelo, numero_serie: f.serie.value.trim(), voltagem: f.voltagem.value,
+        valor_aquisicao: f.valor.value.trim(), criticidade: f.criticidade.value,
+        status: a ? a.status : 'Em operação',
+        dados_pendentes: (marca && f.subcategoria.value.trim()) ? 'Não' : 'Sim',
+        atualizado_por: USER.nome, atualizado_em: nowISO()
+      };
+      if (!a) { row.criado_por = USER.nome; row.criado_em = nowISO(); row.destinacao = 'Não Movimentar'; }
+      /* Quem vinculou a placa fica registrado: é informação de patrimônio. */
+      if (cod && (!a || a.codigo_patrimonio !== cod)) { row.placa_registrada_por = USER.nome; row.placa_registrada_em = nowISO(); }
+      save('ativos', row, true);
+      if (f.evidencia.value) anexar('ATIVO', id, 'Foto do item', f.evidencia.value);
+      evento('', a ? 'ATIVO_ALTERADO' : 'ATIVO_CADASTRADO', { ativo_id: id, descricao: nome });
+      closeModal();
+      toast(a ? 'Ativo atualizado' : 'Ativo cadastrado');
+      if (aoSalvar) aoSalvar(row); else abrirAtivo(id);
+    });
+  }, { foot: `<button type="button" class="btn block" data-f-acao="ok">${a ? 'Salvar alterações' : 'Cadastrar ativo'}</button>` });
+}
+
+/* =========================================================================
+   DETALHE DO CHAMADO
+   ========================================================================= */
+function abrirChamado(id) {
+  const c = chById(id);
+  if (!c) { toast('Chamado não encontrado.', true); return; }
+  const a = c.ativo_id ? ativoById(c.ativo_id) : null;
+  const evs = eventosDo(id).slice().reverse();
+  const rotulo = { CHAMADO_CRIADO: 'Chamado aberto', ACEITE: 'Recebimento confirmado', COMENTARIO: 'Comentário', STATUS_ALTERADO: 'Situação alterada', SERVICO_CONCLUIDO: 'Serviço concluído', GARANTIA_REGISTRADA: 'Garantia registrada', CHAMADO_CANCELADO: 'Chamado cancelado' };
+  const html = `
+    <div class="det-cab">
+      <h2>${esc(c.titulo)}</h2>
+      <div class="dem-sts">${chPill(c.status)}
+        <span class="st ${c.prioridade === 'Emergencial' ? 'urg' : 'mute'}">${ic('alerta')}${esc(c.prioridade)}</span>
+        ${chAtrasado(c) ? `<span class="st bad">${ic('relogio')}Atrasado</span>` : ''}
+        ${c.aberto_com_garantia_ativa === 'Sim' ? `<span class="st warn">${ic('escudo')}Aberto com garantia vigente</span>` : ''}</div>
+    </div>
+    <div class="det-box"><h4>O que está acontecendo</h4><p>${esc(c.descricao || '—')}</p></div>
+    ${a ? `<div class="ativo-sel click" data-act="abrir-ativo" data-id="${esc(a.ativo_id)}" role="button" tabindex="0">
+      <span class="ativo-foto">${ic('caixa', 'lg')}</span>
+      <div><b>${esc(a.nome)}</b><small>${esc(a.codigo_patrimonio ? 'Patrimônio ' + a.codigo_patrimonio : 'Sem placa')}${a.marca ? ', ' + esc(a.marca) : ''}</small></div>${ic('chev')}</div>` : ''}
+    ${miniaturas('CHAMADO', id)}
+    <dl class="det-kv">
+      <dt>Onde</dt><dd>${esc(nomeEmp(c.empresa_id))}, ${esc(nomeUni(c.unidade_id))}${c.local ? ', ' + esc(c.local) : ''}</dd>
+      <dt>Classificação</dt><dd>${esc(c.natureza || '—')}, ${esc(c.especialidade || '—')}, ${esc(c.modalidade || '—')}</dd>
+      <dt>Responsável</dt><dd><b>${esc(c.responsavel || '—')}</b>${c.aceito_em ? `<br><span class="hint">Confirmou em ${fmtDH(c.aceito_em)}</span>` : c.status === 'Aguardando aceite' ? '<br><span class="hint">Ainda não confirmou o recebimento</span>' : ''}</dd>
+      <dt>Prazo</dt><dd>${c.previsao_conclusao ? fmtD(c.previsao_conclusao) : 'Sem prazo'}</dd>
+      ${c.plano_id ? `<dt>Preventiva</dt><dd>${esc((planoById(c.plano_id) || {}).nome || c.plano_id)}</dd>` : ''}
+      ${c.solucao ? `<dt>Solução</dt><dd>${esc(c.solucao)}</dd>` : ''}
+      ${c.valor_final ? `<dt>Valor</dt><dd>${esc(dinheiro(c.valor_final))}</dd>` : ''}
+      <dt>Aberto por</dt><dd>${esc(c.aberto_por || '—')} em ${fmtDH(c.aberto_em)}</dd>
+    </dl>
+    <div class="det-sec">Linha do tempo</div>
+    ${evs.length ? `<div class="tl">${evs.map(e => `<div class="tl-item ${e.tipo_evento === 'SERVICO_CONCLUIDO' ? 'ok' : e.tipo_evento === 'CHAMADO_CANCELADO' ? 'bad' : ''}">
+      <div class="tl-h">${fmtDH(e.data_hora)}</div>
+      <div class="tl-b">${esc(rotulo[e.tipo_evento] || e.tipo_evento)} por ${esc(e.usuario || '—')}</div>
+      ${e.para ? `<div class="tl-de">Para <b>${esc(e.para)}</b></div>` : ''}
+      ${e.descricao ? `<div class="tl-t">${esc(e.descricao)}</div>` : ''}
+      ${e.valor ? `<div class="tl-x">${esc(dinheiro(e.valor))}</div>` : ''}</div>`).join('')}</div>`
+      : '<div class="empty">Sem movimentos ainda.</div>'}`;
+
+  const podeMexerCh = souEu(c.responsavel) || ehGestor();
+  const b = [];
+  if (c.status === 'Aguardando aceite' && podeMexerCh) b.push(['ch-aceitar', 'Aceitar', 'jade']);
+  if (chAberto(c.status) && c.status !== 'Aguardando aceite' && podeMexerCh) b.push(['ch-atualizar', 'Atualizar', 'ghost']);
+  if (chAberto(c.status) && podeMexerCh) b.push(['ch-concluir', 'Concluir', 'red']);
+  if (!b.length) b.push(['ch-comentar', 'Comentar', 'ghost']);
+  const rodape = `<div class="linha">${b.map(([act, t, cls]) => `<button type="button" class="btn ${cls}" data-act="${act}" data-id="${esc(id)}">${t}</button>`).join('')}</div>`;
+  openModal(chNum(c), html, null, { full: true, foot: rodape });
+}
+
+/* ---------- Ações do chamado ---------- */
+function mudarCh(c, novo, tipo, patch, texto) {
+  save('chamados', Object.assign({ chamado_id: c.chamado_id, status: novo, atualizado_em: nowISO() }, patch || {}), true);
+  evento(c.chamado_id, tipo, { ativo_id: c.ativo_id, descricao: texto || '' });
+  render();
+  abrirChamado(c.chamado_id);
+}
+function chAceitar(id) {
+  const c = chById(id); if (!c) return;
+  mudarCh(c, 'Em análise', 'ACEITE', { aceito_em: nowISO(), inicio_real: nowISO() }, 'Recebimento confirmado');
+  toast('Recebimento confirmado');
+}
+function chComentar(id) {
+  const c = chById(id); if (!c) return;
+  formSimples('Comentar', `${campoTexto('texto', 'Comentário', true)}${campoFoto()}`, f => {
+    const t = f.texto.value.trim();
+    if (!t) return 'Escreva o comentário.';
+    evento(id, 'COMENTARIO', { ativo_id: c.ativo_id, descricao: t });
+    if (f.evidencia.value) anexar('CHAMADO', id, 'Foto do problema', f.evidencia.value);
+    render(); abrirChamado(id); toast('Comentário registrado');
+  }, 'Registrar comentário');
+}
+function chAtualizar(id) {
+  const c = chById(id); if (!c) return;
+  const L = n => (DB.listas && DB.listas[n] ? DB.listas[n].itens : []);
+  formSimples('Atualizar chamado', `
+    ${campoTexto('texto', 'O que foi feito', true, 'Mesmo que parcial. Ajuda quem continuar depois.')}
+    <label class="fld"><span>Situação</span><select name="status">${opts(L('status_chamado').filter(s => s !== 'Concluída' && s !== 'Cancelada'), c.status)}</select></label>
+    ${campoFoto()}`, f => {
+    const t = f.texto.value.trim();
+    if (!t) return 'Descreva o que foi feito.';
+    if (f.evidencia.value) anexar('CHAMADO', id, 'Foto do problema', f.evidencia.value);
+    mudarCh(c, f.status.value, f.status.value !== c.status ? 'STATUS_ALTERADO' : 'COMENTARIO', {}, t);
+    toast('Atualização registrada');
+  }, 'Registrar');
+}
+function chConcluir(id) {
+  const c = chById(id); if (!c) return;
+  formSimples('Concluir chamado', `
+    ${campoTexto('solucao', 'Solução aplicada', true, 'É isso que aparece no histórico do equipamento.')}
+    <div class="grid2">
+      <label class="fld"><span>Valor gasto</span><input type="text" name="valor" inputmode="decimal" placeholder="Ex.: 850,00"></label>
+      <label class="fld"><span>Garantia do serviço (dias)</span><input type="number" name="garantia" min="0" placeholder="0"></label>
+    </div>
+    ${campoFoto()}`, f => {
+    const s = f.solucao.value.trim();
+    if (!s) return 'Descreva a solução aplicada.';
+    const dias = Number(f.garantia.value) || 0;
+    const patch = { solucao: s, conclusao_real: nowISO(), valor_final: f.valor.value.trim() };
+    if (dias && c.ativo_id) {
+      const gid = uid('gar');
+      const fim = addDays(today(), dias);
+      save('garantias', {
+        garantia_id: gid, chamado_id: id, ativo_id: c.ativo_id, fornecedor_id: c.fornecedor_executante_id || '',
+        tipo: 'Serviço', inicio: today(), fim: fim, dias: String(dias),
+        descricao: s, status: 'Vigente', acionada_em: '', chamado_acionamento_id: ''
+      }, true);
+      patch.gerou_garantia = 'Sim'; patch.garantia_id = gid;
+      evento(id, 'GARANTIA_REGISTRADA', { ativo_id: c.ativo_id, descricao: `Garantia de ${plural(dias, 'dia')}, até ${fmtD(fim)}` });
+    }
+    if (f.evidencia.value) anexar('CHAMADO', id, 'Foto da peça', f.evidencia.value);
+    mudarCh(c, 'Concluída', 'SERVICO_CONCLUIDO', patch, s);
+    toast(dias ? `Concluído. Garantia registrada por ${plural(dias, 'dia')}.` : 'Chamado concluído');
+  }, 'Concluir', 'jade');
+}
+/* Abrir o chamado de uma preventiva: já vem preenchido pelo plano. */
+function abrirPreventiva(planoId) {
+  const p = planoById(planoId);
+  if (!p) { toast('Plano não encontrado.', true); return; }
+  abrirNovoChamado({ plano: planoId, ativo: p.ativo_id || '', equipamento: !!p.ativo_id });
+}
+
+/* =========================================================================
+   CADASTROS SIMPLES
+   ========================================================================= */
+function cadastroSimples(titulo, campos, aoSalvar) {
+  openModal(titulo, `<form id="fCad" class="stack" novalidate>${campos}<div class="err-msg" id="cadErr"></div></form>`, (body, foot) => {
+    const f = $('#fCad', body).elements, err = $('#cadErr', body);
+    $('[data-f-acao=ok]', foot).addEventListener('click', () => {
+      const msg = aoSalvar(f);
+      if (msg) err.textContent = msg; else { closeModal(); toast('Cadastro salvo'); }
+    });
+  }, { foot: '<button type="button" class="btn block" data-f-acao="ok">Salvar</button>' });
+}
+function novaEmpresa() {
+  cadastroSimples('Nova empresa', `
+    <label class="fld req"><span>Nome</span><input type="text" name="nome"></label>
+    <label class="fld"><span>Nome curto</span><input type="text" name="curto"></label>
+    <label class="fld"><span>CNPJ</span><input type="text" name="cnpj"></label>
+    <label class="fld"><span>Cor de destaque</span><input type="text" name="cor" value="#C8161F" placeholder="#C8161F"></label>`, f => {
+    if (!f.nome.value.trim()) return 'Informe o nome.';
+    save('empresas', {
+      empresa_id: 'EMP-' + normal(f.nome.value).slice(0, 3).toUpperCase().replace(/\s/g, ''),
+      nome: f.nome.value.trim(), nome_curto: f.curto.value.trim() || f.nome.value.trim(),
+      cnpj: f.cnpj.value.trim(), cor_primaria: f.cor.value.trim() || '#C8161F',
+      ativo: 'Sim', observacao: '', criado_por: USER.nome, criado_em: nowISO()
+    }, true);
+  });
+}
+function novaUnidade() {
+  cadastroSimples('Nova unidade', `
+    <label class="fld req"><span>Empresa</span><select name="empresa">${opts(empresas().map(e => ({ v: e.empresa_id, t: e.nome })), CTX.empresa)}</select></label>
+    <label class="fld req"><span>Nome</span><input type="text" name="nome"></label>
+    <label class="fld"><span>Cidade</span><input type="text" name="cidade"></label>
+    <label class="fld"><span>Responsável</span><select name="resp"><option value="">Ninguém</option>${opts(nomesResponsaveis(), '')}</select></label>`, f => {
+    if (!f.nome.value.trim()) return 'Informe o nome.';
+    save('unidades', {
+      unidade_id: uid('uni'), empresa_id: f.empresa.value, nome: f.nome.value.trim(),
+      nome_curto: f.nome.value.trim(), cidade: f.cidade.value.trim(), endereco: '',
+      responsavel: f.resp.value, ativo: 'Sim', observacao: '', criado_por: USER.nome, criado_em: nowISO()
+    }, true);
+  });
+}
+function novoSetor() {
+  cadastroSimples('Novo setor', `
+    <label class="fld req"><span>Unidade</span><select name="unidade">${opts(DB.unidades.map(u => ({ v: u.unidade_id, t: u.nome })), CTX.unidade)}</select></label>
+    <label class="fld req"><span>Nome</span><input type="text" name="nome" placeholder="Ex.: Cozinha"></label>`, f => {
+    if (!f.nome.value.trim()) return 'Informe o nome.';
+    save('setores', {
+      setor_id: uid('set'), unidade_id: f.unidade.value, nome: f.nome.value.trim(),
+      ativo: 'Sim', criado_por: USER.nome, criado_em: nowISO()
+    }, true);
+  });
+}
+function novoFornecedor() {
+  cadastroSimples('Novo fornecedor', `
+    <label class="fld req"><span>Nome</span><input type="text" name="nome"></label>
+    <label class="fld"><span>Especialidades</span><input type="text" name="esp" placeholder="Climatização; Refrigeração"></label>
+    <div class="grid2">
+      <label class="fld"><span>Telefone</span><input type="text" name="tel"></label>
+      <label class="fld"><span>WhatsApp</span><input type="text" name="zap"></label>
+    </div>
+    <label class="fld"><span>Cidade</span><input type="text" name="cidade"></label>`, f => {
+    if (!f.nome.value.trim()) return 'Informe o nome.';
+    save('fornecedores', {
+      fornecedor_id: uid('for'), nome_fantasia: f.nome.value.trim(), razao_social: '', cnpj: '',
+      especialidades: f.esp.value.trim(), telefone: f.tel.value.trim(), whatsapp: f.zap.value.trim(),
+      email: '', responsavel: '', cidade: f.cidade.value.trim(), estado: 'ES', ativo: 'Sim',
+      observacao: '', criado_por: USER.nome, criado_em: nowISO()
+    }, true);
+  });
+}
 /* =========================================================
    FOTOS: guarda no aparelho e envia quando houver internet
    ========================================================= */
@@ -2587,7 +3801,13 @@ function closeModal() {
 /* =========================================================
    EVENTOS
    ========================================================= */
-const VIEWS = { hoje: vHoje, minhas: vMinhas, todas: vTodas, entrada: vEntrada, recorrencias: vRecorrencias, relatorios: vRelatorios, cadastros: vCadastros, mais: vMais };
+const VIEWS = {
+  /* Módulo novo de ativos e chamados */
+  inicio: vInicio, chamados: vChamados, ativos: vAtivos, preventivas: vPreventivas, cadastros: vCadastrosNovo,
+  /* Módulo de demandas, que continua como estava */
+  hoje: vHoje, minhas: vMinhas, todas: vTodas, entrada: vEntrada, recorrencias: vRecorrencias,
+  relatorios: vRelatorios, demandas: vDemandas, mais: vMais
+};
 const irPara = v => { VIEW = v; if (modalAberto()) closeModal(); else render(); window.scrollTo(0, 0); };
 const ACOES_DEM = {
   aceitar: aceitarJa, comentar: acaoComentar, acao: acaoAtualizar, transferir: acaoTransferir,
@@ -2642,6 +3862,38 @@ document.addEventListener('click', ev => {
     }
     case 'origem': abrirOrigem(el.dataset.k); break;
     case 'nova-dem': abrirNovaDemanda(null); break;
+    /* ---------- módulo de ativos e chamados ---------- */
+    case 'seletor': abrirSeletor(); break;
+    case 'ctx':
+      definirContexto(el.dataset.e, el.dataset.u);
+      closeModal();
+      break;
+    case 'novo-ch': abrirNovoChamado({ ativo: el.dataset.ativo || '', equipamento: !!el.dataset.ativo }); break;
+    case 'abrir-ch': abrirChamado(id); break;
+    case 'abrir-ativo': abrirAtivo(id); break;
+    case 'novo-ativo': abrirCadastroAtivo({ empresa: CTX.empresa !== 'todas' ? CTX.empresa : '', unidade: CTX.unidade !== 'todas' ? CTX.unidade : '' }); break;
+    case 'editar-ativo': abrirCadastroAtivo({ ativo_id: id }); break;
+    case 'prev-abrir': abrirPreventiva(id); break;
+    case 'ch-filtro': F_CH.filtro = el.dataset.f; render(); break;
+    case 'sub-dem': SUB_DEM = el.dataset.s; render(); break;
+    case 'ir-ch': F_CH.filtro = el.dataset.f || 'abertos'; F_CH.q = ''; irPara('chamados'); break;
+    case 'ch-aceitar': chAceitar(id); break;
+    case 'ch-atualizar': chAtualizar(id); break;
+    case 'ch-concluir': chConcluir(id); break;
+    case 'ch-comentar': chComentar(id); break;
+    case 'nova-empresa': novaEmpresa(); break;
+    case 'nova-unidade': novaUnidade(); break;
+    case 'novo-setor': novoSetor(); break;
+    case 'novo-fornecedor': novoFornecedor(); break;
+    case 'ler-codigo': {
+      const destino = el.dataset.destino;
+      lerCodigo(valor => {
+        if (destino === 'form' && window.__lerCodigoNoForm) window.__lerCodigoNoForm(valor);
+        else if (destino === 'cadastro' && window.__lerCodigoNoCadastro) window.__lerCodigoNoCadastro(valor);
+        else { F_AT.q = valor; irPara('ativos'); }
+      });
+      break;
+    }
     case 'dem-de-origem': {
       const o = origensPendentes().find(x => x.r.id === id);
       if (o) abrirNovaDemanda(o); else toast('Registro não encontrado.', true);
@@ -2650,6 +3902,7 @@ document.addEventListener('click', ev => {
     case 'sincronizar': load(); flush(); toast('Sincronizando'); break;
     case 'foto': ev.stopPropagation(); abrirFoto(el.dataset.url, el.dataset.id); break;
     case 'lb-fechar': fecharFoto(); break;
+    case 'cam-fechar': fecharCamera(); break;
     case 'exp-xlsx': exportarPlanilha(); break;
     case 'exp-pdf': exportarPDF(); break;
     case 'cad-tab': CAD_TAB = el.dataset.t; render(); break;
@@ -2660,6 +3913,7 @@ document.addEventListener('click', ev => {
 /* Teclado: cartões e linhas clicáveis respondem a Enter e espaço. */
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape') {
+    if (!$('#camBox').classList.contains('hidden')) { fecharCamera(); return; }
     if (!$('#conta').classList.contains('hidden')) { $('#conta').classList.add('hidden'); return; }
     if (!$('#lightbox').classList.contains('hidden')) { fecharFoto(); return; }
     if (modalAberto()) { closeModal(); return; }
@@ -2675,6 +3929,14 @@ document.addEventListener('change', ev => {
   render();
 });
 document.addEventListener('input', ev => {
+  if (ev.target.id === 'chBusca' || ev.target.id === 'atBusca') {
+    const alvo = ev.target.id, pos = ev.target.selectionStart;
+    if (alvo === 'chBusca') F_CH.q = ev.target.value; else F_AT.q = ev.target.value;
+    render();
+    const novo = $('#' + alvo);
+    if (novo) { novo.focus(); novo.setSelectionRange(pos, pos); }
+    return;
+  }
   if (ev.target.id !== 'gtBusca') return;
   F.q = ev.target.value;
   const pos = ev.target.selectionStart;
@@ -2697,6 +3959,7 @@ document.addEventListener('visibilitychange', () => {
 (function init() {
   restore();
   if (!definirUsuario()) { renderPortaria(); return; }
+  restaurarContexto();
   render();
   carregarRoster();
   if (CFG.GAS_URL) {
