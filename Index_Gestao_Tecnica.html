@@ -1030,6 +1030,10 @@ const atrasada = d => stAberto(d.status) && d.prazo && String(d.prazo).slice(0, 
 const venceHoje = d => stAberto(d.status) && String(d.prazo || '').slice(0, 10) === today();
 const diasDePrazo = d => d.prazo ? daysBetween(today(), String(d.prazo).slice(0, 10)) : null;
 const minhaDemanda = d => souEu(d.responsavel) || split(d.apoio).some(souEu);
+/* Confirmar o recebimento é só de quem recebeu: nem gestor, nem apoio. Se
+   outra pessoa pudesse aceitar no lugar, o "tempo até o aceite" deixaria de
+   medir quando a pessoa viu a demanda e passaria a medir quando alguém
+   confirmou por ela. */
 const aguardaMeuAceite = d => d.status === 'aceite' && souEu(d.responsavel);
 const aguardaMinhaValidacao = d => d.status === 'validacao' && ehGestor() && (souEu(d.validador_indicado) || !d.validador_indicado);
 const podeMexer = d => minhaDemanda(d) || ehGestor();
@@ -1619,7 +1623,10 @@ function prazoLinha(d) {
 }
 function acoesRapidas(d) {
   if (!podeMexer(d)) return [];
-  if (d.status === 'aceite') return [['aceitar', 'Aceitar', 'jade', 'check'], ['abrir-dem', 'Abrir', 'ghost', 'chev']];
+  /* Quem não é o responsável vê a demanda, mas não o botão de aceitar. */
+  if (d.status === 'aceite') return aguardaMeuAceite(d)
+    ? [['aceitar', 'Aceitar', 'jade', 'check'], ['abrir-dem', 'Abrir', 'ghost', 'chev']]
+    : [['abrir-dem', 'Abrir', 'ghost', 'chev']];
   if (d.status === 'analise' || d.status === 'andamento') return [['acao', 'Atualizar', 'ghost', 'lapis'], ['bloquear', 'Bloquear', 'ghost', 'cadeado'], ['concluir', 'Concluir', 'red', 'check']];
   if (['bloqueada', 'terceiro', 'decisao'].includes(d.status)) return [['desbloquear', 'Desbloquear', 'ghost', 'cadeado'], ['acao', 'Atualizar', 'ghost', 'lapis']];
   if (d.status === 'validacao' && aguardaMinhaValidacao(d)) return [['validar', 'Validar', 'jade', 'check'], ['devolver', 'Devolver', 'danger', 'voltar']];
@@ -2468,7 +2475,7 @@ function acoesDetalhe(d) {
   const add = (lista, cond, a, t, c) => { if (cond) lista.push([a, t, c || 'ghost']); };
   switch (d.status) {
     case 'aceite':
-      add(prim, mexe, 'aceitar', 'Aceitar', 'jade');
+      add(prim, aguardaMeuAceite(d), 'aceitar', 'Aceitar', 'jade');
       add(mais, g, 'transferir', 'Transferir');
       add(mais, mexe, 'prazo', 'Alterar prazo');
       add(mais, g, 'cancelar', 'Cancelar', 'danger');
@@ -2601,6 +2608,11 @@ const campoFoto = () =>
 function aceitarJa(id) {
   const d = demById(id);
   if (!d || d.status !== 'aceite') return;
+  /* Trava de verdade, além de esconder o botão: quem não recebeu não confirma. */
+  if (!souEu(d.responsavel)) {
+    toast('Só ' + (d.responsavel || 'quem recebeu') + ' pode confirmar o recebimento.', true);
+    return;
+  }
   mudarStatus(d, 'analise', 'aceite', { patch: { aceito_em: nowISO() } });
   toast('Recebimento confirmado');
 }
@@ -3502,7 +3514,8 @@ function abrirChamado(id) {
 
   const podeMexerCh = souEu(c.responsavel) || ehGestor();
   const b = [];
-  if (c.status === 'Aguardando aceite' && podeMexerCh) b.push(['ch-aceitar', 'Aceitar', 'jade']);
+  /* Mesma regra da demanda: o aceite é só de quem recebeu o chamado. */
+  if (c.status === 'Aguardando aceite' && souEu(c.responsavel)) b.push(['ch-aceitar', 'Aceitar', 'jade']);
   if (chAberto(c.status) && c.status !== 'Aguardando aceite' && podeMexerCh) b.push(['ch-atualizar', 'Atualizar', 'ghost']);
   if (chAberto(c.status) && podeMexerCh) b.push(['ch-concluir', 'Concluir', 'red']);
   if (!b.length) b.push(['ch-comentar', 'Comentar', 'ghost']);
@@ -3519,6 +3532,10 @@ function mudarCh(c, novo, tipo, patch, texto) {
 }
 function chAceitar(id) {
   const c = chById(id); if (!c) return;
+  if (!souEu(c.responsavel)) {
+    toast('Só ' + (c.responsavel || 'quem recebeu') + ' pode confirmar o recebimento.', true);
+    return;
+  }
   mudarCh(c, 'Em análise', 'ACEITE', { aceito_em: nowISO(), inicio_real: nowISO() }, 'Recebimento confirmado');
   toast('Recebimento confirmado');
 }
