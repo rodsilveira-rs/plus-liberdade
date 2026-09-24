@@ -199,6 +199,8 @@ input:focus,select:focus,textarea:focus{border-color:#7A9CE8;outline:none}
 .seg{display:inline-flex;background:var(--slate-soft);border-radius:8px;padding:3px;gap:2px}
 .seg button{border:0;background:transparent;padding:5px 11px;border-radius:6px;font-weight:500;color:var(--mute);font-size:13px}
 .seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.seg button .conta{display:inline-block;margin-left:5px;padding:0 6px;border-radius:999px;background:rgba(0,0,0,.08);font-size:11.5px;font-weight:700}
+.seg button.on .conta{background:var(--red-pill);color:var(--red-ink)}
 
 .fbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
 .fbar .busca{flex:1;min-width:200px;position:relative}
@@ -803,7 +805,12 @@ function persist() {
 function restore() {
   try {
     const c = JSON.parse(localStorage.getItem(CFG.CACHE_KEY) || 'null');
-    if (c) TABS.forEach(t => { DB[t] = Array.isArray(c[t]) ? c[t] : []; });
+    if (c) {
+      TABS.forEach(t => { DB[t] = Array.isArray(c[t]) ? c[t] : []; });
+      /* As listas de seleção também vêm do cache. Sem isto, o aparelho que
+         abre antes da planilha chegar mostra "Sem opções" nos campos. */
+      DB.listas = c.listas && typeof c.listas === 'object' ? c.listas : {};
+    }
     OUTBOX = JSON.parse(localStorage.getItem(CFG.OUTBOX_KEY) || '[]');
   } catch (e) { OUTBOX = []; }
   if (!CFG.GAS_URL && !DB.categorias.length) { DB.categorias = SEED_CATEGORIAS.map(c => ({ ...c })); persist(); }
@@ -1258,6 +1265,36 @@ const LEGADO_EMP = { 'EMP-ML': 'ML', 'EMP-GG': 'GG', 'EMP-CP': 'CP' };
 
 /* Contexto: o que está selecionado no topo. Vale para o sistema inteiro. */
 const CTX = { empresa: 'todas', unidade: 'todas' };
+
+/* Se a planilha ainda não chegou, o formulário usa estas opções para não ficar
+   vazio. Assim que o load traz a aba LISTAS, ela manda. */
+const LISTAS_PADRAO = {
+  natureza: ['Equipamento', 'Infraestrutura', 'Instalação', 'Serviço', 'Segurança', 'TI'],
+  especialidade: ['Elétrica', 'Hidráulica', 'Climatização', 'Refrigeração', 'Alvenaria', 'Pintura',
+                  'Marcenaria', 'Serralheria', 'Eletrônica', 'Informática', 'Gás', 'Exaustão', 'CFTV'],
+  modalidade: ['Corretiva', 'Preventiva', 'Preditiva', 'Instalação', 'Melhoria', 'Inspeção', 'Emergencial'],
+  prioridade: ['Baixa', 'Normal', 'Alta', 'Emergencial'],
+  impacto: ['Baixo', 'Médio', 'Alto', 'Crítico'],
+  criticidade: ['Baixa', 'Média', 'Alta', 'Crítica'],
+  voltagem: ['110V', '220V', 'Bivolt', 'Não possui'],
+  categoria_ativo: ['Refrigeração', 'Climatização', 'Eletrônicos', 'Cocção', 'Preparo', 'Móveis',
+                    'Informática', 'Exaustão', 'Elétrica', 'Hidráulica', 'Estrutura'],
+  subcategoria_ativo: ['Ar-condicionado', 'Freezer', 'Refrigerador', 'Expositor refrigerado', 'Câmara fria',
+                       'Televisor', 'Monitor', 'Computador', 'Notebook', 'Impressora', 'Nobreak', 'Balança',
+                       'Forno', 'Fogão', 'Coifa', 'Micro-ondas', 'Rede', 'CFTV'],
+  marca: ['Springer', 'Midea', 'Samsung', 'TCL', 'LG', 'Gree', 'Gelopar', 'Electrolux', 'Consul', 'Elgin',
+          'Carrier', 'Metalfrio', 'Fricon', 'AOC', 'Philco', 'Britânia', 'Panasonic', 'Positivo', 'Dell', 'HP'],
+  local: ['Salão', 'Cozinha', 'Estoque', 'Segundo piso', 'Recebimento', 'Escritório', 'Depósito', 'Caixa',
+          'Recepção', 'Câmara fria', 'Banheiro', 'Área externa'],
+  status_chamado: ['Aguardando aceite', 'Em análise', 'Aguardando orçamento', 'Aguardando aprovação',
+                   'Aprovado', 'Em execução', 'Bloqueada', 'Aguardando terceiro', 'Aguardando validação',
+                   'Concluída', 'Cancelada']
+};
+/* Opções de um campo: a planilha manda; na falta dela, a lista embutida. */
+function lista(nome) {
+  const daPlanilha = DB.listas && DB.listas[nome] && DB.listas[nome].itens;
+  return (daPlanilha && daPlanilha.length) ? daPlanilha : (LISTAS_PADRAO[nome] || []);
+}
 
 const param = (chave, padrao) => {
   const r = DB.parametros.find(p => p.chave === chave);
@@ -2340,25 +2377,61 @@ function vPreventivas() {
 /* =========================================================================
    CADASTROS
    ========================================================================= */
+let CAD2 = { aba: 'empresas', q: '' };
+const CAD_DEF = {
+  empresas: { t: 'Empresas', sing: 'empresa', act: 'nova-empresa', edit: 'edit-empresa' },
+  unidades: { t: 'Unidades', sing: 'unidade', act: 'nova-unidade', edit: 'edit-unidade' },
+  setores: { t: 'Setores', sing: 'setor', act: 'novo-setor', edit: 'edit-setor' },
+  fornecedores: { t: 'Fornecedores', sing: 'fornecedor', act: 'novo-fornecedor', edit: 'edit-fornecedor' }
+};
 function vCadastrosNovo() {
   if (!podeCadastrar()) return '<div class="empty"><b>Sem permissão</b>Seu perfil não permite cadastrar. Fale com o Rodrigo.</div>';
-  const bloco = (titulo, lista, act, corpo) => caixa(titulo,
-    lista.length ? `<div class="list">${corpo}</div>` : '<div class="empty">Nada cadastrado ainda.</div>',
-    `<button type="button" class="link" data-act="${act}">Adicionar</button>`);
+  const aba = CAD2.aba, def = CAD_DEF[aba];
+  const q = normal(CAD2.q);
+  const filtra = (texto) => !q || normal(texto).includes(q);
+
+  let linhas = [];
+  if (aba === 'empresas') {
+    linhas = DB.empresas.filter(e => filtra(e.nome)).map(e => ({
+      id: e.empresa_id, foto: fotoDe(e.empresa_id), titulo: e.nome,
+      sub: plural(unidadesDe(e.empresa_id).length, 'unidade'), inativo: e.ativo === 'Não'
+    }));
+  } else if (aba === 'unidades') {
+    linhas = DB.unidades.filter(u => filtra(u.nome + ' ' + nomeEmp(u.empresa_id))).map(u => ({
+      id: u.unidade_id, titulo: u.nome, sub: meta(esc(nomeEmp(u.empresa_id)), esc(u.cidade || '')), inativo: u.ativo === 'Não'
+    }));
+  } else if (aba === 'setores') {
+    linhas = DB.setores.filter(x => filtra(x.nome + ' ' + nomeUni(x.unidade_id))).map(x => ({
+      id: x.setor_id, titulo: x.nome, sub: esc(nomeUni(x.unidade_id)), inativo: x.ativo === 'Não'
+    }));
+  } else {
+    linhas = DB.fornecedores.filter(x => filtra(x.nome_fantasia + ' ' + (x.especialidades || ''))).map(x => ({
+      id: x.fornecedor_id, titulo: x.nome_fantasia,
+      sub: meta(esc(x.especialidades || ''), esc(x.telefone || x.whatsapp || '')), inativo: x.ativo === 'Não'
+    }));
+  }
+
+  const conta = k => k === 'empresas' ? DB.empresas.length : k === 'unidades' ? DB.unidades.length
+    : k === 'setores' ? DB.setores.length : DB.fornecedores.length;
+
   return `
     <h2 class="view">Cadastros</h2>
-    <p class="lead">Empresas, unidades, setores e fornecedores. Categorias, marcas e locais são criados na hora, dentro do formulário.</p>
-    ${bloco('Empresas', DB.empresas, 'nova-empresa', DB.empresas.map(e => `<div class="row">
-      <span class="sel-foto pequena"><img src="${esc(fotoDe(e.empresa_id))}" alt="" onerror="this.replaceWith(document.createTextNode('${esc(inicial(e.nome))}'))"></span>
-      <div class="row-main"><b>${esc(e.nome)}</b><small>${plural(unidadesDe(e.empresa_id).length, 'unidade')}</small></div>
-      <span class="st ${e.ativo === 'Não' ? 'mute' : 'ok'}">${e.ativo === 'Não' ? 'Inativa' : 'Ativa'}</span></div>`).join(''))}
-    ${bloco('Unidades', DB.unidades, 'nova-unidade', DB.unidades.map(u => `<div class="row">
-      <div class="row-main"><b>${esc(u.nome)}</b><small>${meta(esc(nomeEmp(u.empresa_id)), esc(u.cidade || ''))}</small></div>
-      <span class="st ${u.ativo === 'Não' ? 'mute' : 'ok'}">${u.ativo === 'Não' ? 'Inativa' : 'Ativa'}</span></div>`).join(''))}
-    ${bloco('Setores', DB.setores, 'novo-setor', DB.setores.map(s => `<div class="row">
-      <div class="row-main"><b>${esc(s.nome)}</b><small>${esc(nomeUni(s.unidade_id))}</small></div></div>`).join(''))}
-    ${bloco('Fornecedores', DB.fornecedores, 'novo-fornecedor', DB.fornecedores.map(f => `<div class="row">
-      <div class="row-main"><b>${esc(f.nome_fantasia)}</b><small>${meta(esc(f.especialidades || ''), esc(f.telefone || ''))}</small></div></div>`).join(''))}`;
+    <p class="lead">Categorias, marcas e locais não ficam aqui: são criados na hora, dentro do formulário de ativo e de chamado.</p>
+    <div class="seg" style="margin-bottom:14px;flex-wrap:wrap">
+      ${Object.keys(CAD_DEF).map(k => `<button type="button" data-act="cad-aba" data-a="${k}" class="${aba === k ? 'on' : ''}">${CAD_DEF[k].t} <span class="conta">${conta(k)}</span></button>`).join('')}
+    </div>
+    <div class="fbar">
+      <label class="busca">${ic('busca', 'sm')}<span class="sr">Buscar</span>
+        <input type="search" id="cadBusca" placeholder="Buscar ${esc(def.sing)}" value="${esc(CAD2.q)}"></label>
+      <button type="button" class="btn sm" data-act="${def.act}">${ic('mais2', 'sm')}Nova ${esc(def.sing)}</button>
+    </div>
+    ${linhas.length ? `<div class="list">${linhas.map(l => `
+      <div class="row click" data-act="${def.edit}" data-id="${esc(l.id)}">
+        ${l.foto ? `<span class="sel-foto pequena"><img src="${esc(l.foto)}" alt="" onerror="this.replaceWith(document.createTextNode('${esc(inicial(l.titulo))}'))"></span>` : ''}
+        <div class="row-main"><b>${esc(l.titulo)}</b><small>${l.sub || ''}</small></div>
+        ${l.inativo ? '<span class="st mute">Inativo</span>' : ''}${ic('chev')}
+      </div>`).join('')}</div>`
+      : `<div class="empty"><b>Nada encontrado</b>${CAD2.q ? 'Tente outro termo.' : 'Toque em Nova ' + esc(def.sing) + ' para começar.'}</div>`}`;
 }
 /* =========================================================
    DETALHE DA DEMANDA
@@ -2952,41 +3025,83 @@ let CAM = null;
 function pararCamera() {
   if (CAM) { CAM.getTracks().forEach(t => t.stop()); CAM = null; }
 }
-let LEITURA = null;
+let LEITURA = null, ZX_CTRL = null;
+
+/* No Chrome do Android o navegador já lê código de barras sozinho. No Safari do
+   iPhone não existe esse recurso, então carregamos um leitor pela internet só
+   nesse caso, e só quando a pessoa toca em Ler código. Se não der, o campo para
+   digitar continua ali do lado. */
+const ZXING_URL = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js';
+function carregarLeitorExterno() {
+  if (window.ZXingBrowser) return Promise.resolve(window.ZXingBrowser);
+  return new Promise((res, rej) => {
+    const tag = document.createElement('script');
+    tag.src = ZXING_URL;
+    tag.onload = () => window.ZXingBrowser ? res(window.ZXingBrowser) : rej(new Error('leitor não disponível'));
+    tag.onerror = () => rej(new Error('sem internet para baixar o leitor'));
+    document.head.appendChild(tag);
+  });
+}
+
 async function lerCodigo(aoLer) {
   const box = $('#camBox'), video = $('#camVideo'), err = $('#camErr');
-  if (!temLeitor()) {
-    toast('Este aparelho não lê código pela câmera. Digite o número da placa.', true);
-    return;
-  }
   LEITURA = aoLer;
   box.classList.remove('hidden');
-  err.textContent = 'Aponte para o código de barras da placa. A leitura é automática.';
+  err.textContent = 'Abrindo a câmera…';
+
+  const entregar = valor => {
+    const cb = LEITURA;
+    fecharCamera();
+    if (cb) cb(String(valor || '').trim());
+  };
+
   try {
     CAM = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
     video.srcObject = CAM;
     await video.play();
+  } catch (e) {
+    err.textContent = 'Não consegui abrir a câmera. Libere a permissão no navegador ou digite o número da placa.';
+    return;
+  }
+
+  if (temLeitor()) {
+    err.textContent = 'Aponte para o código de barras da placa. A leitura é automática.';
     const det = new window.BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'itf'] });
     const tick = async () => {
       if (!CAM || box.classList.contains('hidden')) return;
       try {
         const achou = await det.detect(video);
-        if (achou && achou.length) {
-          const valor = String(achou[0].rawValue || '').trim();
-          const cb = LEITURA;
-          fecharCamera();
-          if (cb) cb(valor);
-          return;
-        }
+        if (achou && achou.length) { entregar(achou[0].rawValue); return; }
       } catch (e) { /* quadro ruim, tenta o próximo */ }
       setTimeout(tick, 300);
     };
     tick();
+    return;
+  }
+
+  /* Caminho do iPhone: leitor carregado na hora. */
+  err.textContent = 'Preparando o leitor…';
+  let Z;
+  try {
+    Z = await carregarLeitorExterno();
   } catch (e) {
-    err.textContent = 'Não consegui abrir a câmera. Libere a permissão no navegador ou digite o número da placa.';
+    err.textContent = 'Este aparelho precisa baixar o leitor e não consegui agora. Feche e digite o número da placa.';
+    return;
+  }
+  try {
+    err.textContent = 'Aponte para o código de barras da placa. A leitura é automática.';
+    const reader = new Z.BrowserMultiFormatReader();
+    ZX_CTRL = await reader.decodeFromVideoElement(video, (result, erro, controls) => {
+      if (!ZX_CTRL && controls) ZX_CTRL = controls;
+      if (result) entregar(result.getText ? result.getText() : result.text);
+    });
+  } catch (e) {
+    err.textContent = 'Não consegui ler pela câmera neste aparelho. Digite o número da placa.';
   }
 }
+
 function fecharCamera() {
+  if (ZX_CTRL) { try { ZX_CTRL.stop(); } catch (e) { } ZX_CTRL = null; }
   pararCamera();
   LEITURA = null;
   const v = $('#camVideo'); if (v) v.srcObject = null;
@@ -3009,7 +3124,7 @@ function abrirNovoChamado(pre) {
   let ativo = pre.ativo ? ativoById(pre.ativo) : (plano && plano.ativo_id ? ativoById(plano.ativo_id) : null);
   let passo = 0;
   const nomes = nomesResponsaveis();
-  const L = n => (DB.listas && DB.listas[n] ? DB.listas[n].itens : []);
+  const L = lista;
   const empIni = ativo ? ativo.empresa_id : (CTX.empresa !== 'todas' ? CTX.empresa : (empresas()[0] || {}).empresa_id);
   const uniIni = ativo ? ativo.unidade_id : (CTX.unidade !== 'todas' ? CTX.unidade : '');
 
@@ -3265,8 +3380,8 @@ function abrirCadastroAtivo(pre, aoSalvar) {
   if (faltamCadastros()) { avisarSemCadastros(); return; }
   pre = pre || {};
   const a = pre.ativo_id ? ativoById(pre.ativo_id) : null;
-  const L = n => (DB.listas && DB.listas[n] ? DB.listas[n].itens : []);
-  const lista = (nome, rotulo, valor, obrig) => `<label class="fld ${obrig ? 'req' : ''}"><span>${rotulo}</span>
+  const L = lista;
+  const campoLista = (nome, rotulo, valor, obrig) => `<label class="fld ${obrig ? 'req' : ''}"><span>${rotulo}</span>
     <input type="text" name="${nome}" list="l_${nome}" autocomplete="off" value="${esc(valor || '')}">
     <datalist id="l_${nome}">${L(nome === 'categoria' ? 'categoria_ativo' : nome === 'subcategoria' ? 'subcategoria_ativo' : nome).map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>
     <span class="hint">Escolha da lista ou escreva um valor novo.</span></label>`;
@@ -3283,9 +3398,9 @@ function abrirCadastroAtivo(pre, aoSalvar) {
       <label class="fld req"><span>Empresa</span><select name="empresa">${opts(empresas().map(e => ({ v: e.empresa_id, t: e.nome })), a ? a.empresa_id : pre.empresa)}</select></label>
       <label class="fld req"><span>Unidade</span><select name="unidade"></select></label>
     </div>
-    ${lista('local', 'Local', a ? a.local : '')}
-    <div class="grid2">${lista('categoria', 'Categoria', a ? a.categoria : '', true)}${lista('subcategoria', 'Tipo', a ? a.subcategoria : '')}</div>
-    <div class="grid2">${lista('marca', 'Marca', a ? a.marca : '')}
+    ${campoLista('local', 'Local', a ? a.local : '')}
+    <div class="grid2">${campoLista('categoria', 'Categoria', a ? a.categoria : '', true)}${campoLista('subcategoria', 'Tipo', a ? a.subcategoria : '')}</div>
+    <div class="grid2">${campoLista('marca', 'Marca', a ? a.marca : '')}
       <label class="fld"><span>Modelo</span><input type="text" name="modelo" value="${esc(a ? a.modelo : '')}"></label></div>
     <div class="grid2">
       <label class="fld"><span>Número de série</span><input type="text" name="serie" value="${esc(a ? a.numero_serie : '')}"></label>
@@ -3415,7 +3530,7 @@ function chComentar(id) {
 }
 function chAtualizar(id) {
   const c = chById(id); if (!c) return;
-  const L = n => (DB.listas && DB.listas[n] ? DB.listas[n].itens : []);
+  const L = lista;
   formSimples('Atualizar chamado', `
     ${campoTexto('texto', 'O que foi feito', true, 'Mesmo que parcial. Ajuda quem continuar depois.')}
     <label class="fld"><span>Situação</span><select name="status">${opts(L('status_chamado').filter(s => s !== 'Concluída' && s !== 'Cancelada'), c.status)}</select></label>
@@ -3475,61 +3590,81 @@ function cadastroSimples(titulo, campos, aoSalvar) {
     });
   }, { foot: '<button type="button" class="btn block" data-f-acao="ok">Salvar</button>' });
 }
-function novaEmpresa() {
-  cadastroSimples('Nova empresa', `
-    <label class="fld req"><span>Nome</span><input type="text" name="nome"></label>
-    <label class="fld"><span>Nome curto</span><input type="text" name="curto"></label>
-    <label class="fld"><span>CNPJ</span><input type="text" name="cnpj"></label>
-    <label class="fld"><span>Cor de destaque</span><input type="text" name="cor" value="#C8161F" placeholder="#C8161F"></label>`, f => {
+function novaEmpresa(id) {
+  const e = id ? empById(id) : null;
+  cadastroSimples(e ? 'Editar empresa' : 'Nova empresa', `
+    <label class="fld req"><span>Nome</span><input type="text" name="nome" value="${esc(e ? e.nome : '')}"></label>
+    <label class="fld"><span>Nome curto</span><input type="text" name="curto" value="${esc(e ? e.nome_curto : '')}"></label>
+    <label class="fld"><span>CNPJ</span><input type="text" name="cnpj" value="${esc(e ? e.cnpj : '')}"></label>
+    <div class="grid2">
+      <label class="fld"><span>Cor de destaque</span><input type="text" name="cor" value="${esc(e ? e.cor_primaria : '#C8161F')}" placeholder="#C8161F"></label>
+      <label class="fld"><span>Situação</span><select name="ativo">${opts([{ v: 'Sim', t: 'Ativa' }, { v: 'Não', t: 'Inativa' }], e ? e.ativo : 'Sim')}</select></label>
+    </div>`, f => {
     if (!f.nome.value.trim()) return 'Informe o nome.';
     save('empresas', {
-      empresa_id: 'EMP-' + normal(f.nome.value).slice(0, 3).toUpperCase().replace(/\s/g, ''),
+      empresa_id: e ? e.empresa_id : 'EMP-' + normal(f.nome.value).replace(/\s/g, '').slice(0, 4).toUpperCase(),
       nome: f.nome.value.trim(), nome_curto: f.curto.value.trim() || f.nome.value.trim(),
       cnpj: f.cnpj.value.trim(), cor_primaria: f.cor.value.trim() || '#C8161F',
-      ativo: 'Sim', observacao: '', criado_por: USER.nome, criado_em: nowISO()
+      ativo: f.ativo.value, observacao: e ? e.observacao : '',
+      criado_por: e ? e.criado_por : USER.nome, criado_em: e ? e.criado_em : nowISO()
     }, true);
   });
 }
-function novaUnidade() {
-  cadastroSimples('Nova unidade', `
-    <label class="fld req"><span>Empresa</span><select name="empresa">${opts(empresas().map(e => ({ v: e.empresa_id, t: e.nome })), CTX.empresa)}</select></label>
-    <label class="fld req"><span>Nome</span><input type="text" name="nome"></label>
-    <label class="fld"><span>Cidade</span><input type="text" name="cidade"></label>
-    <label class="fld"><span>Responsável</span><select name="resp"><option value="">Ninguém</option>${opts(nomesResponsaveis(), '')}</select></label>`, f => {
+function novaUnidade(id) {
+  const u = id ? uniById(id) : null;
+  cadastroSimples(u ? 'Editar unidade' : 'Nova unidade', `
+    <label class="fld req"><span>Empresa</span><select name="empresa">${opts(empresas().map(e => ({ v: e.empresa_id, t: e.nome })), u ? u.empresa_id : CTX.empresa)}</select></label>
+    <label class="fld req"><span>Nome</span><input type="text" name="nome" value="${esc(u ? u.nome : '')}"></label>
+    <div class="grid2">
+      <label class="fld"><span>Cidade</span><input type="text" name="cidade" value="${esc(u ? u.cidade : '')}"></label>
+      <label class="fld"><span>Situação</span><select name="ativo">${opts([{ v: 'Sim', t: 'Ativa' }, { v: 'Não', t: 'Inativa' }], u ? u.ativo : 'Sim')}</select></label>
+    </div>
+    <label class="fld"><span>Responsável</span><select name="resp"><option value="">Ninguém</option>${opts(nomesResponsaveis(), u ? u.responsavel : '')}</select></label>`, f => {
     if (!f.nome.value.trim()) return 'Informe o nome.';
     save('unidades', {
-      unidade_id: uid('uni'), empresa_id: f.empresa.value, nome: f.nome.value.trim(),
-      nome_curto: f.nome.value.trim(), cidade: f.cidade.value.trim(), endereco: '',
-      responsavel: f.resp.value, ativo: 'Sim', observacao: '', criado_por: USER.nome, criado_em: nowISO()
+      unidade_id: u ? u.unidade_id : uid('uni'), empresa_id: f.empresa.value, nome: f.nome.value.trim(),
+      nome_curto: f.nome.value.trim(), cidade: f.cidade.value.trim(), endereco: u ? u.endereco : '',
+      responsavel: f.resp.value, ativo: f.ativo.value, observacao: u ? u.observacao : '',
+      criado_por: u ? u.criado_por : USER.nome, criado_em: u ? u.criado_em : nowISO()
     }, true);
   });
 }
-function novoSetor() {
-  cadastroSimples('Novo setor', `
-    <label class="fld req"><span>Unidade</span><select name="unidade">${opts(DB.unidades.map(u => ({ v: u.unidade_id, t: u.nome })), CTX.unidade)}</select></label>
-    <label class="fld req"><span>Nome</span><input type="text" name="nome" placeholder="Ex.: Cozinha"></label>`, f => {
+function novoSetor(id) {
+  const x = id ? DB.setores.find(s => s.setor_id === id) : null;
+  cadastroSimples(x ? 'Editar setor' : 'Novo setor', `
+    <label class="fld req"><span>Unidade</span><select name="unidade">${opts(DB.unidades.map(u => ({ v: u.unidade_id, t: u.nome })), x ? x.unidade_id : CTX.unidade)}</select></label>
+    <label class="fld req"><span>Nome</span><input type="text" name="nome" value="${esc(x ? x.nome : '')}" placeholder="Ex.: Cozinha"></label>
+    <label class="fld"><span>Situação</span><select name="ativo">${opts([{ v: 'Sim', t: 'Ativo' }, { v: 'Não', t: 'Inativo' }], x ? x.ativo : 'Sim')}</select></label>`, f => {
     if (!f.nome.value.trim()) return 'Informe o nome.';
     save('setores', {
-      setor_id: uid('set'), unidade_id: f.unidade.value, nome: f.nome.value.trim(),
-      ativo: 'Sim', criado_por: USER.nome, criado_em: nowISO()
+      setor_id: x ? x.setor_id : uid('set'), unidade_id: f.unidade.value, nome: f.nome.value.trim(),
+      ativo: f.ativo.value, criado_por: x ? x.criado_por : USER.nome, criado_em: x ? x.criado_em : nowISO()
     }, true);
   });
 }
-function novoFornecedor() {
-  cadastroSimples('Novo fornecedor', `
-    <label class="fld req"><span>Nome</span><input type="text" name="nome"></label>
-    <label class="fld"><span>Especialidades</span><input type="text" name="esp" placeholder="Climatização; Refrigeração"></label>
+function novoFornecedor(id) {
+  const x = id ? DB.fornecedores.find(f => f.fornecedor_id === id) : null;
+  cadastroSimples(x ? 'Editar fornecedor' : 'Novo fornecedor', `
+    <label class="fld req"><span>Nome</span><input type="text" name="nome" value="${esc(x ? x.nome_fantasia : '')}"></label>
+    <label class="fld"><span>Especialidades</span><input type="text" name="esp" list="lEspFor" autocomplete="off" value="${esc(x ? x.especialidades : '')}" placeholder="Climatização; Refrigeração">
+      <datalist id="lEspFor">${lista('especialidade').map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist></label>
     <div class="grid2">
-      <label class="fld"><span>Telefone</span><input type="text" name="tel"></label>
-      <label class="fld"><span>WhatsApp</span><input type="text" name="zap"></label>
+      <label class="fld"><span>Telefone</span><input type="text" name="tel" value="${esc(x ? x.telefone : '')}"></label>
+      <label class="fld"><span>WhatsApp</span><input type="text" name="zap" value="${esc(x ? x.whatsapp : '')}"></label>
     </div>
-    <label class="fld"><span>Cidade</span><input type="text" name="cidade"></label>`, f => {
+    <div class="grid2">
+      <label class="fld"><span>Cidade</span><input type="text" name="cidade" value="${esc(x ? x.cidade : '')}"></label>
+      <label class="fld"><span>Situação</span><select name="ativo">${opts([{ v: 'Sim', t: 'Ativo' }, { v: 'Não', t: 'Inativo' }], x ? x.ativo : 'Sim')}</select></label>
+    </div>
+    <label class="fld"><span>Observação</span><input type="text" name="obs" value="${esc(x ? x.observacao : '')}"></label>`, f => {
     if (!f.nome.value.trim()) return 'Informe o nome.';
     save('fornecedores', {
-      fornecedor_id: uid('for'), nome_fantasia: f.nome.value.trim(), razao_social: '', cnpj: '',
+      fornecedor_id: x ? x.fornecedor_id : uid('for'), nome_fantasia: f.nome.value.trim(),
+      razao_social: x ? x.razao_social : '', cnpj: x ? x.cnpj : '',
       especialidades: f.esp.value.trim(), telefone: f.tel.value.trim(), whatsapp: f.zap.value.trim(),
-      email: '', responsavel: '', cidade: f.cidade.value.trim(), estado: 'ES', ativo: 'Sim',
-      observacao: '', criado_por: USER.nome, criado_em: nowISO()
+      email: x ? x.email : '', responsavel: x ? x.responsavel : '', cidade: f.cidade.value.trim(),
+      estado: x ? x.estado : 'ES', ativo: f.ativo.value, observacao: f.obs.value.trim(),
+      criado_por: x ? x.criado_por : USER.nome, criado_em: x ? x.criado_em : nowISO()
     }, true);
   });
 }
@@ -3911,6 +4046,11 @@ document.addEventListener('click', ev => {
     case 'nova-unidade': novaUnidade(); break;
     case 'novo-setor': novoSetor(); break;
     case 'novo-fornecedor': novoFornecedor(); break;
+    case 'edit-empresa': novaEmpresa(id); break;
+    case 'edit-unidade': novaUnidade(id); break;
+    case 'edit-setor': novoSetor(id); break;
+    case 'edit-fornecedor': novoFornecedor(id); break;
+    case 'cad-aba': CAD2.aba = el.dataset.a; CAD2.q = ''; render(); break;
     case 'ler-codigo': {
       const destino = el.dataset.destino;
       lerCodigo(valor => {
@@ -3955,9 +4095,11 @@ document.addEventListener('change', ev => {
   render();
 });
 document.addEventListener('input', ev => {
-  if (ev.target.id === 'chBusca' || ev.target.id === 'atBusca') {
+  if (ev.target.id === 'chBusca' || ev.target.id === 'atBusca' || ev.target.id === 'cadBusca') {
     const alvo = ev.target.id, pos = ev.target.selectionStart;
-    if (alvo === 'chBusca') F_CH.q = ev.target.value; else F_AT.q = ev.target.value;
+    if (alvo === 'chBusca') F_CH.q = ev.target.value;
+    else if (alvo === 'cadBusca') CAD2.q = ev.target.value;
+    else F_AT.q = ev.target.value;
     render();
     const novo = $('#' + alvo);
     if (novo) { novo.focus(); novo.setSelectionRange(pos, pos); }
