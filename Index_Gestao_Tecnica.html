@@ -2228,7 +2228,7 @@ function vInicio() {
 function ultimasMovimentacoes() {
   const evs = DB.eventos.slice().sort((a, b) => String(b.data_hora).localeCompare(String(a.data_hora))).slice(0, 8);
   if (!evs.length) return '<div class="empty">Nada registrado ainda.</div>';
-  const rotulo = { CHAMADO_CRIADO: 'Chamado aberto', SERVICO_CONCLUIDO: 'Serviço concluído', GARANTIA_REGISTRADA: 'Garantia registrada', ORCAMENTO_APROVADO: 'Orçamento aprovado', ACEITE: 'Recebimento confirmado', COMENTARIO: 'Comentário', STATUS_ALTERADO: 'Situação alterada', ATIVO_CADASTRADO: 'Ativo cadastrado' };
+  const rotulo = ROTULO_EV;
   return `<div class="list">${evs.map(e => {
     const c = chById(e.chamado_id);
     return `<div class="row${c ? ' click' : ''}" ${c ? `data-act="abrir-ch" data-id="${esc(e.chamado_id)}"` : ''}>
@@ -3482,7 +3482,7 @@ function abrirChamado(id) {
   if (!c) { toast('Chamado não encontrado.', true); return; }
   const a = c.ativo_id ? ativoById(c.ativo_id) : null;
   const evs = eventosDo(id).slice().reverse();
-  const rotulo = { CHAMADO_CRIADO: 'Chamado aberto', ACEITE: 'Recebimento confirmado', COMENTARIO: 'Comentário', STATUS_ALTERADO: 'Situação alterada', SERVICO_CONCLUIDO: 'Serviço concluído', GARANTIA_REGISTRADA: 'Garantia registrada', CHAMADO_CANCELADO: 'Chamado cancelado' };
+  const rotulo = ROTULO_EV;
   const html = `
     <div class="det-cab">
       <h2>${esc(c.titulo)}</h2>
@@ -3501,11 +3501,13 @@ function abrirChamado(id) {
       <dt>Classificação</dt><dd>${esc(c.natureza || '—')}, ${esc(c.especialidade || '—')}, ${esc(c.modalidade || '—')}</dd>
       <dt>Responsável</dt><dd><b>${esc(c.responsavel || '—')}</b>${c.aceito_em ? `<br><span class="hint">Confirmou em ${fmtDH(c.aceito_em)}</span>` : c.status === 'Aguardando aceite' ? '<br><span class="hint">Ainda não confirmou o recebimento</span>' : ''}</dd>
       <dt>Prazo</dt><dd>${c.previsao_conclusao ? fmtD(c.previsao_conclusao) : 'Sem prazo'}</dd>
+      ${c.orcamento_aprovado_id ? `<dt>Orçamento</dt><dd><b>${esc(dinheiro(c.valor_aprovado))}</b>, ${esc(fornNome(c.fornecedor_executante_id))}</dd>` : ''}
       ${c.plano_id ? `<dt>Preventiva</dt><dd>${esc((planoById(c.plano_id) || {}).nome || c.plano_id)}</dd>` : ''}
       ${c.solucao ? `<dt>Solução</dt><dd>${esc(c.solucao)}</dd>` : ''}
       ${c.valor_final ? `<dt>Valor</dt><dd>${esc(dinheiro(c.valor_final))}</dd>` : ''}
       <dt>Aberto por</dt><dd>${esc(c.aberto_por || '—')} em ${fmtDH(c.aberto_em)}</dd>
     </dl>
+    ${secaoOrcamentos(c)}
     <div class="det-sec">Linha do tempo</div>
     ${evs.length ? `<div class="tl">${evs.map(e => `<div class="tl-item ${e.tipo_evento === 'SERVICO_CONCLUIDO' ? 'ok' : e.tipo_evento === 'CHAMADO_CANCELADO' ? 'bad' : ''}">
       <div class="tl-h">${fmtDH(e.data_hora)}</div>
@@ -3514,12 +3516,14 @@ function abrirChamado(id) {
       ${e.descricao ? `<div class="tl-t">${esc(e.descricao)}</div>` : ''}
       ${e.valor ? `<div class="tl-x">${esc(dinheiro(e.valor))}</div>` : ''}</div>`).join('')}</div>`
       : '<div class="empty">Sem movimentos ainda.</div>'}`;
-
+ 
   const podeMexerCh = souEu(c.responsavel) || ehGestor();
   const b = [];
   /* Mesma regra da demanda: o aceite é só de quem recebeu o chamado. */
   if (c.status === 'Aguardando aceite' && souEu(c.responsavel)) b.push(['ch-aceitar', 'Aceitar', 'jade']);
   if (chAberto(c.status) && c.status !== 'Aguardando aceite' && podeMexerCh) b.push(['ch-atualizar', 'Atualizar', 'ghost']);
+  /* Transferir: passa o chamado para outra pessoa, que precisa aceitar. */
+  if (chAberto(c.status) && podeMexerCh) b.push(['cho-transferir', 'Transferir', 'ghost']);
   if (chAberto(c.status) && podeMexerCh) b.push(['ch-concluir', 'Concluir', 'red']);
   if (!b.length) b.push(['ch-comentar', 'Comentar', 'ghost']);
   const rodape = `<div class="linha">${b.map(([act, t, cls]) => `<button type="button" class="btn ${cls}" data-act="${act}" data-id="${esc(id)}">${t}</button>`).join('')}</div>`;
@@ -3595,6 +3599,233 @@ function chConcluir(id) {
     toast(dias ? `Concluído. Garantia registrada por ${plural(dias, 'dia')}.` : 'Chamado concluído');
   }, 'Concluir', 'jade');
 }
+/* =========================================================================
+   ORÇAMENTO, APROVAÇÃO E TRANSFERÊNCIA DE CHAMADO
+   Fluxo: quem cuida do chamado registra os orçamentos, pede aprovação a um
+   gestor, e o gestor aprova um (os outros ficam reprovados) ou reprova todos.
+   Cada passo vira um evento no chamado, e o Telegram avisa quem precisa agir.
+   ========================================================================= */
+const ROTULO_EV = {
+  CHAMADO_CRIADO: 'Chamado aberto', ACEITE: 'Recebimento confirmado', COMENTARIO: 'Comentário',
+  STATUS_ALTERADO: 'Situação alterada', SERVICO_CONCLUIDO: 'Serviço concluído',
+  GARANTIA_REGISTRADA: 'Garantia registrada', CHAMADO_CANCELADO: 'Chamado cancelado',
+  ATIVO_CADASTRADO: 'Ativo cadastrado', ATIVO_ALTERADO: 'Ativo alterado',
+  ORCAMENTO_REGISTRADO: 'Orçamento recebido', APROVACAO_SOLICITADA: 'Aprovação pedida',
+  ORCAMENTO_APROVADO: 'Orçamento aprovado', ORCAMENTO_REPROVADO: 'Orçamentos reprovados',
+  TRANSFERIDO: 'Transferido'
+};
+const ORC_ABERTO = ['Recebido', 'Em análise'];
+const ST_ORC = { 'Recebido': 'info', 'Em análise': 'warn', 'Aprovado': 'ok', 'Reprovado': 'mute', 'Expirado': 'mute' };
+const orcamentosDo = id => DB.orcamentos.filter(o => o.chamado_id === id)
+  .sort((a, b) => String(a.criado_em).localeCompare(String(b.criado_em)));
+const orcAbertos = id => orcamentosDo(id).filter(o => ORC_ABERTO.includes(o.status));
+const fornecedoresAtivos = () => DB.fornecedores.filter(f => f.ativo !== 'Não')
+  .sort((a, b) => String(a.nome_fantasia).localeCompare(String(b.nome_fantasia), 'pt-BR'));
+const fornNome = id => { const f = DB.fornecedores.find(x => x.fornecedor_id === id); return f ? (f.nome_fantasia || f.razao_social || 'Sem nome') : 'Fornecedor não informado'; };
+/* Valor digitado (850 / 850,5 / 1.250,00) para número, e número para o
+   formato gravado na planilha (1250,00), o mesmo que o dinheiro() entende. */
+const numBR = v => Number(String(v || '').trim().replace(/\./g, '').replace(',', '.')) || 0;
+const valorBR = n => (Math.round(n * 100) / 100).toFixed(2).replace('.', ',');
+/* O último pedido de aprovação diz quem aprova. */
+function pedidoAprovacao(c) {
+  const p = eventosDo(c.chamado_id).filter(e => e.tipo_evento === 'APROVACAO_SOLICITADA');
+  return p.length ? p[p.length - 1] : null;
+}
+const aprovadorDe = c => { const p = pedidoAprovacao(c); return p ? p.para : ''; };
+const possoAprovar = c => c.status === 'Aguardando aprovação' &&
+  (souEu(aprovadorDe(c)) || (!aprovadorDe(c) && ehGestor()));
+const podeOrcar = c => chAberto(c.status) && (souEu(c.responsavel) || ehGestor()) &&
+  !['Aguardando aceite', 'Aprovado', 'Em execução', 'Aguardando validação'].includes(c.status);
+ 
+/* Bloco "Orçamentos" no detalhe do chamado. Só aparece quando o chamado
+   precisa de orçamento ou já tem algum. */
+function secaoOrcamentos(c) {
+  const lista = orcamentosDo(c.chamado_id);
+  const precisa = c.necessita_orcamento === 'Sim' || ['Aguardando orçamento', 'Aguardando aprovação'].includes(c.status);
+  if (!lista.length && !precisa) return '';
+  const minimo = Number(param('minimo_orcamentos', '3')) || 0;
+  const abertos = orcAbertos(c.chamado_id);
+  const menor = abertos.length ? Math.min.apply(null, abertos.map(o => numBR(o.valor_total))) : 0;
+  const aprovar = possoAprovar(c);
+  const itens = lista.map(o => {
+    const aberto = ORC_ABERTO.includes(o.status);
+    const det = [
+      o.valor_servico || o.valor_material ? `Serviço ${dinheiro(o.valor_servico)}, material ${dinheiro(o.valor_material)}` : '',
+      [o.prazo_execucao_dias ? `Prazo ${o.prazo_execucao_dias} dias` : '', o.garantia_dias ? `garantia ${o.garantia_dias} dias` : '', o.condicao_pagamento || ''].filter(Boolean).join(', '),
+      o.validade_proposta ? `Proposta válida até ${fmtD(o.validade_proposta)}` : '',
+      o.descricao || '',
+      o.aprovado_por ? `Aprovado por ${o.aprovado_por} em ${fmtDH(o.aprovado_em)}${o.justificativa_escolha ? ': ' + o.justificativa_escolha : ''}` : ''
+    ].filter(Boolean).join('\n');
+    return `<div class="det-box">
+      <h4 style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="color:var(--ink,inherit)"><b>${esc(fornNome(o.fornecedor_id))}</b></span>
+        <span class="st ${ST_ORC[o.status] || 'mute'}">${esc(o.status || '—')}</span>
+        ${aberto && abertos.length > 1 && numBR(o.valor_total) === menor ? '<span class="st ok">Menor valor</span>' : ''}</h4>
+      <p><b>${esc(dinheiro(o.valor_total))}</b>${det ? '\n' + esc(det) : ''}</p>
+      ${miniaturas('ORCAMENTO', o.orcamento_id)}
+      ${aprovar && aberto ? `<div style="margin-top:8px"><button type="button" class="btn sm jade" data-act="cho-orc-aprovar" data-id="${esc(o.orcamento_id)}">Aprovar este</button></div>` : ''}
+    </div>`;
+  }).join('');
+  const botoes = [];
+  if (podeOrcar(c)) botoes.push(['cho-orc-novo', 'Registrar orçamento', 'ghost']);
+  if (podeOrcar(c) && abertos.length && c.status !== 'Aguardando aprovação') botoes.push(['cho-orc-pedir', 'Pedir aprovação', 'jade']);
+  if (aprovar && abertos.length) botoes.push(['cho-orc-reprovar', 'Reprovar todos', 'danger']);
+  const aviso = c.status === 'Aguardando aprovação'
+    ? `<p class="hint" style="margin:0 0 8px">Aguardando aprovação de <b>${esc(aprovadorDe(c) || 'um gestor')}</b>.</p>`
+    : minimo && abertos.length < minimo && podeOrcar(c)
+      ? `<p class="hint" style="margin:0 0 8px">O recomendado é juntar ${minimo} orçamentos antes de pedir aprovação. Até agora: ${abertos.length}.</p>` : '';
+  return `<div class="det-sec">Orçamentos</div>${aviso}
+    ${itens || '<div class="empty">Nenhum orçamento registrado ainda.</div>'}
+    ${botoes.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${botoes.map(([act, t, cls]) =>
+      `<button type="button" class="btn sm ${cls}" data-act="${act}" data-id="${esc(c.chamado_id)}">${t}</button>`).join('')}</div>` : ''}`;
+}
+ 
+function chOrcNovo(id) {
+  const c = chById(id); if (!c) return;
+  const forn = fornecedoresAtivos().map(f => ({ v: f.fornecedor_id, t: f.nome_fantasia || f.razao_social }));
+  formSimples('Registrar orçamento', `
+    <label class="fld req"><span>Fornecedor</span><select name="forn"><option value="">Escolha</option>${opts(forn, '')}<option value="__novo">Outro, ainda não cadastrado</option></select></label>
+    <label class="fld"><span>Nome do fornecedor novo</span><input type="text" name="fornNovo" placeholder="Só se escolheu Outro"></label>
+    <div class="grid2">
+      <label class="fld req"><span>Valor do serviço</span><input type="text" name="serv" inputmode="decimal" placeholder="Ex.: 850,00"></label>
+      <label class="fld"><span>Valor do material</span><input type="text" name="mat" inputmode="decimal" placeholder="0,00"></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>Prazo de execução (dias)</span><input type="number" name="prazo" min="0"></label>
+      <label class="fld"><span>Garantia (dias)</span><input type="number" name="garantia" min="0"></label>
+    </div>
+    <div class="grid2">
+      <label class="fld"><span>Pagamento</span><input type="text" name="pgto" placeholder="Ex.: 50% entrada"></label>
+      <label class="fld"><span>Proposta válida até</span><input type="date" name="validade"></label>
+    </div>
+    ${campoTexto('descricao', 'O que está incluído', false, 'Peças, serviço, visita. Ajuda a comparar os orçamentos.')}
+    ${campoFoto()}`, f => {
+    let fid = f.forn.value;
+    const nomeNovo = f.fornNovo.value.trim();
+    if (!fid) return 'Escolha o fornecedor.';
+    if (fid === '__novo' && !nomeNovo) return 'Escreva o nome do fornecedor novo.';
+    const serv = numBR(f.serv.value), mat = numBR(f.mat.value);
+    if (serv + mat <= 0) return 'Informe o valor do orçamento.';
+    if (fid === '__novo') {
+      fid = uid('for');
+      save('fornecedores', {
+        fornecedor_id: fid, nome_fantasia: nomeNovo, razao_social: '', cnpj: '',
+        especialidades: c.especialidade || '', telefone: '', whatsapp: '', email: '', responsavel: '',
+        cidade: '', estado: 'ES', ativo: 'Sim', observacao: 'Cadastrado ao registrar orçamento',
+        criado_por: USER.nome, criado_em: nowISO()
+      }, true);
+    }
+    const oid = uid('orc');
+    save('orcamentos', {
+      orcamento_id: oid, chamado_id: id, fornecedor_id: fid, data_orcamento: today(),
+      descricao: f.descricao.value.trim(), valor_servico: valorBR(serv), valor_material: valorBR(mat),
+      valor_total: valorBR(serv + mat), prazo_execucao_dias: f.prazo.value, garantia_dias: f.garantia.value,
+      condicao_pagamento: f.pgto.value.trim(), validade_proposta: f.validade.value, status: 'Recebido',
+      observacao: '', criado_por: USER.nome, criado_em: nowISO(), aprovado_por: '', aprovado_em: '', justificativa_escolha: ''
+    }, true);
+    if (f.evidencia.value) anexar('ORCAMENTO', oid, 'Proposta', f.evidencia.value);
+    evento(id, 'ORCAMENTO_REGISTRADO', { ativo_id: c.ativo_id, descricao: fornNome(fid), valor: valorBR(serv + mat) });
+    render(); abrirChamado(id); toast('Orçamento registrado');
+  }, 'Registrar orçamento');
+}
+ 
+function chOrcPedir(id) {
+  const c = chById(id); if (!c) return;
+  const abertos = orcAbertos(id);
+  if (!abertos.length) { toast('Registre pelo menos um orçamento antes.', true); return; }
+  const minimo = Number(param('minimo_orcamentos', '3')) || 0;
+  let gestores = responsaveis().filter(p => p.nivel === 'gestor' && !souEu(p.nome)).map(p => p.nome);
+  if (!gestores.length) gestores = nomesResponsaveis().filter(n => !souEu(n));
+  formSimples('Pedir aprovação', `
+    <p class="hint" style="margin:0">${abertos.length === 1 ? '1 orçamento vai' : abertos.length + ' orçamentos vão'} para aprovação.${minimo && abertos.length < minimo ? ` O recomendado são ${minimo}.` : ''}</p>
+    <label class="fld req"><span>Quem aprova</span><select name="aprovador"><option value="">Escolha</option>${opts(gestores, '')}</select>
+      <span class="hint">Recebe o pedido no Telegram e pode aprovar por lá.</span></label>
+    ${campoTexto('texto', 'Observação (opcional)', false, 'Ex.: urgente, o equipamento está parado.')}`, f => {
+    const quem = f.aprovador.value;
+    if (!quem) return 'Escolha quem aprova.';
+    abertos.filter(o => o.status === 'Recebido').forEach(o => save('orcamentos', { orcamento_id: o.orcamento_id, status: 'Em análise' }, true));
+    /* O chamado muda antes do evento: quando o aviso for montado, o
+       servidor já vê o chamado aguardando aprovação e põe os botões. */
+    save('chamados', { chamado_id: id, status: 'Aguardando aprovação', atualizado_em: nowISO() }, true);
+    evento(id, 'APROVACAO_SOLICITADA', { ativo_id: c.ativo_id, descricao: f.texto.value.trim(), para: quem });
+    render(); abrirChamado(id); toast('Pedido enviado para ' + quem);
+  }, 'Pedir aprovação', 'jade');
+}
+ 
+function chOrcAprovar(orcId) {
+  const o = DB.orcamentos.find(x => x.orcamento_id === orcId); if (!o) return;
+  const c = chById(o.chamado_id); if (!c) return;
+  if (!possoAprovar(c)) { toast('A aprovação deste chamado está com ' + (aprovadorDe(c) || 'um gestor') + '.', true); return; }
+  const abertos = orcAbertos(c.chamado_id);
+  const menor = Math.min.apply(null, abertos.map(x => numBR(x.valor_total)));
+  const naoEhMenor = abertos.length > 1 && numBR(o.valor_total) > menor;
+  formSimples('Aprovar orçamento', `
+    <div class="det-box"><h4>${esc(fornNome(o.fornecedor_id))}</h4><p><b>${esc(dinheiro(o.valor_total))}</b>${o.prazo_execucao_dias ? '\nPrazo ' + esc(o.prazo_execucao_dias) + ' dias' : ''}${o.garantia_dias ? ', garantia ' + esc(o.garantia_dias) + ' dias' : ''}</p></div>
+    ${abertos.length > 1 ? `<p class="hint" style="margin:0">Os outros ${abertos.length - 1} orçamentos em aberto ficam reprovados.</p>` : ''}
+    ${campoTexto('texto', naoEhMenor ? 'Por que este e não o de menor valor' : 'Justificativa (opcional)', naoEhMenor,
+      naoEhMenor ? 'Este não é o menor valor. A justificativa fica registrada.' : '')}`, f => {
+    const t = f.texto.value.trim();
+    if (naoEhMenor && !t) return 'Explique a escolha: este não é o menor valor.';
+    const agora = nowISO();
+    save('orcamentos', { orcamento_id: o.orcamento_id, status: 'Aprovado', aprovado_por: USER.nome, aprovado_em: agora, justificativa_escolha: t }, true);
+    abertos.filter(x => x.orcamento_id !== o.orcamento_id).forEach(x => save('orcamentos', { orcamento_id: x.orcamento_id, status: 'Reprovado' }, true));
+    save('chamados', {
+      chamado_id: c.chamado_id, status: 'Aprovado', orcamento_aprovado_id: o.orcamento_id,
+      valor_aprovado: o.valor_total, fornecedor_executante_id: o.fornecedor_id || '', atualizado_em: agora
+    }, true);
+    evento(c.chamado_id, 'ORCAMENTO_APROVADO', {
+      ativo_id: c.ativo_id, descricao: fornNome(o.fornecedor_id) + (t ? ' · ' + t : ''), valor: o.valor_total, para: c.responsavel
+    });
+    render(); abrirChamado(c.chamado_id); toast('Orçamento aprovado');
+  }, 'Aprovar', 'jade');
+}
+ 
+function chOrcReprovar(id) {
+  const c = chById(id); if (!c) return;
+  if (!possoAprovar(c)) { toast('A aprovação deste chamado está com ' + (aprovadorDe(c) || 'um gestor') + '.', true); return; }
+  formSimples('Reprovar orçamentos', `
+    <p class="hint" style="margin:0">Todos os orçamentos em aberto ficam reprovados e o chamado volta para Aguardando orçamento.</p>
+    ${campoTexto('texto', 'Motivo', true, 'Ex.: valores altos, peça trocar o fornecedor.')}`, f => {
+    const t = f.texto.value.trim();
+    if (!t) return 'Explique o motivo.';
+    orcAbertos(id).forEach(x => save('orcamentos', { orcamento_id: x.orcamento_id, status: 'Reprovado' }, true));
+    save('chamados', { chamado_id: id, status: 'Aguardando orçamento', atualizado_em: nowISO() }, true);
+    evento(id, 'ORCAMENTO_REPROVADO', { ativo_id: c.ativo_id, descricao: t, para: c.responsavel });
+    render(); abrirChamado(id); toast('Orçamentos reprovados');
+  }, 'Reprovar', 'red');
+}
+ 
+function chTransferir(id) {
+  const c = chById(id); if (!c) return;
+  const nomes = nomesResponsaveis().filter(n => normal(n) !== normal(c.responsavel));
+  formSimples('Transferir chamado', `
+    <p class="hint" style="margin:0">Hoje com <b>${esc(c.responsavel || '—')}</b>. Quem receber precisa confirmar o recebimento.</p>
+    <label class="fld req"><span>Para quem</span><select name="para"><option value="">Escolha</option>${opts(nomes, '')}</select></label>
+    ${campoTexto('texto', 'Motivo', true, 'Quem recebe lê isto no aviso.')}
+    <label class="fld"><span>Prazo</span><input type="date" name="prazo" value="${esc(String(c.previsao_conclusao || '').slice(0, 10))}"></label>`, f => {
+    const para = f.para.value, t = f.texto.value.trim();
+    if (!para) return 'Escolha para quem transferir.';
+    if (!t) return 'Explique o motivo.';
+    save('chamados', {
+      chamado_id: id, responsavel: para, aceito_em: '', status: 'Aguardando aceite',
+      previsao_conclusao: f.prazo.value || c.previsao_conclusao || '', atualizado_em: nowISO()
+    }, true);
+    evento(id, 'TRANSFERIDO', { ativo_id: c.ativo_id, de: c.responsavel, para, descricao: t });
+    render(); abrirChamado(id); toast('Transferido para ' + para);
+  }, 'Transferir');
+}
+ 
+/* Os botões deste bloco usam data-act começando com cho- e são atendidos
+   aqui, sem mexer no roteador principal de cliques. */
+const ACOES_CHO = {
+  'cho-transferir': chTransferir, 'cho-orc-novo': chOrcNovo, 'cho-orc-pedir': chOrcPedir,
+  'cho-orc-aprovar': chOrcAprovar, 'cho-orc-reprovar': chOrcReprovar
+};
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act^="cho-"]');
+  if (!el || !ACOES_CHO[el.dataset.act]) return;
+  ACOES_CHO[el.dataset.act](el.dataset.id);
+});
+ 
 /* Abrir o chamado de uma preventiva: já vem preenchido pelo plano. */
 function abrirPreventiva(planoId) {
   const p = planoById(planoId);
