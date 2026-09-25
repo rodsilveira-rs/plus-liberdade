@@ -908,6 +908,9 @@ async function load() {
     persist();
     setSync('ok');
     if (!modalAberto() && !isTyping()) render(); else atualizarContadores();
+    /* Veio pelo botão Abrir do Telegram e o item ainda não estava no aparelho:
+       agora, com a planilha carregada, abre (ou avisa que não achou). */
+    abrirPedido(true);
     flush();
   } catch (e) {
     console.warn(e);
@@ -4145,11 +4148,47 @@ document.addEventListener('visibilitychange', () => {
 /* =========================================================
    INÍCIO
    ========================================================= */
+/* =========================================================
+   LINK DO TELEGRAM
+   O botão Abrir dos avisos chega com #abrir=dem:<id> ou #abrir=ch:<id>.
+   O pedido fica guardado no aparelho por 2 horas: se a pessoa ainda não
+   entrou neste navegador, ela passa pelo Menu, volta pelo card da Gestão
+   Técnica e o item abre do mesmo jeito.
+   ========================================================= */
+const PEDIDO_ABRIR = 'gt_abrir_v1';
+function guardarPedidoAbrir() {
+  const m = String(location.hash || '').match(/abrir=(dem|ch):([^&]+)/);
+  if (!m) return;
+  try {
+    localStorage.setItem(PEDIDO_ABRIR, JSON.stringify({ tipo: m[1], id: decodeURIComponent(m[2]), ts: Date.now() }));
+  } catch (e) { }
+  /* Tira o pedido da barra de endereço, para recarregar não abrir de novo. */
+  history.replaceState(null, '', location.pathname + location.search);
+}
+function abrirPedido(depoisDoLoad) {
+  let p = null;
+  try { p = JSON.parse(localStorage.getItem(PEDIDO_ABRIR) || 'null'); } catch (e) { }
+  if (!p || !p.id) return;
+  const limpar = () => { try { localStorage.removeItem(PEDIDO_ABRIR); } catch (e) { } };
+  if (Date.now() - (p.ts || 0) > 2 * 3600e3) { limpar(); return; }
+  const achou = p.tipo === 'ch' ? chById(p.id) : demById(p.id);
+  if (achou) {
+    limpar();
+    if (p.tipo === 'ch') abrirChamado(p.id); else abrirDemanda(p.id);
+    return;
+  }
+  /* Só desiste depois de a planilha chegar: antes disso, o item pode ser
+     novo demais para já estar guardado no aparelho. */
+  if (depoisDoLoad) { limpar(); toast('Não encontrei o item do aviso. Ele pode ter sido apagado.', true); }
+}
+ 
 (function init() {
   restore();
+  guardarPedidoAbrir();
   if (!definirUsuario()) { renderPortaria(); return; }
   restaurarContexto();
   render();
+  abrirPedido(false);
   carregarRoster();
   if (CFG.GAS_URL) {
     load();
