@@ -1126,7 +1126,8 @@ function abrirSol(id) {
     (s.motivo_recusa ? '<div class="alerta vermelho" style="margin-top:8px">Recusa: ' + esc(s.motivo_recusa) + '</div>' : '') + '</div></div>';
 
   h += '<div class="sec"><div class="sec-t">Escalados (' + ocupadas(s) + '/' + num(s.vagas) + ')<span class="grow"></span>' +
-    (vivo && podeE && ocupadas(s) < num(s.vagas) && am < turno(s).fim ? '<button class="btn sm" data-act="escalar" data-id="' + esc(s.sol_id) + '">' + ic('mais', 'sm') + 'Adicionar pessoa</button>' : '') + '</div>';
+    (vivo && podeE && ocupadas(s) < num(s.vagas) ? '<button class="btn sm" data-act="escalar" data-id="' + esc(s.sol_id) + '">' + ic('mais', 'sm') +
+      (am >= turno(s).ini ? 'Registrar quem trabalhou' : 'Adicionar pessoa') + '</button>' : '') + '</div>';
   h += esca.length ? '<div class="list">' + esca.map(e => {
     const pes = pessoaDe(e.pessoa_id);
     const acoes = [];
@@ -1288,7 +1289,9 @@ function abrirConfirmaEscala(solId, pessoaId) {
   }
   if (p.tipo_vinculo === 'CLT_GRUPO') h += '<div class="alerta azul">CLT do grupo' + (p.empresa_origem ? ' (' + esc(empNome(p.empresa_origem)) + ')' : '') + ': confira o descanso de 11h em relação ao turno regular dela e combine com o RH a forma de pagamento.</div>';
   h += '<div class="field"><label>Justificativa' + (verm ? ' <span class="req">*</span>' : ' (opcional)') + '</label><textarea id="esc-just" placeholder="Por que esta pessoa? Ex.: única treinada no forno novo"></textarea></div>' +
-    '<label class="check"><input type="checkbox" id="esc-conf"> Já confirmou comigo (WhatsApp, ligação, pessoalmente)</label>';
+    (agoraMin() >= turno(s).ini
+      ? '<input type="checkbox" id="esc-conf" checked hidden><div class="alerta azul">O turno já começou: a pessoa entra como confirmada e, em seguida, você valida o horário que ela trabalhou.</div>'
+      : '<label class="check"><input type="checkbox" id="esc-conf"> Já confirmou comigo (WhatsApp, ligação, pessoalmente)</label>');
   const bloqueado = verm && !podeAprovar(s);
   const rod = '<button class="btn ghost" data-act="escalar" data-id="' + esc(solId) + '">Voltar</button>' +
     (p.telefone ? '<a class="btn wa" target="_blank" rel="noopener" href="' + linkWhats(p, s) + '">' + ic('zap', 'sm') + 'Chamar no WhatsApp</a>' : '') +
@@ -1298,9 +1301,11 @@ function abrirConfirmaEscala(solId, pessoaId) {
 function confirmarEscala() {
   const c = S.modalCtx, just = $('#esc-just').value.trim(), conf = $('#esc-conf').checked;
   if (c.nivel === 'vermelho' && just.length < 10) return toast('Escreva a justificativa (pelo menos 10 letras).', 'err');
-  const solId = c.id;
-  Fila.add('escalar', { sol_id: solId, esc_id: uid('esc'), pessoa_id: c.pessoa, confirmado: conf, justificativa: just, _nivel: c.nivel });
-  abrirSol(solId);
+  const solId = c.id, escId = uid('esc');
+  Fila.add('escalar', { sol_id: solId, esc_id: escId, pessoa_id: c.pessoa, confirmado: conf, justificativa: just, _nivel: c.nivel });
+  /* Registro depois do turno: já emenda a validação, que é o que falta para pagar */
+  if (agoraMin() >= turno(solDe(solId)).ini) abrirValidar(escId);
+  else abrirSol(solId);
 }
 
 /* ---------- Validar turno ---------- */
