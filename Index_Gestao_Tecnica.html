@@ -1386,7 +1386,10 @@ function podeCadastrar() {
   const perfil = String((eu && eu.perfil) || '').toLowerCase();
   return !perfil || bloqueados.indexOf(perfil) < 0;
 }
+/* Vincular placa: todo gestor pode. Executor só se tiver a coluna
+   Patrimonio preenchida na USRR (liberação individual). */
 function podePatrimonio() {
+  if (ehGestor()) return true;
   const eu = euNoRoster();
   return !!(eu && String(eu.patrimonio || '').trim());
 }
