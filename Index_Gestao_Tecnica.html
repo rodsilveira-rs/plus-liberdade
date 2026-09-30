@@ -1523,10 +1523,16 @@ const preventivasVencidas = () => planosNoCtx().filter(p => diasDaPreventiva(p) 
 
 /* Anexos de qualquer registro, já com miniatura. */
 const anexosDe = (origem, id) => DB.anexos.filter(a => a.origem === origem && a.origem_id === id && a.url);
+/* PDF aparece como um cartão com o tipo (Proposta, Nota fiscal) e abre em
+   outra aba. Foto continua com miniatura e tela cheia. */
+const ehPdfAnexo = a => /pdf/i.test(a.mime || '') || /\.pdf$/i.test(a.nome_arquivo || '');
 function miniaturas(origem, id) {
   const lista = anexosDe(origem, id);
   if (!lista.length) return '';
-  return `<div class="thumbs">${lista.map(a => `<button type="button" class="thumb" data-act="foto" data-url="${esc(a.url)}" data-id="${esc(a.drive_file_id)}" title="${esc(a.tipo || 'Anexo')}">
+  return `<div class="thumbs">${lista.map(a => ehPdfAnexo(a)
+    ? `<a class="thumb" href="${esc(a.url)}" target="_blank" rel="noopener" title="${esc(a.nome_arquivo || a.tipo || 'PDF')}"
+        style="flex-direction:column;gap:4px;text-decoration:none;color:inherit;font-size:11.5px;text-align:center;padding:6px">${ic('doc', 'lg')}<span>${esc(a.tipo || 'PDF')}</span></a>`
+    : `<button type="button" class="thumb" data-act="foto" data-url="${esc(a.url)}" data-id="${esc(a.drive_file_id)}" title="${esc(a.tipo || 'Anexo')}">
     <img src="${esc(a.thumb_url || '')}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('Abrir'))"></button>`).join('')}</div>`;
 }
 /* =========================================================
@@ -2425,7 +2431,7 @@ function vPreventivas() {
         ${p.instrucoes ? `<div class="dem-l fraco">${ic('lista', 'sm')}<span>${esc(p.instrucoes)}</span></div>` : ''}
         <div class="dem-acoes"><button type="button" class="btn sm" data-act="prev-abrir" data-id="${esc(p.plano_id)}">${ic('mais2')}Abrir chamado</button></div>
       </article>`;
-    }).join('')}</div>` : '<div class="empty"><b>Nenhum plano preventivo</b>Cadastre os planos na aba PLANOS_PREVENTIVOS da planilha.</div>'}`;
+    }).join('')}</div>` : '<div class="empty"><b>Nenhum plano preventivo</b>Cadastre os planos PREVENTIVOS.</div>'}`;
 }
 
 /* =========================================================================
@@ -2630,9 +2636,10 @@ function formSimples(titulo, campos, onOk, textoBotao, classeBotao) {
   openModal(titulo, `<form id="fMov" class="stack" novalidate>${campos}<div class="err-msg" id="movErr"></div></form>`, (body, foot) => {
     const f = $('#fMov', body), err = $('#movErr', body);
     bindFoto(body);
+    bindArquivos(body);
     const enviar = ev => {
       if (ev) ev.preventDefault();
-      if (FOTO_BUSY) { err.textContent = 'Aguarde o envio da foto terminar.'; return; }
+      if (FOTO_BUSY) { err.textContent = 'Aguarde o envio do arquivo terminar.'; return; }
       const msg = onOk(f.elements);
       if (msg) err.textContent = msg;
     };
@@ -2646,6 +2653,63 @@ const campoFoto = () =>
   `<div class="fld"><span>Foto</span><input type="file" accept="image/*" capture="environment" data-foto>
     <input type="hidden" name="evidencia" value="">
     <span class="hint foto-st">Opcional. Sem internet, a foto fica guardada no aparelho e sobe sozinha depois.</span></div>`;
+ 
+/* =========================================================
+   ARQUIVOS: PDF OU FOTO (orçamento, recibo, nota fiscal)
+   Diferente da foto, o arquivo sobe na hora e precisa de internet: PDF
+   não dá para guardar no aparelho e mandar depois. Foto é reduzida antes
+   de subir; PDF vai como está, até ARQ_MAX_MB.
+   ========================================================= */
+const ARQ_MAX_MB = 10;
+const campoArquivo = (nome, rotulo, dica) =>
+  `<div class="fld"><span>${rotulo}</span><input type="file" accept="application/pdf,image/*" data-arquivo="${nome}">
+    <input type="hidden" name="${nome}" value="" data-mime="">
+    <span class="hint arq-st">${dica || 'PDF ou foto. Precisa de internet para enviar.'}</span></div>`;
+const lerComoDataURL = file => new Promise((res, rej) => {
+  const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file);
+});
+function bindArquivos(root) {
+  $$('[data-arquivo]', root).forEach(inp => inp.addEventListener('change', async () => {
+    const file = inp.files[0];
+    if (!file) return;
+    const box = inp.closest('.fld');
+    const out = $(`input[name="${inp.dataset.arquivo}"]`, box), st = $('.arq-st', box);
+    out.value = ''; out.dataset.mime = '';
+    const ehPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    const ehImg = /^image\//.test(file.type);
+    if (!ehPdf && !ehImg) { st.textContent = 'Só dá para anexar PDF ou foto.'; inp.value = ''; return; }
+    if (ehPdf && file.size > ARQ_MAX_MB * 1048576) { st.textContent = `Este PDF passa de ${ARQ_MAX_MB} MB. Mande uma versão menor ou uma foto.`; inp.value = ''; return; }
+    if (!CFG.GAS_URL || !navigator.onLine) { st.textContent = 'Sem internet agora. Anexe o arquivo quando a conexão voltar.'; inp.value = ''; return; }
+    FOTO_BUSY = true;
+    st.textContent = ehPdf ? 'Enviando o PDF…' : 'Preparando a foto…';
+    try {
+      const data = ehPdf ? await lerComoDataURL(file) : await compressImg(file);
+      const mime = ehPdf ? 'application/pdf' : 'image/jpeg';
+      const nome = `${today()}_${USER.nome.replace(/[^\w]+/g, '_')}_${Date.now()}.${ehPdf ? 'pdf' : 'jpg'}`;
+      if (!ehPdf) st.textContent = 'Enviando a foto…';
+      const r = await api({ action: 'upload', name: nome, mime: mime, data: String(data).split(',')[1] });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'Falha no envio');
+      out.value = r.url; out.dataset.mime = mime; out.dataset.nome = file.name;
+      st.textContent = (ehPdf ? 'PDF anexado: ' : 'Foto anexada: ') + file.name;
+    } catch (e) {
+      console.warn(e);
+      st.textContent = 'Não consegui enviar o arquivo. Tente de novo.';
+      inp.value = '';
+    } finally { FOTO_BUSY = false; }
+  }));
+}
+/* Liga o arquivo enviado ao registro, na aba ANEXOS. */
+function anexarDoc(origem, origemId, tipo, campo) {
+  if (!campo || !campo.value) return;
+  const id = driveId(campo.value);
+  const pdf = campo.dataset.mime === 'application/pdf';
+  save('anexos', {
+    anexo_id: uid('anx'), origem: origem, origem_id: origemId, tipo: tipo,
+    nome_arquivo: campo.dataset.nome || '', pasta: '', drive_file_id: id, url: campo.value,
+    thumb_url: id && !pdf ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : '',
+    mime: campo.dataset.mime || 'image/jpeg', enviado_por: USER.nome, enviado_em: nowISO(), status: 'Ligado'
+  }, true);
+}
 
 /* Aceite direto, sem formulário: é o gesto mais frequente e precisa ser um toque. */
 function aceitarJa(id) {
@@ -3620,31 +3684,42 @@ function chAtualizar(id) {
 }
 function chConcluir(id) {
   const c = chById(id); if (!c) return;
+  const valorSugerido = c.valor_aprovado || '';
   formSimples('Concluir chamado', `
     ${campoTexto('solucao', 'Solução aplicada', true, 'É isso que aparece no histórico do equipamento.')}
-    <div class="grid2">
-      <label class="fld"><span>Valor gasto</span><input type="text" name="valor" inputmode="decimal" placeholder="Ex.: 850,00"></label>
-      <label class="fld"><span>Garantia do serviço (dias)</span><input type="number" name="garantia" min="0" placeholder="0"></label>
-    </div>
+    <label class="fld"><span>Valor gasto</span><input type="text" name="valor" inputmode="decimal" placeholder="Ex.: 850,00" value="${esc(valorSugerido)}">
+      ${valorSugerido ? '<span class="hint">Veio do orçamento aprovado. Ajuste se o valor final foi outro.</span>' : ''}</label>
+    <label class="fld req"><span>O serviço tem garantia?</span>
+      <select name="temGar" onchange="this.closest('form').querySelector('[data-gar-ate]').classList.toggle('hidden', this.value !== 'Sim')">
+        <option value="">Escolha</option><option value="Não">Não</option><option value="Sim">Sim</option></select></label>
+    <label class="fld req hidden" data-gar-ate><span>Garantia até</span><input type="date" name="garAte" min="${today()}">
+      <span class="hint">A data que está no recibo, na nota ou no termo do fornecedor.</span></label>
+    ${campoArquivo('arq_nf', 'Recibo ou nota fiscal', 'PDF ou foto do recibo ou da NF. Precisa de internet para enviar.')}
     ${campoFoto()}`, f => {
     const s = f.solucao.value.trim();
     if (!s) return 'Descreva a solução aplicada.';
-    const dias = Number(f.garantia.value) || 0;
-    const patch = { solucao: s, conclusao_real: nowISO(), valor_final: f.valor.value.trim() };
-    if (dias && c.ativo_id) {
+    const tem = f.temGar.value;
+    if (!tem) return 'Informe se o serviço tem garantia.';
+    const fim = f.garAte.value;
+    if (tem === 'Sim' && !fim) return 'Informe até quando vai a garantia.';
+    if (tem === 'Sim' && fim <= today()) return 'A garantia precisa terminar depois de hoje.';
+    const patch = { solucao: s, conclusao_real: nowISO(), valor_final: f.valor.value.trim(), gerou_garantia: tem };
+    let dias = 0;
+    if (tem === 'Sim') {
+      dias = daysBetween(today(), fim);
       const gid = uid('gar');
-      const fim = addDays(today(), dias);
       save('garantias', {
-        garantia_id: gid, chamado_id: id, ativo_id: c.ativo_id, fornecedor_id: c.fornecedor_executante_id || '',
+        garantia_id: gid, chamado_id: id, ativo_id: c.ativo_id || '', fornecedor_id: c.fornecedor_executante_id || '',
         tipo: 'Serviço', inicio: today(), fim: fim, dias: String(dias),
         descricao: s, status: 'Vigente', acionada_em: '', chamado_acionamento_id: ''
       }, true);
-      patch.gerou_garantia = 'Sim'; patch.garantia_id = gid;
+      patch.garantia_id = gid;
       evento(id, 'GARANTIA_REGISTRADA', { ativo_id: c.ativo_id, descricao: `Garantia de ${plural(dias, 'dia')}, até ${fmtD(fim)}` });
     }
+    anexarDoc('CHAMADO', id, 'Nota fiscal', f.arq_nf);
     if (f.evidencia.value) anexar('CHAMADO', id, 'Foto da peça', f.evidencia.value);
     mudarCh(c, 'Concluída', 'SERVICO_CONCLUIDO', patch, s);
-    toast(dias ? `Concluído. Garantia registrada por ${plural(dias, 'dia')}.` : 'Chamado concluído');
+    toast(dias ? `Concluído. Garantia registrada até ${fmtD(fim)}.` : 'Chamado concluído');
   }, 'Concluir', 'jade');
 }
 /* =========================================================================
@@ -3746,7 +3821,7 @@ function chOrcNovo(id) {
       <label class="fld"><span>Proposta válida até</span><input type="date" name="validade"></label>
     </div>
     ${campoTexto('descricao', 'O que está incluído', false, 'Peças, serviço, visita. Ajuda a comparar os orçamentos.')}
-    ${campoFoto()}`, f => {
+    ${campoArquivo('arq_orc', 'Arquivo do orçamento', 'PDF ou foto da proposta. Precisa de internet para enviar.')}`, f => {
     let fid = f.forn.value;
     const nomeNovo = f.fornNovo.value.trim();
     if (!fid) return 'Escolha o fornecedor.';
@@ -3770,7 +3845,7 @@ function chOrcNovo(id) {
       condicao_pagamento: f.pgto.value.trim(), validade_proposta: f.validade.value, status: 'Recebido',
       observacao: '', criado_por: USER.nome, criado_em: nowISO(), aprovado_por: '', aprovado_em: '', justificativa_escolha: ''
     }, true);
-    if (f.evidencia.value) anexar('ORCAMENTO', oid, 'Proposta', f.evidencia.value);
+    anexarDoc('ORCAMENTO', oid, 'Proposta', f.arq_orc);
     evento(id, 'ORCAMENTO_REGISTRADO', { ativo_id: c.ativo_id, descricao: fornNome(fid), valor: valorBR(serv + mat) });
     render(); abrirChamado(id); toast('Orçamento registrado');
   }, 'Registrar orçamento');
