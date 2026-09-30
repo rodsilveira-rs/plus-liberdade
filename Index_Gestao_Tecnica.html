@@ -3671,13 +3671,19 @@ function chComentar(id) {
 function chAtualizar(id) {
   const c = chById(id); if (!c) return;
   const L = lista;
+  /* O tipo diz o que é o arquivo: aparece no cartão do anexo no chamado. */
+  const tipos = ['Proposta', 'Nota fiscal', 'Termo de garantia', 'Laudo', 'Manual', 'Outro'];
   formSimples('Atualizar chamado', `
     ${campoTexto('texto', 'O que foi feito', true, 'Mesmo que parcial. Ajuda quem continuar depois.')}
     <label class="fld"><span>Situação</span><select name="status">${opts(L('status_chamado').filter(s => s !== 'Concluída' && s !== 'Cancelada'), c.status)}</select></label>
+    ${campoArquivo('arq_doc', 'Documento (orçamento, recibo, NF, laudo)', 'PDF ou foto. Precisa de internet para enviar.')}
+    <label class="fld"><span>Esse documento é</span><select name="tipoDoc">${opts(tipos.map(t => ({ v: t, t: t === 'Proposta' ? 'Orçamento' : t === 'Nota fiscal' ? 'Recibo ou nota fiscal' : t })), 'Proposta')}</select>
+      <span class="hint">Só vale se você anexou um documento acima.</span></label>
     ${campoFoto()}`, f => {
     const t = f.texto.value.trim();
     if (!t) return 'Descreva o que foi feito.';
     if (f.evidencia.value) anexar('CHAMADO', id, 'Foto do problema', f.evidencia.value);
+    anexarDoc('CHAMADO', id, f.tipoDoc.value, f.arq_doc);
     mudarCh(c, f.status.value, f.status.value !== c.status ? 'STATUS_ALTERADO' : 'COMENTARIO', {}, t);
     toast('Atualização registrada');
   }, 'Registrar');
