@@ -1411,14 +1411,49 @@ function buscarAtivos(q) {
   if (!t) return lista.sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
   return lista.filter(a => normal([a.codigo_patrimonio, a.nome, a.marca, a.modelo, a.categoria, a.subcategoria, a.local].join(' ')).includes(t));
 }
-/* Tudo o que já se gastou com o equipamento, e o que isso representa. */
+/* Tudo o que já se gastou com o equipamento, e o que isso representa.
+   Os valores chegam como 1250,00 ou 1.250,00: numBR entende os dois. */
 function custoDoAtivo(id) {
   const chs = chamadosDoAtivo(id);
-  const gasto = chs.reduce((s, c) => s + (Number(String(c.valor_final || c.valor_aprovado || '0').replace(',', '.')) || 0), 0);
-  const valor = Number(String((ativoById(id) || {}).valor_aquisicao || '0').replace(',', '.')) || 0;
+  const gasto = chs.reduce((s, c) => s + numBR(c.valor_final || c.valor_aprovado), 0);
+  const valor = numBR((ativoById(id) || {}).valor_aquisicao);
   return { gasto: gasto, valor: valor, pct: valor ? Math.round(gasto / valor * 100) : null, chamados: chs.length };
 }
 const LIMITE_TROCA = () => Number(param('indice_troca_alerta', '70')) || 70;
+ 
+/* CRITICIDADE CALCULADA
+   Não é mais escolhida à mão: sai do histórico do equipamento.
+   Crítica  gasto em manutenção >= 70% do valor de aquisição (não compensa
+            mais consertar) OU 5+ corretivas nos últimos 12 meses
+   Alta     gasto >= 40% OU 3+ corretivas em 12 meses
+   Média    gasto >= 15% OU pelo menos 1 corretiva em 12 meses
+   Baixa    o resto
+   Os números mudam na aba CONFIG, sem mexer no código:
+   indice_troca_alerta, criticidade_alta_pct, criticidade_media_pct,
+   criticidade_critica_corretivas, criticidade_alta_corretivas. */
+const MODALIDADES_CORRETIVAS = ['Corretiva', 'Emergencial'];
+function criticidadeDe(a) {
+  if (!a) return { nivel: 'Baixa', motivo: '' };
+  const P = (k, d) => { const n = Number(param(k, d)); return isNaN(n) ? Number(d) : n; };
+  const c = custoDoAtivo(a.ativo_id);
+  const umAno = addDays(today(), -365);
+  const corretivas = chamadosDoAtivo(a.ativo_id).filter(x =>
+    MODALIDADES_CORRETIVAS.includes(x.modalidade) && String(x.aberto_em || '').slice(0, 10) >= umAno).length;
+  /* O valor vem do próprio registro: no cadastro ainda não salvo, é o
+     valor que acabou de ser digitado. */
+  const valor = numBR(a.valor_aquisicao);
+  const pct = valor ? Math.round(c.gasto / valor * 100) : null;
+  const motivo = [
+    pct !== null ? `manutenção já custou ${pct}% do valor de aquisição` : (c.gasto ? 'sem valor de aquisição para comparar' : ''),
+    corretivas ? `${plural(corretivas, 'corretiva')} nos últimos 12 meses` : 'nenhuma corretiva nos últimos 12 meses'
+  ].filter(Boolean).join(', ');
+  const passa = (lim, qtd) => (pct !== null && pct >= lim) || corretivas >= qtd;
+  if (passa(LIMITE_TROCA(), P('criticidade_critica_corretivas', '5'))) return { nivel: 'Crítica', motivo };
+  if (passa(P('criticidade_alta_pct', '40'), P('criticidade_alta_corretivas', '3'))) return { nivel: 'Alta', motivo };
+  if (passa(P('criticidade_media_pct', '15'), 1)) return { nivel: 'Média', motivo };
+  return { nivel: 'Baixa', motivo };
+}
+const critCor = n => n === 'Crítica' ? 'bad' : n === 'Alta' ? 'warn' : 'mute';
 
 /* =========================================================================
    CHAMADOS
@@ -2293,9 +2328,10 @@ function cartaoAtivo(a) {
   const c = custoDoAtivo(a.ativo_id);
   const gar = garantiaVigente(a.ativo_id);
   const foto = anexosDe('ATIVO', a.ativo_id)[0];
+  const crit = criticidadeDe(a);
   return `<article class="dem ativo-card" data-act="abrir-ativo" data-id="${esc(a.ativo_id)}" tabindex="0" role="button">
     <div class="dem-top">
-      <span class="st ${a.criticidade === 'Crítica' ? 'bad' : a.criticidade === 'Alta' ? 'warn' : 'mute'}">${ic('alerta')}${esc(a.criticidade || 'Média')}</span>
+      <span class="st ${critCor(crit.nivel)}" title="${esc(crit.motivo)}">${ic('alerta')}${esc(crit.nivel)}</span>
       <span class="grow"></span>
       <span class="dem-num">${a.codigo_patrimonio ? 'Patrimônio ' + esc(a.codigo_patrimonio) : 'Sem placa'}</span>${ic('chev')}
     </div>
@@ -2322,6 +2358,7 @@ function abrirAtivo(id) {
   const gar = garantiaVigente(id);
   const chs = chamadosDoAtivo(id);
   const alerta = c.pct !== null && c.pct >= LIMITE_TROCA();
+  const crit = criticidadeDe(a);
   const html = `
     <div class="det-cab">
       <h2>${esc(a.nome)}</h2>
@@ -2347,7 +2384,7 @@ function abrirAtivo(id) {
       <dt>Marca</dt><dd>${esc(a.marca || '—')}${a.modelo ? ' ' + esc(a.modelo) : ''}</dd>
       ${a.numero_serie ? `<dt>Número de série</dt><dd>${esc(a.numero_serie)}</dd>` : ''}
       <dt>Voltagem</dt><dd>${esc(a.voltagem || '—')}</dd>
-      <dt>Criticidade</dt><dd>${esc(a.criticidade || '—')}</dd>
+      <dt>Criticidade</dt><dd><span class="st ${critCor(crit.nivel)}">${esc(crit.nivel)}</span><br><span class="hint">${esc(crit.motivo)}</span></dd>
       ${a.data_aquisicao ? `<dt>Comprado em</dt><dd>${fmtD(a.data_aquisicao)}</dd>` : ''}
       ${a.placa_registrada_por ? `<dt>Placa registrada</dt><dd>por ${esc(a.placa_registrada_por)}${a.placa_registrada_em ? ' em ' + fmtD(a.placa_registrada_em) : ''}</dd>` : ''}
     </dl>
@@ -3429,8 +3466,11 @@ function abrirCadastroAtivo(pre, aoSalvar) {
       <label class="fld"><span>Voltagem</span><select name="voltagem">${opts(L('voltagem'), a ? a.voltagem : 'Não possui')}</select></label>
     </div>
     <div class="grid2">
-      <label class="fld"><span>Valor de aquisição</span><input type="text" name="valor" inputmode="decimal" value="${esc(a ? a.valor_aquisicao : '')}" placeholder="Ex.: 5200,00"></label>
-      <label class="fld"><span>Criticidade</span><select name="criticidade">${opts(L('criticidade'), a ? a.criticidade : 'Média')}</select></label>
+      <label class="fld req"><span>Valor de aquisição</span><input type="text" name="valor" inputmode="decimal" value="${esc(a ? a.valor_aquisicao : '')}" placeholder="Ex.: 5200,00">
+        <span class="hint">Se não souber o valor exato, informe uma estimativa.</span></label>
+      <div class="fld"><span>Criticidade</span>
+        <div><span class="st ${critCor(a ? criticidadeDe(a).nivel : 'Baixa')}">${esc(a ? criticidadeDe(a).nivel : 'Baixa')}</span></div>
+        <span class="hint">Calculada pelo histórico de manutenção. Não se escolhe à mão.</span></div>
     </div>
     ${campoFoto()}
     <div class="err-msg" id="atErr"></div>
@@ -3447,6 +3487,9 @@ function abrirCadastroAtivo(pre, aoSalvar) {
       const nome = f.nome.value.trim();
       if (!nome) { err.textContent = 'Informe o nome do equipamento.'; return; }
       if (!f.categoria.value.trim()) { err.textContent = 'Informe a categoria.'; return; }
+      /* Valor de aquisição é obrigatório e precisa ser maior que zero. Aceita
+         5200 / 5200,00 / 5.200,00. */
+      if (!(numBR(f.valor.value) > 0)) { err.textContent = 'Informe o valor de aquisição.'; f.valor.focus(); return; }
       const cod = podePatrimonio() ? f.patrimonio.value.trim() : (a ? a.codigo_patrimonio : '');
       if (cod) {
         const outro = ativoPorPatrimonio(cod);
@@ -3459,7 +3502,9 @@ function abrirCadastroAtivo(pre, aoSalvar) {
         empresa_id: f.empresa.value, unidade_id: f.unidade.value, setor_id: '', local: f.local.value.trim(),
         categoria: f.categoria.value.trim(), subcategoria: f.subcategoria.value.trim(), nome: nome,
         marca: marca, modelo: modelo, numero_serie: f.serie.value.trim(), voltagem: f.voltagem.value,
-        valor_aquisicao: f.valor.value.trim(), criticidade: f.criticidade.value,
+        valor_aquisicao: f.valor.value.trim(),
+        /* Calculada com o valor novo que acabou de ser digitado. */
+        criticidade: criticidadeDe(Object.assign({}, a || { ativo_id: id }, { valor_aquisicao: f.valor.value.trim() })).nivel,
         status: a ? a.status : 'Em operação',
         dados_pendentes: (marca && f.subcategoria.value.trim()) ? 'Não' : 'Sim',
         atualizado_por: USER.nome, atualizado_em: nowISO()
