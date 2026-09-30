@@ -2655,60 +2655,81 @@ const campoFoto = () =>
     <span class="hint foto-st">Opcional. Sem internet, a foto fica guardada no aparelho e sobe sozinha depois.</span></div>`;
  
 /* =========================================================
-   ARQUIVOS: PDF OU FOTO (orçamento, recibo, nota fiscal)
-   Diferente da foto, o arquivo sobe na hora e precisa de internet: PDF
-   não dá para guardar no aparelho e mandar depois. Foto é reduzida antes
-   de subir; PDF vai como está, até ARQ_MAX_MB.
+   ARQUIVOS: PDF OU FOTO (orçamento, recibo, nota fiscal, evidências)
+   Diferente da foto antiga, o arquivo sobe na hora e precisa de internet:
+   PDF não dá para guardar no aparelho e mandar depois. Foto é reduzida
+   antes de subir; PDF vai como está, até ARQ_MAX_MB.
+   o.multi  aceita vários arquivos de uma vez (fotos de evidência)
+   o.foto   aceita só foto (abre a câmera no celular)
    ========================================================= */
 const ARQ_MAX_MB = 10;
-const campoArquivo = (nome, rotulo, dica) =>
-  `<div class="fld"><span>${rotulo}</span><input type="file" accept="application/pdf,image/*" data-arquivo="${nome}">
-    <input type="hidden" name="${nome}" value="" data-mime="">
-    <span class="hint arq-st">${dica || 'PDF ou foto. Precisa de internet para enviar.'}</span></div>`;
+const campoArquivo = (nome, rotulo, dica, o) => {
+  o = o || {};
+  return `<div class="fld"><span>${rotulo}</span><input type="file" accept="${o.foto ? 'image/*' : 'application/pdf,image/*'}" ${o.multi ? 'multiple' : ''} data-arquivo="${nome}">
+    <input type="hidden" name="${nome}" value="">
+    <span class="hint arq-st">${dica || (o.foto ? 'Fotos. Precisa de internet para enviar.' : 'PDF ou foto. Precisa de internet para enviar.')}</span></div>`;
+};
 const lerComoDataURL = file => new Promise((res, rej) => {
   const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file);
 });
+/* Sobe um arquivo e devolve { url, mime, nome }. */
+async function subirArquivo(file) {
+  const ehPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  const ehImg = /^image\//.test(file.type);
+  if (!ehPdf && !ehImg) throw new Error('Só dá para anexar PDF ou foto.');
+  if (ehPdf && file.size > ARQ_MAX_MB * 1048576) throw new Error(`${file.name} passa de ${ARQ_MAX_MB} MB.`);
+  const data = ehPdf ? await lerComoDataURL(file) : await compressImg(file);
+  const mime = ehPdf ? 'application/pdf' : 'image/jpeg';
+  const nome = `${today()}_${USER.nome.replace(/[^\w]+/g, '_')}_${Date.now()}.${ehPdf ? 'pdf' : 'jpg'}`;
+  const r = await api({ action: 'upload', name: nome, mime: mime, data: String(data).split(',')[1] });
+  if (!r || !r.ok) throw new Error((r && r.error) || 'Falha no envio');
+  return { url: r.url, mime: mime, nome: file.name };
+}
+/* O campo escondido guarda a lista do que já subiu, em JSON. Escolher
+   arquivos de novo SOMA à lista: dá para anexar em mais de uma vez. */
 function bindArquivos(root) {
   $$('[data-arquivo]', root).forEach(inp => inp.addEventListener('change', async () => {
-    const file = inp.files[0];
-    if (!file) return;
+    const files = Array.from(inp.files || []);
+    if (!files.length) return;
     const box = inp.closest('.fld');
     const out = $(`input[name="${inp.dataset.arquivo}"]`, box), st = $('.arq-st', box);
-    out.value = ''; out.dataset.mime = '';
-    const ehPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
-    const ehImg = /^image\//.test(file.type);
-    if (!ehPdf && !ehImg) { st.textContent = 'Só dá para anexar PDF ou foto.'; inp.value = ''; return; }
-    if (ehPdf && file.size > ARQ_MAX_MB * 1048576) { st.textContent = `Este PDF passa de ${ARQ_MAX_MB} MB. Mande uma versão menor ou uma foto.`; inp.value = ''; return; }
-    if (!CFG.GAS_URL || !navigator.onLine) { st.textContent = 'Sem internet agora. Anexe o arquivo quando a conexão voltar.'; inp.value = ''; return; }
+    if (!CFG.GAS_URL || !navigator.onLine) { st.textContent = 'Sem internet agora. Anexe quando a conexão voltar.'; inp.value = ''; return; }
+    let lista = [];
+    try { lista = JSON.parse(out.value || '[]'); } catch (e) { lista = []; }
+    if (!inp.multiple) lista = [];
     FOTO_BUSY = true;
-    st.textContent = ehPdf ? 'Enviando o PDF…' : 'Preparando a foto…';
+    const falhas = [];
     try {
-      const data = ehPdf ? await lerComoDataURL(file) : await compressImg(file);
-      const mime = ehPdf ? 'application/pdf' : 'image/jpeg';
-      const nome = `${today()}_${USER.nome.replace(/[^\w]+/g, '_')}_${Date.now()}.${ehPdf ? 'pdf' : 'jpg'}`;
-      if (!ehPdf) st.textContent = 'Enviando a foto…';
-      const r = await api({ action: 'upload', name: nome, mime: mime, data: String(data).split(',')[1] });
-      if (!r || !r.ok) throw new Error((r && r.error) || 'Falha no envio');
-      out.value = r.url; out.dataset.mime = mime; out.dataset.nome = file.name;
-      st.textContent = (ehPdf ? 'PDF anexado: ' : 'Foto anexada: ') + file.name;
-    } catch (e) {
-      console.warn(e);
-      st.textContent = 'Não consegui enviar o arquivo. Tente de novo.';
-      inp.value = '';
-    } finally { FOTO_BUSY = false; }
+      for (let k = 0; k < files.length; k++) {
+        st.textContent = files.length > 1 ? `Enviando ${k + 1} de ${files.length}…` : 'Enviando…';
+        try { lista.push(await subirArquivo(files[k])); }
+        catch (e) { console.warn(e); falhas.push(files[k].name); }
+      }
+    } finally { FOTO_BUSY = false; inp.value = ''; }
+    out.value = lista.length ? JSON.stringify(lista) : '';
+    const pdfs = lista.filter(a => a.mime === 'application/pdf').length, fotos = lista.length - pdfs;
+    const partes = [pdfs ? plural(pdfs, 'PDF anexado', 'PDFs anexados') : '', fotos ? plural(fotos, 'foto anexada', 'fotos anexadas') : ''].filter(Boolean);
+    st.textContent = (partes.length ? partes.join(' e ') + '.' : '') +
+      (falhas.length ? ` Não consegui enviar: ${falhas.join(', ')}.` : '') +
+      (inp.multiple && lista.length ? ' Pode escolher mais.' : '');
   }));
 }
-/* Liga o arquivo enviado ao registro, na aba ANEXOS. */
+/* Liga o que foi enviado ao registro, na aba ANEXOS. Um anexo por arquivo. */
 function anexarDoc(origem, origemId, tipo, campo) {
-  if (!campo || !campo.value) return;
-  const id = driveId(campo.value);
-  const pdf = campo.dataset.mime === 'application/pdf';
-  save('anexos', {
-    anexo_id: uid('anx'), origem: origem, origem_id: origemId, tipo: tipo,
-    nome_arquivo: campo.dataset.nome || '', pasta: '', drive_file_id: id, url: campo.value,
-    thumb_url: id && !pdf ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : '',
-    mime: campo.dataset.mime || 'image/jpeg', enviado_por: USER.nome, enviado_em: nowISO(), status: 'Ligado'
-  }, true);
+  if (!campo || !campo.value) return 0;
+  let lista = [];
+  try { lista = JSON.parse(campo.value); } catch (e) { lista = [{ url: campo.value, mime: 'image/jpeg', nome: '' }]; }
+  lista.forEach(a => {
+    const id = driveId(a.url);
+    const pdf = a.mime === 'application/pdf';
+    save('anexos', {
+      anexo_id: uid('anx'), origem: origem, origem_id: origemId, tipo: tipo,
+      nome_arquivo: a.nome || '', pasta: '', drive_file_id: id, url: a.url,
+      thumb_url: id && !pdf ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : '',
+      mime: a.mime || 'image/jpeg', enviado_por: USER.nome, enviado_em: nowISO(), status: 'Ligado'
+    }, true);
+  });
+  return lista.length;
 }
 
 /* Aceite direto, sem formulário: é o gesto mais frequente e precisa ser um toque. */
@@ -3671,21 +3692,19 @@ function chComentar(id) {
 function chAtualizar(id) {
   const c = chById(id); if (!c) return;
   const L = lista;
-  /* O tipo diz o que é o arquivo: aparece no cartão do anexo no chamado. */
-  const tipos = ['Proposta', 'Nota fiscal', 'Termo de garantia', 'Laudo', 'Manual', 'Outro'];
   formSimples('Atualizar chamado', `
     ${campoTexto('texto', 'O que foi feito', true, 'Mesmo que parcial. Ajuda quem continuar depois.')}
     <label class="fld"><span>Situação</span><select name="status">${opts(L('status_chamado').filter(s => s !== 'Concluída' && s !== 'Cancelada'), c.status)}</select></label>
-    ${campoArquivo('arq_doc', 'Documento (orçamento, recibo, NF, laudo)', 'PDF ou foto. Precisa de internet para enviar.')}
-    <label class="fld"><span>Esse documento é</span><select name="tipoDoc">${opts(tipos.map(t => ({ v: t, t: t === 'Proposta' ? 'Orçamento' : t === 'Nota fiscal' ? 'Recibo ou nota fiscal' : t })), 'Proposta')}</select>
-      <span class="hint">Só vale se você anexou um documento acima.</span></label>
-    ${campoFoto()}`, f => {
+    ${campoArquivo('arq_orc', 'Orçamento', 'PDF ou foto da proposta. Precisa de internet para enviar.')}
+    ${campoArquivo('arq_nf', 'Recibo ou nota fiscal', 'PDF ou foto do recibo ou da NF. Precisa de internet para enviar.')}
+    ${campoArquivo('arq_fotos', 'Fotos de evidência', 'Pode escolher várias de uma vez: antes, durante, depois. Precisa de internet.', { multi: true, foto: true })}`, f => {
     const t = f.texto.value.trim();
     if (!t) return 'Descreva o que foi feito.';
-    if (f.evidencia.value) anexar('CHAMADO', id, 'Foto do problema', f.evidencia.value);
-    anexarDoc('CHAMADO', id, f.tipoDoc.value, f.arq_doc);
+    const n = anexarDoc('CHAMADO', id, 'Proposta', f.arq_orc) +
+      anexarDoc('CHAMADO', id, 'Nota fiscal', f.arq_nf) +
+      anexarDoc('CHAMADO', id, 'Foto de evidência', f.arq_fotos);
     mudarCh(c, f.status.value, f.status.value !== c.status ? 'STATUS_ALTERADO' : 'COMENTARIO', {}, t);
-    toast('Atualização registrada');
+    toast(n ? `Atualização registrada com ${plural(n, 'anexo')}` : 'Atualização registrada');
   }, 'Registrar');
 }
 function chConcluir(id) {
@@ -3701,7 +3720,7 @@ function chConcluir(id) {
     <label class="fld req hidden" data-gar-ate><span>Garantia até</span><input type="date" name="garAte" min="${today()}">
       <span class="hint">A data que está no recibo, na nota ou no termo do fornecedor.</span></label>
     ${campoArquivo('arq_nf', 'Recibo ou nota fiscal', 'PDF ou foto do recibo ou da NF. Precisa de internet para enviar.')}
-    ${campoFoto()}`, f => {
+    ${campoArquivo('arq_fotos', 'Fotos do serviço', 'Pode escolher várias: peça trocada, serviço pronto. Precisa de internet.', { multi: true, foto: true })}`, f => {
     const s = f.solucao.value.trim();
     if (!s) return 'Descreva a solução aplicada.';
     const tem = f.temGar.value;
@@ -3723,7 +3742,7 @@ function chConcluir(id) {
       evento(id, 'GARANTIA_REGISTRADA', { ativo_id: c.ativo_id, descricao: `Garantia de ${plural(dias, 'dia')}, até ${fmtD(fim)}` });
     }
     anexarDoc('CHAMADO', id, 'Nota fiscal', f.arq_nf);
-    if (f.evidencia.value) anexar('CHAMADO', id, 'Foto da peça', f.evidencia.value);
+    anexarDoc('CHAMADO', id, 'Foto de evidência', f.arq_fotos);
     mudarCh(c, 'Concluída', 'SERVICO_CONCLUIDO', patch, s);
     toast(dias ? `Concluído. Garantia registrada até ${fmtD(fim)}.` : 'Chamado concluído');
   }, 'Concluir', 'jade');
