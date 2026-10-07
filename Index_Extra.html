@@ -158,6 +158,9 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:500}
 .chip.on{background:var(--text);color:#fff;border-color:var(--text)}
+.chip.fora{text-decoration:line-through;opacity:.45;border-style:dashed}
+.txt-red{color:var(--red-ink);font-weight:600}
+.serie-tag{font-size:11px;color:var(--slate-ink,#475569);background:var(--slate-soft);border-radius:6px;padding:1px 6px;font-weight:600;white-space:nowrap}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
 .tabs button{border:0;background:none;padding:10px 12px;font-weight:600;font-size:14px;color:var(--mute);border-bottom:2px solid transparent;white-space:nowrap}
 .tabs button.on{color:var(--red);border-bottom-color:var(--red)}
@@ -267,7 +270,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.09.29-a',
+  VERSAO: '2026.10.07-a',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -557,6 +560,10 @@ const nomeDe = email => email ? ((email === U().email) ? 'você' : (S.d.nomes[lo
 const ocupadas = sol => escDa(sol).filter(e => ATIVAS.indexOf(e.status) >= 0).length;
 const confirmados = sol => escDa(sol).filter(e => e.status === 'CONFIRMADO' || e.status === 'VALIDADO').length;
 const turno = x => extTurno_(x.data, x.hora_ini, x.hora_fim);
+/* Série = mesma vaga aberta em várias datas (dias fixos) */
+const serieDe = sol => sol && sol.serie_id ? S.d.solicitacoes.filter(x => x.serie_id === sol.serie_id).sort((a, b) => a.data.localeCompare(b.data)) : (sol ? [sol] : []);
+const serieCancelaveis = sol => serieDe(sol).filter(x => x.data >= sol.data && ['CANCELADA', 'RECUSADA', 'ENCERRADA'].indexOf(x.status) < 0 &&
+  (podeAprovar(x) || low(x.solicitante) === U().email) && !escDa(x).some(e => e.status === 'VALIDADO'));
 const local = sol => empNome(sol.empresa) + (sol.unidade && norm(sol.unidade) !== norm(empNome(sol.empresa)) ? ' ' + sol.unidade : '');
 
 function bate(a, b, n) { if (!a || a === '*') return true; return n ? norm(a) === norm(b) : up(a) === up(b); }
@@ -640,6 +647,18 @@ function aplicarLocal(it) {
         valor_previsto: String(valorDe(p.funcao_id, horasTurno(p.data, p.hora_ini, p.hora_fim, p.intervalo_min), p.data)),
         criado_em: p.feito_em, _pend: true
       }));
+      break;
+    case 'criarSerie':
+      (p.itens || []).forEach(x => {
+        if (solDe(x.sol_id)) return;
+        aplicarLocal({ action: 'criarSolicitacao', payload: Object.assign({}, p, { itens: undefined, sol_id: x.sol_id, data: x.data }) });
+      });
+      break;
+    case 'decidirSerie':
+      if (s) serieDe(s).filter(x => x.status === 'SOLICITADA' && podeAprovar(x)).forEach(x => aplicarLocal({ action: 'decidirSolicitacao', payload: Object.assign({}, p, { sol_id: x.sol_id }) }));
+      break;
+    case 'cancelarSerie':
+      if (s) serieCancelaveis(s).forEach(x => aplicarLocal({ action: 'cancelarSolicitacao', payload: Object.assign({}, p, { sol_id: x.sol_id }) }));
       break;
     case 'decidirSolicitacao':
       if (s && s.status === 'SOLICITADA') { s.status = p.decisao === 'APROVAR' ? 'APROVADA' : 'RECUSADA'; s.aprovador_nome = u.nome; s.motivo_recusa = p.motivo || ''; s._pend = true; }
@@ -893,7 +912,7 @@ function gauge(pct, rotulo) {
 function linhaSol(s, extra) {
   const o = ocupadas(s), v = num(s.vagas);
   return '<button type="button" class="item' + (s._pend ? ' pend' : '') + '" data-act="sol" data-id="' + esc(s.sol_id) + '">' +
-    '<div class="grow"><div class="t">' + esc(s.funcao_nome) + ' ' + pill(rotuloSol(s)) + (s._pend ? '<span class="pend-tag">na fila</span>' : '') + '</div>' +
+    '<div class="grow"><div class="t">' + esc(s.funcao_nome) + ' ' + pill(rotuloSol(s)) + (s.serie_id ? ' <span class="serie-tag">dias fixos</span>' : '') + (s._pend ? '<span class="pend-tag">na fila</span>' : '') + '</div>' +
     '<div class="m">' + esc(local(s)) + ' · ' + esc(s.setor) + '</div>' +
     '<div class="m">' + esc(quando(s.data)) + ' · ' + esc(s.hora_ini) + '–' + esc(s.hora_fim) + ' · ' + esc(s.numero) + '</div>' + (extra || '') + '</div>' +
     '<div class="r"><span class="vagas num">' + o + '/' + v + '</span><span class="tiny mute">escalados</span></div></button>';
@@ -919,13 +938,21 @@ function vInicio(c) {
       '<div class="item"><div class="grow"><div class="t">' + pill(['Atenção', 'p-amber']) + ' ' + esc(l.numero) + '</div><div class="m">' + esc(l.texto) + '</div></div></div>').join('') + '</div></div>');
   }
   if (c.aprovar.length) {
-    partes.push('<div class="sec"><div class="sec-t">Esperando sua aprovação<span class="grow"></span></div><div class="list">' + c.aprovar.slice(0, 8).map(s =>
-      '<div class="item"><div class="grow"><div class="t">' + esc(s.funcao_nome) + ' · ' + plural(num(s.vagas), 'vaga') + '</div>' +
-      '<div class="m">' + esc(local(s)) + ' · ' + esc(s.setor) + ' · ' + esc(quando(s.data)) + ' ' + esc(s.hora_ini) + '–' + esc(s.hora_fim) + '</div>' +
+    /* Série de dias fixos aparece num cartão só, com "Aprovar as N datas" */
+    const grupos = [], porSerie = {};
+    c.aprovar.forEach(s => {
+      if (s.serie_id && porSerie[s.serie_id]) { porSerie[s.serie_id].push(s); return; }
+      const g = [s]; if (s.serie_id) porSerie[s.serie_id] = g; grupos.push(g);
+    });
+    partes.push('<div class="sec"><div class="sec-t">Esperando sua aprovação<span class="grow"></span></div><div class="list">' + grupos.slice(0, 8).map(g => {
+      const s = g[0], varias = g.length > 1;
+      return '<div class="item"><div class="grow"><div class="t">' + esc(s.funcao_nome) + ' · ' + plural(num(s.vagas), 'vaga') + (varias ? ' por dia <span class="serie-tag">' + g.length + ' datas</span>' : '') + '</div>' +
+      '<div class="m">' + esc(local(s)) + ' · ' + esc(s.setor) + ' · ' + (varias ? esc(g.slice(0, 6).map(x => diaCurto(x.data)).join(', ') + (g.length > 6 ? '…' : '')) : esc(quando(s.data))) + ' ' + esc(s.hora_ini) + '–' + esc(s.hora_fim) + '</div>' +
       '<div class="m">' + esc(s.motivo) + (s.motivo_detalhe ? ' · ' + esc(s.motivo_detalhe) : '') + ' · pedido por ' + esc(nomeDe(s.solicitante)) + '</div>' +
-      '<div class="acts"><button class="btn ok sm" data-act="aprovar" data-id="' + esc(s.sol_id) + '">Aprovar</button>' +
-      '<button class="btn out-red sm" data-act="recusar" data-id="' + esc(s.sol_id) + '">Recusar</button>' +
-      '<button class="btn ghost sm" data-act="sol" data-id="' + esc(s.sol_id) + '">Ver</button></div></div></div>').join('') + '</div></div>');
+      '<div class="acts"><button class="btn ok sm" data-act="' + (varias ? 'aprovar-serie' : 'aprovar') + '" data-id="' + esc(s.sol_id) + '">' + (varias ? 'Aprovar as ' + g.length : 'Aprovar') + '</button>' +
+      '<button class="btn out-red sm" data-act="' + (varias ? 'recusar-serie' : 'recusar') + '" data-id="' + esc(s.sol_id) + '">' + (varias ? 'Recusar todas' : 'Recusar') + '</button>' +
+      '<button class="btn ghost sm" data-act="sol" data-id="' + esc(s.sol_id) + '">Ver</button></div></div></div>';
+    }).join('') + '</div></div>');
   }
   if (c.validar.length) {
     partes.push('<div class="sec"><div class="sec-t">Turnos para validar</div><div class="list">' + c.validar.slice(0, 8).map(itemValidar).join('') + '</div></div>');
@@ -1159,6 +1186,18 @@ function abrirSol(id) {
   if (['SOLICITADA', 'APROVADA', 'EM_ESCALA', 'COMPLETA'].indexOf(s.status) >= 0 && (podeA || low(s.solicitante) === U().email) && !esca.some(e => e.status === 'VALIDADO') && !s._pend) {
     rod.push('<button class="btn ghost" data-act="cancelar-sol" data-id="' + esc(s.sol_id) + '">Cancelar solicitação</button>');
   }
+  const serie = serieDe(s);
+  if (s.serie_id && serie.length > 1) {
+    const esperando = serie.filter(x => x.status === 'SOLICITADA' && podeAprovar(x) && !(low(x.solicitante) === U().email && !autoaprova(x)));
+    const canc = serieCancelaveis(s);
+    const pos = serie.indexOf(s) + 1;
+    h = '<div class="alerta azul" style="margin-bottom:12px"><b>Dias fixos · data ' + pos + ' de ' + serie.length + '</b><div class="chips" style="margin-top:8px">' +
+      serie.map(x => '<button type="button" class="chip' + (x === s ? ' on' : '') + (['CANCELADA', 'RECUSADA'].indexOf(x.status) >= 0 ? ' fora' : '') + '" data-act="sol" data-id="' + esc(x.sol_id) + '">' + diaCurto(x.data) + '</button>').join('') +
+      '</div></div>' + h;
+    if (esperando.length > 1 && !s._pend) rod.unshift('<button class="btn ok" data-act="aprovar-serie" data-id="' + esc(s.sol_id) + '">Aprovar as ' + esperando.length + ' datas</button>');
+    if (esperando.length > 1 && !s._pend) rod.push('<button class="btn out-red" data-act="recusar-serie" data-id="' + esc(s.sol_id) + '">Recusar todas</button>');
+    if (canc.length > 1 && !s._pend) rod.push('<button class="btn ghost" data-act="cancelar-serie" data-id="' + esc(s.sol_id) + '">Cancelar esta e as seguintes (' + canc.length + ')</button>');
+  }
   modal(esc(s.numero), h, rod.join(''), false);
 }
 function linkWhats(p, s) {
@@ -1170,17 +1209,28 @@ function linkWhats(p, s) {
 }
 
 /* ---------- Nova solicitação ---------- */
+const SERIE_MAX = 31;
+const SEM_CURTA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const ORDEM_SEM = [1, 2, 3, 4, 5, 6, 0];   // segunda primeiro
+const diaSemana = iso => new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))).getUTCDay();
 function abrirNova() {
   const d = S.d;
   const empresas = []; d.estrutura.forEach(r => { if (!empresas.some(e => e[0] === r.empresa)) empresas.push([r.empresa, r.empresa_nome || r.empresa]); });
   const amanha = addDias(hojeStr(), 1);
-  S.modalCtx = { tipo: 'nova', vagas: 1 };
+  S.modalCtx = { tipo: 'nova', vagas: 1, modo: 'um', dias: [], fora: {} };
   const h = '<form id="f-nova" autocomplete="off">' +
     '<div class="field"><label>Empresa <span class="req">*</span></label><select name="empresa" required><option value="">Escolha</option>' + empresas.map(e => '<option value="' + esc(e[0]) + '">' + esc(e[1]) + '</option>').join('') + '</select></div>' +
     '<div class="row2"><div class="field"><label>Unidade <span class="req">*</span></label><select name="unidade" required><option value="">—</option></select></div>' +
     '<div class="field"><label>Setor <span class="req">*</span></label><select name="setor" required><option value="">—</option></select></div></div>' +
     '<div class="field"><label>Função <span class="req">*</span></label><select name="funcao_id" required><option value="">Escolha</option>' + d.funcoes.map(f => '<option value="' + esc(f.funcao_id) + '">' + esc(f.nome) + ' · ' + esc(f.grupo) + '</option>').join('') + '</select></div>' +
-    '<div class="row3"><div class="field"><label>Data <span class="req">*</span></label><input type="date" name="data" value="' + amanha + '" required></div>' +
+    '<div class="field"><label>Quando</label><div class="seg" id="nova-modo"><button type="button" class="on" data-act="nova-modo" data-m="um">Um dia</button><button type="button" data-act="nova-modo" data-m="varios">Dias fixos / várias datas</button></div></div>' +
+    '<div id="nova-varios" hidden>' +
+      '<div class="field"><label>Dias da semana <span class="req">*</span></label><div class="chips" id="nova-sem">' + ORDEM_SEM.map(w => '<button type="button" class="chip" data-act="nova-dia" data-d="' + w + '">' + SEM_CURTA[w] + '</button>').join('') + '</div></div>' +
+      '<div class="row2"><div class="field"><label>De <span class="req">*</span></label><input type="date" name="de" value="' + amanha + '"></div>' +
+      '<div class="field"><label>Até <span class="req">*</span></label><input type="date" name="ate" value="' + addDias(amanha, 27) + '"></div></div>' +
+      '<div class="field"><label>Datas que vão abrir</label><div class="chips" id="nova-datas"></div><span class="hint">Toque numa data para tirar (feriado, folga). Toque de novo para voltar.</span></div>' +
+    '</div>' +
+    '<div class="row3" id="nova-horas"><div class="field" id="nova-data-f"><label>Data <span class="req">*</span></label><input type="date" name="data" value="' + amanha + '"></div>' +
     '<div class="field"><label>Início <span class="req">*</span></label><input type="time" name="hora_ini" value="18:00" required></div>' +
     '<div class="field"><label>Fim <span class="req">*</span></label><input type="time" name="hora_fim" value="00:00" required></div></div>' +
     '<div class="row2"><div class="field"><label>Vagas <span class="req">*</span></label><div class="stepper"><button type="button" data-act="vagas" data-d="-1" aria-label="Menos">−</button><input name="vagas" inputmode="numeric" value="1"><button type="button" data-act="vagas" data-d="1" aria-label="Mais">+</button></div></div>' +
@@ -1194,9 +1244,22 @@ function abrirNova() {
   atualizarNova();
 }
 function formDados(f) { const o = {}; new FormData(f).forEach((v, k) => { o[k] = String(v).trim(); }); return o; }
+/* Datas da série: período De/Até, só os dias da semana marcados, menos as tiradas. */
+function datasNova(x) {
+  const c = S.modalCtx, out = { todas: [], datas: [], erro: '' };
+  if (!c.dias.length) { out.erro = 'Escolha os dias da semana.'; return out; }
+  if (!x.de || !x.ate) { out.erro = 'Informe o período (de / até).'; return out; }
+  if (x.ate < x.de) { out.erro = 'A data final é antes da inicial.'; return out; }
+  if (extDia_(x.ate) - extDia_(x.de) > 92) { out.erro = 'Período de no máximo 3 meses.'; return out; }
+  for (let d = x.de; d <= x.ate; d = addDias(d, 1)) if (c.dias.indexOf(diaSemana(d)) >= 0) out.todas.push(d);
+  out.datas = out.todas.filter(d => !c.fora[d]);
+  if (!out.datas.length) out.erro = 'Nenhuma data nesse período.';
+  else if (out.datas.length > SERIE_MAX) out.erro = 'São ' + out.datas.length + ' datas. O máximo é ' + SERIE_MAX + ' por vez: encurte o período.';
+  return out;
+}
 function atualizarNova(campo) {
   const f = $('#f-nova'); if (!f) return;
-  const d = S.d, v = formDados(f);
+  const d = S.d, v = formDados(f), c = S.modalCtx, varios = c.modo === 'varios';
   if (campo === 'empresa' || campo === undefined) {
     const us = []; d.estrutura.filter(r => r.empresa === v.empresa).forEach(r => { if (us.indexOf(r.unidade) < 0) us.push(r.unidade); });
     f.unidade.innerHTML = us.length ? us.map(u => '<option>' + esc(u) + '</option>').join('') : '<option value="">—</option>';
@@ -1207,36 +1270,66 @@ function atualizarNova(campo) {
     const antes = f.setor.value;
     f.setor.innerHTML = ss.length ? ss.map(s => '<option' + (s === antes ? ' selected' : '') + '>' + esc(s) + '</option>').join('') : '<option value="">—</option>';
   }
+  /* Modo: um dia ou dias fixos */
+  $('#nova-varios').hidden = !varios;
+  $('#nova-data-f').hidden = varios;
+  $('#nova-horas').className = varios ? 'row2' : 'row3';
+  $$('#nova-modo button').forEach(b => b.classList.toggle('on', b.dataset.m === c.modo));
+  $$('#nova-sem .chip').forEach(b => b.classList.toggle('on', c.dias.indexOf(Number(b.dataset.d)) >= 0));
   const x = formDados(f);
+  const vg = Math.max(1, Math.round(num(x.vagas)));
   let txt = 'Preencha para ver o valor previsto.';
-  if (x.funcao_id && x.data && x.hora_ini && x.hora_fim) {
+  if (varios) {
+    const r = datasNova(x);
+    $('#nova-datas').innerHTML = r.todas.length ? r.todas.map(dt => '<button type="button" class="chip' + (c.fora[dt] ? ' fora' : '') + '" data-act="nova-fora" data-d="' + dt + '">' + diaCurto(dt) + '</button>').join('')
+      : '<span class="small mute">' + esc(r.erro || '—') + '</span>';
+    if (r.erro) txt = '<span class="txt-red">' + esc(r.erro) + '</span>';
+    else if (x.funcao_id && x.hora_ini && x.hora_fim) {
+      const hs = horasTurno(r.datas[0], x.hora_ini, x.hora_fim, x.intervalo_min);
+      const tot = r.datas.reduce((t, dt) => t + valorDe(x.funcao_id, hs, dt), 0);
+      txt = '<b>' + plural(r.datas.length, 'data') + '</b> · <b>' + hFmt(hs) + '</b> por turno' + (x.hora_fim <= x.hora_ini ? ' (termina no dia seguinte)' : '') +
+        ' · <b>' + dinheiro(valorDe(x.funcao_id, hs, r.datas[0])) + '</b> por pessoa por dia · total previsto <b>' + dinheiro(tot * vg) + '</b>' +
+        '<div class="small mute" style="margin-top:4px">Abre uma solicitação para cada data. Cada uma é escalada, validada e paga separadamente.</div>';
+    } else txt = '<b>' + plural(r.datas.length, 'data') + '</b>. Escolha a função e o horário para ver o valor.';
+  } else if (x.funcao_id && x.data && x.hora_ini && x.hora_fim) {
     const hs = horasTurno(x.data, x.hora_ini, x.hora_fim, x.intervalo_min);
-    const val = valorDe(x.funcao_id, hs, x.data), vg = Math.max(1, Math.round(num(x.vagas)));
+    const val = valorDe(x.funcao_id, hs, x.data);
     txt = '<b>' + hFmt(hs) + '</b> de turno' + (extTurno_(x.data, x.hora_ini, x.hora_fim).fim % 1440 !== 0 && x.hora_fim <= x.hora_ini ? ' (termina no dia seguinte)' : '') +
       ' · <b>' + dinheiro(val) + '</b> por pessoa · total previsto <b>' + dinheiro(val * vg) + '</b>';
   }
   $('#nova-resumo').innerHTML = txt;
   const alvo = { empresa: x.empresa, unidade: f.unidade.value, setor: f.setor.value };
   const auto = x.empresa && autoaprova(alvo);
-  $('#nova-botoes').innerHTML = (auto ? '<button class="btn ghost" data-act="nova-enviar" data-auto="0">Enviar para aprovação</button><button class="btn ok" data-act="nova-enviar" data-auto="1">Aprovar e abrir vaga</button>'
-    : '<button class="btn" data-act="nova-enviar" data-auto="0">Enviar para aprovação</button>');
+  const n = varios ? datasNova(x).datas.length : 1;
+  const sufixo = varios && n > 1 ? ' (' + n + ')' : '';
+  $('#nova-botoes').innerHTML = (auto ? '<button class="btn ghost" data-act="nova-enviar" data-auto="0">Enviar para aprovação' + sufixo + '</button><button class="btn ok" data-act="nova-enviar" data-auto="1">Aprovar e abrir ' + (varios && n > 1 ? 'as vagas' : 'vaga') + sufixo + '</button>'
+    : '<button class="btn" data-act="nova-enviar" data-auto="0">Enviar para aprovação' + sufixo + '</button>');
 }
 function enviarNova(auto) {
-  const f = $('#f-nova'), x = formDados(f);
+  const f = $('#f-nova'), x = formDados(f), varios = S.modalCtx.modo === 'varios';
   const falta = [];
   if (!x.empresa) falta.push('empresa'); if (!x.unidade) falta.push('unidade'); if (!x.setor) falta.push('setor'); if (!x.funcao_id) falta.push('função');
-  if (!x.data) falta.push('data'); if (!x.hora_ini || !x.hora_fim) falta.push('horário'); if (!x.motivo) falta.push('motivo');
+  if (!varios && !x.data) falta.push('data'); if (!x.hora_ini || !x.hora_fim) falta.push('horário'); if (!x.motivo) falta.push('motivo');
   if (falta.length) return toast('Falta preencher: ' + falta.join(', '), 'err');
   if (x.motivo === 'Outros' && x.motivo_detalhe.length < 5) return toast('Em "Outros", descreva o motivo.', 'err');
   const vg = Math.round(num(x.vagas));
   if (vg < 1 || vg > 50) return toast('Informe de 1 a 50 vagas.', 'err');
-  const hs = horasTurno(x.data, x.hora_ini, x.hora_fim, x.intervalo_min);
+  const datas = varios ? datasNova(x) : { datas: [x.data] };
+  if (datas.erro) return toast(datas.erro, 'err');
+  const hs = horasTurno(datas.datas[0], x.hora_ini, x.hora_fim, x.intervalo_min);
   if (hs <= 0 || hs > 16) return toast('Confira o horário: o turno ficou com ' + hFmt(hs) + '.', 'err');
   const retro = num(cfg().dias_retroativos || 7);
-  if (extDia_(x.data) < extDia_(hojeStr()) - retro) return toast('A data passou de ' + retro + ' dias.', 'err');
+  if (extDia_(datas.datas[0]) < extDia_(hojeStr()) - retro) return toast('A data ' + dataBr(datas.datas[0]) + ' passou de ' + retro + ' dias.', 'err');
+  const base = { empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, hora_ini: x.hora_ini, hora_fim: x.hora_fim,
+    motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: x.obs, vagas: vg, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), autoaprovar: auto };
   fechar();
-  Fila.add('criarSolicitacao', Object.assign(x, { sol_id: uid('sol'), vagas: vg, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), autoaprovar: auto }));
-  if (navigator.onLine) toast(auto ? 'Aprovada. Agora é escalar as pessoas.' : 'Enviada para aprovação.');
+  if (varios) {
+    Fila.add('criarSerie', Object.assign(base, { serie_id: uid('ser'), itens: datas.datas.map(dt => ({ sol_id: uid('sol'), data: dt })) }));
+    if (navigator.onLine) toast(plural(datas.datas.length, 'data') + (auto ? ' abertas. Agora é escalar as pessoas.' : ' enviadas para aprovação.'));
+  } else {
+    Fila.add('criarSolicitacao', Object.assign(base, { sol_id: uid('sol'), data: x.data }));
+    if (navigator.onLine) toast(auto ? 'Aprovada. Agora é escalar as pessoas.' : 'Enviada para aprovação.');
+  }
   S.view = 'solicitacoes'; S.f.solEscopo = 'abertas'; render();
 }
 
@@ -1553,6 +1646,8 @@ function responder() {
   delete c.dados.volta;
   if (c.acao === 'recusar') Fila.add('decidirSolicitacao', Object.assign(c.dados, { decisao: 'RECUSAR', motivo: txt }));
   if (c.acao === 'cancelar') Fila.add('cancelarSolicitacao', Object.assign(c.dados, { motivo: txt }));
+  if (c.acao === 'recusar-serie') Fila.add('decidirSerie', Object.assign(c.dados, { decisao: 'RECUSAR', motivo: txt }));
+  if (c.acao === 'cancelar-serie') Fila.add('cancelarSerie', Object.assign(c.dados, { motivo: txt }));
   if (c.acao === 'esc-cancelar') Fila.add('escalaAcao', Object.assign(c.dados, { acao: 'CANCELAR', texto: txt }));
   if (volta) abrirSol(volta); else fechar();
 }
@@ -1602,6 +1697,12 @@ document.addEventListener('click', ev => {
     case 'nova': abrirNova(); break;
     case 'vagas': { const i = $('#f-nova [name=vagas]'); i.value = Math.min(50, Math.max(1, Math.round(num(i.value)) + Number(el.dataset.d))); atualizarNova('vagas'); break; }
     case 'nova-enviar': enviarNova(el.dataset.auto === '1'); break;
+    case 'nova-modo': S.modalCtx.modo = el.dataset.m; atualizarNova('modo'); break;
+    case 'nova-dia': { const w = Number(el.dataset.d), l = S.modalCtx.dias, i = l.indexOf(w); if (i >= 0) l.splice(i, 1); else l.push(w); atualizarNova('dias'); break; }
+    case 'nova-fora': { const f = S.modalCtx.fora; f[el.dataset.d] = !f[el.dataset.d]; atualizarNova('fora'); break; }
+    case 'aprovar-serie': { const s = solDe(id), n = serieDe(s).filter(x => x.status === 'SOLICITADA').length; fechar(); Fila.add('decidirSerie', { sol_id: id, decisao: 'APROVAR', visto: s.status }); if (navigator.onLine) toast(plural(n, 'data aprovada', 'datas aprovadas') + '.'); break; }
+    case 'recusar-serie': perguntar('Recusar a série de ' + solDe(id).funcao_nome, 'Por que está recusando todas as datas?', 'recusar-serie', { sol_id: id, visto: solDe(id).status }, true); break;
+    case 'cancelar-serie': perguntar('Cancelar esta data e as seguintes', 'Motivo do cancelamento (vale para ' + plural(serieCancelaveis(solDe(id)).length, 'data') + ')', 'cancelar-serie', { sol_id: id, visto: solDe(id).status }, true); break;
     case 'sol': abrirSol(id); break;
     case 'aprovar': { const s = solDe(id); fechar(); Fila.add('decidirSolicitacao', { sol_id: id, decisao: 'APROVAR', visto: s.status }); if (navigator.onLine) toast('Aprovada.'); break; }
     case 'recusar': perguntar('Recusar ' + solDe(id).numero, 'Por que está recusando?', 'recusar', { sol_id: id, visto: solDe(id).status }, true); break;
