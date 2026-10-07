@@ -270,7 +270,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.10.07-a',
+  VERSAO: '2026.10.07-b',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -1775,7 +1775,7 @@ document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && aberto()
    VERSÃO NOVA NO GITHUB — mesmo esquema da Requisições
    ════════════════════════════════════════════════════════════════ */
 const Versao = {
-  assinatura: null, nova: false, checando: false, toque: Date.now(),
+  assinatura: null, nova: false, checando: false, toque: 0,   // 0: ainda não mexeu, pode recarregar já na abertura
   hash(t) { let h = 0; for (let i = 0; i < t.length; i++) h = ((h << 5) - h + t.charCodeAt(i)) | 0; return String(h); },
   ocupado() {
     if (aberto() || S.enviando || S.fila.length) return true;
@@ -1791,25 +1791,50 @@ const Versao = {
     el.querySelector('button').onclick = () => Versao.recarregar();
     document.body.appendChild(el);
   },
+  /* Compara a versão escrita no arquivo do GitHub com a versão que está
+     rodando. Antes comparava só com o que viu na 1ª checagem: se a página
+     abria de uma cópia velha (o GitHub Pages deixa o navegador guardar por
+     10 min), a 1ª checagem já pegava a nova como "normal" e a tela ficava
+     velha até a próxima atualização. */
+  versaoDe(t) { const m = /VERSAO:\s*'([^']+)'/.exec(t); return m ? m[1] : ''; },
   async checar() {
     if (this.checando || !navigator.onLine || location.protocol === 'file:') return;
     this.checando = true;
     try {
       const url = location.pathname + '?checagem=' + Date.now();
-      let a = null;
-      try { const r = await fetch(url, { method: 'HEAD', cache: 'no-store' }); if (r.ok) a = r.headers.get('etag') || r.headers.get('last-modified'); } catch (e) { }
-      if (!a) { const r = await fetch(url, { cache: 'no-store' }); if (r.ok) { const t = await r.text(); a = t.length + ':' + this.hash(t); } }
-      if (!a) return;
-      if (!this.assinatura) { this.assinatura = a; return; }
-      if (a === this.assinatura) return;
-      this.nova = true; this.avisar();
-      if (!this.ocupado() && Date.now() - this.toque > CFG.OCIOSO_MS) this.recarregar();
+      let etag = null;
+      try { const r = await fetch(url, { method: 'HEAD', cache: 'no-store' }); if (r.ok) etag = r.headers.get('etag') || r.headers.get('last-modified'); } catch (e) { }
+      if (etag && etag === this.assinatura) return;            // nada mudou desde a última olhada
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) return;
+      const t = await r.text();
+      const sig = etag || (t.length + ':' + this.hash(t));
+      const antes = this.assinatura;
+      this.assinatura = sig;
+      const v = this.versaoDe(t);
+      // versão diferente da que roda, ou arquivo mudou sem trocar o número da versão
+      const mudou = (v && v !== CFG.VERSAO) || (antes && antes !== sig);
+      if (!mudou) return;
+      this.nova = v || 'nova';
+      this.avisar();
+      this.tentar();
     } catch (e) { } finally { this.checando = false; }
+  },
+  /* Recarrega sozinho quando a pessoa não está mexendo. Se já tentou ir para
+     essa versão há pouco e voltou a velha (GitHub ainda espalhando o arquivo),
+     não fica em looping: mostra só o aviso e tenta de novo em 5 min. */
+  tentar() {
+    if (!this.nova || document.visibilityState !== 'visible' || this.ocupado() || Date.now() - this.toque <= CFG.OCIOSO_MS) return;
+    let ult = null;
+    try { ult = JSON.parse(sessionStorage.getItem('ext_recarga') || 'null'); } catch (e) { }
+    if (ult && ult.v === this.nova && Date.now() - ult.t < 300000) return;
+    try { sessionStorage.setItem('ext_recarga', JSON.stringify({ v: this.nova, t: Date.now() })); } catch (e) { }
+    this.recarregar();
   },
   iniciar() {
     this.checar();
     setInterval(() => { if (document.visibilityState === 'visible') this.checar(); }, CFG.VERSAO_MS);
-    setInterval(() => { if (this.nova && document.visibilityState === 'visible' && !this.ocupado() && Date.now() - this.toque > CFG.OCIOSO_MS) this.recarregar(); }, 20000);
+    setInterval(() => this.tentar(), 20000);
     ['pointerdown', 'keydown', 'touchstart'].forEach(e => document.addEventListener(e, () => { this.toque = Date.now(); }, { passive: true }));
   }
 };
