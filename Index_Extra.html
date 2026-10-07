@@ -270,7 +270,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.10.07-b',
+ VERSAO: '2026.10.07-c',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -1479,7 +1479,7 @@ function formPessoa(p, c) {
   const h = (navigator.onLine ? '' : '<div class="alerta amarelo">Sem internet: o cadastro precisa de sinal, porque CPF e PIX não ficam guardados no aparelho.</div>') +
     (p ? '<div class="resumo">' + p.c30 + ' / ' + p.c60 + ' / ' + p.c90 + ' extras nos últimos 30/60/90 dias · recorrência <span class="sem ' + riscoHoje(p) + '"></span>' + (p.lgpd_aceite_em ? ' · LGPD aceito em ' + dataBr(p.lgpd_aceite_em.slice(0, 10)) : '') + '</div>' : '') +
     '<form id="f-pes" autocomplete="off"><div class="field"><label>Nome completo <span class="req">*</span></label><input name="nome" value="' + esc(v.nome || '') + '"></div>' +
-    '<div class="row2"><div class="field"><label>CPF' + (novo ? ' <span class="req">*</span>' : '') + '</label><input name="cpf" inputmode="numeric" value="' + esc(v.cpf || '') + '" placeholder="' + esc(sensivelBloq ? p.cpf_mascara + ' (só o financeiro altera)' : '000.000.000-00') + '"' + (sensivelBloq ? ' disabled' : '') + '></div>' +
+    '<div class="row2"><div class="field"><label>CPF</label><input name="cpf" inputmode="numeric" value="' + esc(v.cpf || '') + '" placeholder="' + esc(sensivelBloq ? p.cpf_mascara + ' (só o financeiro altera)' : '000.000.000-00') + '"' + (sensivelBloq ? ' disabled' : '') + '>' + (sensivelBloq ? '' : '<span class="hint">Opcional. Se tiver, preencha: evita cadastro repetido.</span>') + '</div>' +
     '<div class="field"><label>Telefone (WhatsApp)</label><input name="telefone" inputmode="tel" value="' + esc(v.telefone || '') + '" placeholder="27 99999-0000"></div></div>' +
     '<div class="row2"><div class="field"><label>Vínculo <span class="req">*</span></label><select name="tipo_vinculo">' + d.vinculos.map(x => '<option value="' + x + '"' + (v.tipo_vinculo === x ? ' selected' : '') + '>' + esc(VINCULO[x] || x) + '</option>').join('') + '</select></div>' +
     '<div class="field"><label>Empresa de origem</label><select name="empresa_origem"><option value="">—</option>' + empresas.map(e => '<option value="' + esc(e[0]) + '"' + (v.empresa_origem === e[0] ? ' selected' : '') + '>' + esc(e[1]) + '</option>').join('') + '</select><span class="hint">Obrigatória para CLT do grupo</span></div></div>' +
