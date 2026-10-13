@@ -270,7 +270,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.10.13-a',
+  VERSAO: '2026.10.13-b',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -1161,6 +1161,7 @@ function abrirSol(id) {
     if (podeE && e.status === 'CONVIDADO') acoes.push('<button class="btn ok sm" data-act="esc-acao" data-a="CONFIRMAR" data-id="' + esc(e.esc_id) + '">Confirmou</button>', '<button class="btn ghost sm" data-act="esc-acao" data-a="RECUSOU" data-id="' + esc(e.esc_id) + '">Não aceitou</button>');
     if (podeE && (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && am < turno(e).fim) acoes.push('<button class="btn ghost sm" data-act="esc-acao" data-a="CANCELAR" data-id="' + esc(e.esc_id) + '">Tirar da escala</button>');
     if (podeV && (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && am >= turno(e).ini) acoes.push('<button class="btn sm" data-act="validar" data-id="' + esc(e.esc_id) + '">Validar turno</button>');
+    if ((podeV || U().financeiro) && e.status === 'VALIDADO' && ['LIBERADO', 'AGENDADO'].indexOf(e.status_fin) >= 0 && !e.lote_id && !e._pend) acoes.push('<button class="btn ghost sm" data-act="corrigir-valor" data-id="' + esc(e.esc_id) + '">Corrigir valor</button>');
     if (pes && pes.telefone && (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && am < turno(e).ini) acoes.push('<a class="btn wa sm" target="_blank" rel="noopener" href="' + linkWhats(pes, s) + '">' + ic('zap', 'sm') + 'WhatsApp</a>');
     return '<div class="item' + (e._pend ? ' pend' : '') + '"><span class="avatar">' + esc(iniciais(e.pessoa_nome)) + '</span><div class="grow"><div class="t">' + esc(e.pessoa_nome) + ' ' + pill(rotuloEsc(e)) +
       (e.risco_nivel && e.risco_nivel !== 'verde' ? '<span class="sem ' + e.risco_nivel + '" title="Recorrência"></span>' : '') + '</div>' +
@@ -1174,7 +1175,7 @@ function abrirSol(id) {
   const tl = S.d.log.filter(l => l.sol_id === s.sol_id && l.tipo !== 'STATUS').sort((a, b) => a.data_hora.localeCompare(b.data_hora));
   const TXT = { SOLICITADA: 'solicitou', APROVADA: 'aprovou', RECUSADA: 'recusou', CANCELADA: 'cancelou', ESCALADO: 'escalou', CONFIRMADO: 'registrou que confirmou',
     RECUSOU: 'registrou que não aceitou', ESCALA_CANCELADA: 'tirou da escala', VALIDADO: 'validou', FALTOU: 'registrou falta', PAGO: 'pagou', AGENDADO: 'agendou o pagamento',
-    CONFLITO: 'teve uma ação que não entrou', REJEITADO: 'teve uma escala recusada pelo servidor' };
+    CONFLITO: 'teve uma ação que não entrou', REJEITADO: 'teve uma escala recusada pelo servidor', VALOR_CORRIGIDO: 'corrigiu o valor' };
   h += '<div class="sec"><div class="sec-t">Histórico</div>' + (tl.length ? '<ul class="tl">' + tl.map(l => '<li class="' + (l.tipo === 'CONFLITO' || l.tipo === 'REJEITADO' ? 'c' : '') + '"><b>' + esc(l.usuario_nome || nomeDe(l.usuario)) + '</b> ' + esc(TXT[l.tipo] || l.tipo.toLowerCase()) +
     (l.texto ? '<div>' + esc(l.texto) + '</div>' : '') + '<small>' + dataBr(l.data_hora.slice(0, 10)) + ' ' + horaDe(l.data_hora) + '</small></li>').join('') + '</ul>' : '<div class="small mute">O histórico aparece quando a solicitação chega ao servidor.</div>') + '</div>';
 
@@ -1479,6 +1480,34 @@ function enviarValidar() {
   render();
 }
 
+/* ---------- Corrigir valor de turno já validado (só com internet) ---------- */
+function abrirCorrigir(escId) {
+  const e = S.d.escalas.find(x => x.esc_id === escId), s = solDe(e.sol_id);
+  S.modalCtx = { tipo: 'corrigir', id: escId, volta: s.sol_id };
+  const h = '<div class="item" style="margin-bottom:12px"><span class="avatar">' + esc(iniciais(e.pessoa_nome)) + '</span><div class="grow"><div class="t">' + esc(e.pessoa_nome) + '</div>' +
+    '<div class="m">' + esc(s.funcao_nome) + ' · ' + esc(local(s)) + ' · ' + esc(diaCurto(e.data)) + ' · ' + esc(e.hora_ini_real || e.hora_ini) + '–' + esc(e.hora_fim_real || e.hora_fim) + '</div></div></div>' +
+    '<div class="field"><label>Valor a pagar (R$)</label><input id="c-valor" inputmode="decimal" value="' + num(e.valor_final).toFixed(2).replace('.', ',') + '">' +
+    '<span class="hint">Hoje: ' + dinheiro(e.valor_final) + ' · tabela: ' + dinheiro(e.valor_base) + '</span></div>' +
+    '<div class="field"><label>Motivo</label><div class="chips">' +
+      ['Fim de semana', 'Data comemorativa', 'Nível da pessoa', 'Combinado com a pessoa', 'Lançado errado'].map(m => '<button type="button" class="chip" data-act="val-mot" data-v="' + m + '">' + m + '</button>').join('') + '</div></div>' +
+    '<div class="field"><label>Observação</label><textarea id="v-obs">' + esc(e.obs_validacao || '') + '</textarea></div>' +
+    '<div class="alerta azul">Dá para corrigir até o financeiro colocar o extra num lote ou pagar. O Gustavo é avisado da correção.</div>';
+  modal('Corrigir valor', h, '<button class="btn ghost" data-act="fechar">Cancelar</button><button class="btn" data-act="corrigir-enviar">Salvar valor</button>');
+  $$('[data-act=val-mot]').forEach(b => b.classList.toggle('on', ($('#v-obs').value || '').indexOf(b.dataset.v) >= 0));
+}
+async function enviarCorrigir() {
+  const c = S.modalCtx, e = S.d.escalas.find(x => x.esc_id === c.id);
+  const v = Math.max(0, Math.round(num($('#c-valor').value) * 100) / 100), obs = $('#v-obs').value.trim();
+  if (Math.abs(v - num(e.valor_final)) < 0.01) return toast('O valor é o mesmo que já estava.', 'err');
+  if (Math.abs(v - num(e.valor_base)) >= 0.01 && obs.length < 3) return toast('O valor ficou diferente da tabela: escolha o motivo.', 'err');
+  try {
+    await online('corrigirValor', { esc_id: e.esc_id, valor_final: v, obs }, 'Salvando valor…');
+    toast('Valor corrigido para ' + dinheiro(v) + '.');
+    await carregar();
+    abrirSol(c.volta);
+  } catch (err) { /* toast já mostrado */ }
+}
+
 /* ---------- Pessoa: ver e cadastrar (cadastro só com internet) ---------- */
 async function abrirPessoa(id) {
   const p = id ? pessoaDe(id) : null;
@@ -1747,6 +1776,8 @@ document.addEventListener('click', ev => {
     case 'val-real': S.modalCtx.realizou = el.dataset.v === '1'; $$('[data-act=val-real]').forEach(b => { b.className = b === el ? 'on ' + (el.dataset.v === '1' ? 'ok' : 'no') : ''; }); calcValidar(); break;
     case 'val-modo': S.modalCtx.modo = el.dataset.v; $$('[data-act=val-modo]').forEach(b => b.classList.toggle('on', b === el)); $('#v-data-box').hidden = el.dataset.v !== 'AGENDADO'; break;
     case 'val-enviar': enviarValidar(); break;
+    case 'corrigir-valor': abrirCorrigir(id); break;
+    case 'corrigir-enviar': enviarCorrigir(); break;
     case 'val-mot': { const t = $('#v-obs'), m = el.dataset.v; if (t.value.indexOf(m) < 0) t.value = (t.value.trim() ? t.value.trim() + ' · ' : '') + m; $$('[data-act=val-mot]').forEach(b => b.classList.toggle('on', t.value.indexOf(b.dataset.v) >= 0)); break; }
     case 'pessoa': abrirPessoa(id); break;
     case 'pessoa-nova': abrirPessoa(''); break;
