@@ -270,7 +270,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
- VERSAO: '2026.10.07-c',
+  VERSAO: '2026.10.13-a',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -1411,11 +1411,13 @@ function abrirValidar(escId) {
     '<div id="val-sim"><div class="row3"><div class="field"><label>Entrada</label><input type="time" id="v-ini" value="' + esc(e.hora_ini) + '"></div>' +
     '<div class="field"><label>Saída</label><input type="time" id="v-fim" value="' + esc(e.hora_fim) + '"></div>' +
     '<div class="field"><label>Intervalo (min)</label><input id="v-int" inputmode="numeric" value="' + esc(s.intervalo_min || 0) + '"></div></div>' +
-    '<div class="row2"><div class="field"><label>Adicional (R$)</label><input id="v-add" inputmode="decimal" placeholder="0,00"></div><div class="field"><label>Desconto (R$)</label><input id="v-desc" inputmode="decimal" placeholder="0,00"></div></div>' +
+    '<div class="field"><label>Valor a pagar (R$)</label><input id="v-valor" inputmode="decimal"><span class="hint" id="v-valor-hint"></span></div>' +
+    '<div class="field" id="v-mot-box" hidden><label>Motivo do valor diferente <span class="req">*</span></label><div class="chips">' +
+      ['Fim de semana', 'Data comemorativa', 'Nível da pessoa', 'Combinado com a pessoa'].map(m => '<button type="button" class="chip" data-act="val-mot" data-v="' + m + '">' + m + '</button>').join('') + '</div></div>' +
     '<div class="field"><label>Pagamento</label><div class="seg"><button type="button" data-act="val-modo" data-v="IMEDIATO" class="' + (S.modalCtx.modo === 'IMEDIATO' ? 'on' : '') + '">Pagar hoje</button><button type="button" data-act="val-modo" data-v="AGENDADO" class="' + (S.modalCtx.modo === 'AGENDADO' ? 'on' : '') + '">Agendar</button></div></div>' +
     '<div class="field" id="v-data-box"' + (S.modalCtx.modo === 'AGENDADO' ? '' : ' hidden') + '><label>Data do pagamento</label><input type="date" id="v-data" value="' + addDias(hojeStr(), 1) + '"></div>' +
     '<div class="resumo" id="val-resumo"></div></div>' +
-    '<div class="field"><label id="v-obs-l">Observação</label><textarea id="v-obs" placeholder="Obrigatória se houver adicional, desconto ou falta"></textarea></div>';
+    '<div class="field"><label id="v-obs-l">Observação</label><textarea id="v-obs" placeholder="Obrigatória se o valor for diferente da tabela ou se faltou"></textarea></div>';
   modal('Validar turno', h, '<button class="btn ghost" data-act="fechar">Cancelar</button><button class="btn" data-act="val-enviar">Confirmar validação</button>');
   calcValidar();
 }
@@ -1427,9 +1429,29 @@ function calcValidar() {
   if (!c.realizou) return;
   const hs = horasTurno(e.data, $('#v-ini').value, $('#v-fim').value, $('#v-int').value);
   const base = valorDe(e.funcao_id, hs, e.data);
-  const fin = Math.max(0, base + num($('#v-add').value) - num($('#v-desc').value));
-  c.valor = fin; c.horas = hs;
-  $('#val-resumo').innerHTML = '<b>' + hFmt(hs) + '</b> trabalhadas · tabela ' + dinheiro(base) + ' · <b>total ' + dinheiro(fin) + '</b>' + (hs > 12 ? ' · <span style="color:var(--red-ink)">mais de 12h, confira</span>' : '');
+  /* Sugestão: o que essa pessoa recebeu da última vez na mesma função e no
+     mesmo tipo de dia (semana ou fim de semana). Sem histórico, a tabela. */
+  const ult = ultimoValor(e);
+  const sug = ult ? num(ult.valor_final) : base;
+  const inp = $('#v-valor');
+  if (!c.editado) inp.value = sug.toFixed(2).replace('.', ',');
+  const fin = Math.max(0, Math.round(num(inp.value) * 100) / 100);
+  c.valor = fin; c.horas = hs; c.base = base; c.ult = ult;
+  const dif = Math.abs(fin - base) >= 0.01;
+  $('#v-valor-hint').innerHTML = 'Tabela: ' + dinheiro(base) + (ult ? ' · última vez (' + esc(diaCurto(ult.data)) + '): ' + dinheiro(ult.valor_final) : '');
+  $('#v-mot-box').hidden = !dif;
+  $('#v-obs-l').innerHTML = dif ? 'Observação <span class="req">*</span>' : 'Observação';
+  $('#val-resumo').innerHTML = '<b>' + hFmt(hs) + '</b> trabalhadas · <b>a pagar ' + dinheiro(fin) + '</b>' +
+    (dif ? ' · ' + (fin > base ? dinheiro(fin - base) + ' acima' : dinheiro(base - fin) + ' abaixo') + ' da tabela' : '') +
+    (base > 0 && fin > base * 2 ? ' · <span style="color:var(--red-ink)">mais que o dobro da tabela, confira</span>' : '') +
+    (hs > 12 ? ' · <span style="color:var(--red-ink)">mais de 12h, confira</span>' : '');
+}
+const fimDeSemana = iso => { const w = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))).getUTCDay(); return w === 0 || w === 6; };
+function ultimoValor(e) {
+  const fds = fimDeSemana(e.data);
+  return S.d.escalas.filter(x => x.esc_id !== e.esc_id && x.pessoa_id === e.pessoa_id && x.funcao_id === e.funcao_id && x.status === 'VALIDADO' &&
+    num(x.valor_final) > 0 && fimDeSemana(x.data) === fds && x.data <= e.data && extDia_(e.data) - extDia_(x.data) <= 120)
+    .sort((a, b) => b.data.localeCompare(a.data))[0] || null;
 }
 function enviarValidar() {
   const c = S.modalCtx, e = S.d.escalas.find(x => x.esc_id === c.id);
@@ -1442,12 +1464,17 @@ function enviarValidar() {
   }
   calcValidar();
   if (c.horas <= 0 || c.horas > 16) return toast('Confira os horários.', 'err');
-  if ((num($('#v-add').value) || num($('#v-desc').value)) && obs.length < 3) return toast('Explique o adicional ou o desconto.', 'err');
+  let motivo = obs;
+  if (Math.abs(c.valor - c.base) >= 0.01 && motivo.length < 3) {
+    /* Repetiu o valor da última vez: o próprio sistema registra o motivo */
+    if (c.ult && Math.abs(c.valor - num(c.ult.valor_final)) < 0.01) motivo = 'Mesmo valor do turno de ' + dataBr(c.ult.data);
+    else return toast('O valor ficou diferente da tabela: escolha o motivo.', 'err');
+  }
   const dataPag = $('#v-data').value;
   if (c.modo === 'AGENDADO' && (!dataPag || dataPag < hojeStr())) return toast('Escolha a data do pagamento.', 'err');
   fechar();
   Fila.add('validar', { esc_id: e.esc_id, realizou: true, hora_ini_real: $('#v-ini').value, hora_fim_real: $('#v-fim').value, intervalo_min: Math.round(num($('#v-int').value)),
-    adicional: num($('#v-add').value), desconto: num($('#v-desc').value), obs, pag_modo: c.modo, pag_data: c.modo === 'AGENDADO' ? dataPag : '', visto: e.status, _valor: c.valor });
+    valor_final: c.valor, obs: motivo, pag_modo: c.modo, pag_data: c.modo === 'AGENDADO' ? dataPag : '', visto: e.status, _valor: c.valor });
   if (navigator.onLine) toast('Turno validado. ' + (c.modo === 'AGENDADO' ? 'Pagamento agendado.' : 'O financeiro já foi avisado.'));
   render();
 }
@@ -1466,7 +1493,7 @@ async function abrirPessoa(id) {
   formPessoa(p, completo);
 }
 function mostrarPessoa(p) {
-  const h = '<div class="info"><div><small>Vínculo</small><b>' + esc(VINCULO[p.tipo_vinculo] || '') + '</b></div><div><small>CPF</small><b>' + esc(p.cpf_mascara || '—') + '</b></div>' +
+  const h = '<div class="info"><div><small>Vínculo</small><b>' + esc(VINCULO[p.tipo_vinculo] || '') + '</b></div><div><small>CPF</small><b>' + esc(p.cpf_mascara || 'não informado') + '</b></div>' +
     '<div><small>Telefone</small><b>' + esc(p.telefone || '—') + '</b></div><div><small>Funções</small><b>' + esc((p.funcoes || []).map(funcaoNome).join(', ') || '—') + '</b></div>' +
     '<div><small>Extras 30 / 60 / 90 dias</small><b>' + p.c30 + ' / ' + p.c60 + ' / ' + p.c90 + '</b></div><div><small>Recorrência</small><b><span class="sem ' + riscoHoje(p) + '"></span></b></div></div>';
   modal(esc(p.nome), h, '');
@@ -1720,6 +1747,7 @@ document.addEventListener('click', ev => {
     case 'val-real': S.modalCtx.realizou = el.dataset.v === '1'; $$('[data-act=val-real]').forEach(b => { b.className = b === el ? 'on ' + (el.dataset.v === '1' ? 'ok' : 'no') : ''; }); calcValidar(); break;
     case 'val-modo': S.modalCtx.modo = el.dataset.v; $$('[data-act=val-modo]').forEach(b => b.classList.toggle('on', b === el)); $('#v-data-box').hidden = el.dataset.v !== 'AGENDADO'; break;
     case 'val-enviar': enviarValidar(); break;
+    case 'val-mot': { const t = $('#v-obs'), m = el.dataset.v; if (t.value.indexOf(m) < 0) t.value = (t.value.trim() ? t.value.trim() + ' · ' : '') + m; $$('[data-act=val-mot]').forEach(b => b.classList.toggle('on', t.value.indexOf(b.dataset.v) >= 0)); break; }
     case 'pessoa': abrirPessoa(id); break;
     case 'pessoa-nova': abrirPessoa(''); break;
     case 'pessoa-salvar': salvarPessoa(); break;
@@ -1767,6 +1795,7 @@ document.addEventListener('input', ev => {
     return;
   }
   if (el.closest && el.closest('#f-nova')) atualizarNova(el.name);
+  if (el.id === 'v-valor' && S.modalCtx) S.modalCtx.editado = true;
   if (el.closest && el.closest('#val-sim')) calcValidar();
 });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && aberto()) fechar(); });
