@@ -29,8 +29,8 @@
   --sans:'Figtree', system-ui, sans-serif;
 }
 /* Cada projeto tem sua cor de acento. O fundo e os status não mudam. */
-body[data-proj="cozinha"]{--ouro:#9EB1C2;--ouro-2:#DDE8F1;--fogo:#C8372C;--linha:#39393B}
-body[data-proj="mercearia"]{--ouro:#DF9A3C;--ouro-2:#F7C87E;--fogo:#C0392B;--linha:#3D362C}
+body[data-proj="cozinha"]{--ouro:#F0821E;--ouro-2:#FFC27A;--fogo:#C8372C;--linha:#3E352A}
+body[data-proj="mercearia"]{--ouro:#EC8A7F;--ouro-2:#FBCCC4;--fogo:#A82A20;--linha:#3E2F2C}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 html{background:var(--carvao)}
@@ -49,13 +49,13 @@ button{cursor:pointer}
 .oculto{display:none!important}
 
 /* ---------- Login ---------- */
-#telaLogin{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 20px 40px}
+#telaLogin{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
 .logo-grande{width:min(340px,78vw);aspect-ratio:600/510;margin-top:8px;
   -webkit-mask-image:radial-gradient(ellipse 62% 60% at 50% 50%,#000 55%,transparent 100%);
           mask-image:radial-gradient(ellipse 62% 60% at 50% 50%,#000 55%,transparent 100%)}
 .logo-grande img{width:100%;height:100%;object-fit:cover;display:block}
 .logo-texto{font-family:var(--serif);font-weight:700;color:var(--ouro);font-size:52px;letter-spacing:.08em;text-align:center;padding:60px 0 20px}
-.login-titulo{font-family:var(--serif);font-weight:500;font-size:22px;color:var(--ouro-2);margin:4px 0 4px;text-align:center}
+.login-titulo{font-family:var(--serif);font-weight:500;font-size:25px;color:var(--ouro-2);margin:0 0 6px;text-align:center}
 .login-sub{color:var(--suave);margin:0 0 22px;text-align:center}
 .nomes{width:min(460px,100%);display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .nome{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--raio);
@@ -334,12 +334,6 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <!-- ============ LOGIN ============ -->
 <main id="telaLogin">
-  <div class="logo-grande" id="logoGrande"><img src="https://rodsilveira-rs.github.io/plus-liberdade/gogui-logo.jpg" alt="Gogui Korean BBQ" onerror="this.closest('.logo-grande').outerHTML='<div class=&quot;logo-texto&quot;>GOGUI</div>'"></div>
-  <div class="marcas-topo">
-    <img src="https://rodsilveira-rs.github.io/plus-liberdade/cozinha-logo.jpg" alt="Cozinha de Produção" onerror="this.remove()">
-    <span class="sep"></span>
-    <img src="https://rodsilveira-rs.github.io/plus-liberdade/mercearia-logo.png" alt="Mercearia Liberdade" onerror="this.previousElementSibling.remove();this.remove()">
-  </div>
   <p class="login-titulo">Acompanhamento de projetos</p>
   <p class="login-sub">Toque no seu nome para entrar</p>
   <div class="nomes" id="listaNomes">
@@ -367,7 +361,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="topo-linha">
       <div class="marca">
         <span class="ico" id="mIco"></span>
-        <div><h1 id="mTitulo">—</h1><button class="troca" data-act="trocarProjeto">trocar de projeto</button></div>
+        <div><h1 id="mTitulo">—</h1><button class="troca" id="btnTrocarProj" data-act="trocarProjeto">trocar de projeto</button></div>
       </div>
       <a class="btn-menu" id="btnMenu" href="https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html" title="Voltar ao Menu">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Menu
@@ -422,16 +416,22 @@ const PROJETOS = [
   {
     id: 'Cozinha de Produção', tema: 'cozinha', titulo: 'COZINHA DE PRODUÇÃO', curto: 'COZINHA',
     nome: 'Cozinha de Produção', desc: 'Implantação da planta industrial',
-    logo: BASE_IMG + 'cozinha-logo.jpg', ico: 'contain', cor: '#9EB1C2', cor2: '#DDE8F1',
+    logo: BASE_IMG + 'cozinha-logo.png', ico: 'contain', cor: '#F0821E', cor2: '#FFC27A',
     alvo: '', rotuloAlvo: 'a entrega', rotuloPontos: 'Pontos críticos do projeto'
   },
   {
     id: 'Mercearia Liberdade', tema: 'mercearia', titulo: 'MERCEARIA LIBERDADE', curto: 'MERCEARIA',
     nome: 'Mercearia Liberdade', desc: 'Obras e infraestrutura da loja',
-    logo: BASE_IMG + 'mercearia-logo.png', ico: 'contain', cor: '#DF9A3C', cor2: '#F7C87E',
+    logo: BASE_IMG + 'mercearia-logo.png', ico: 'contain', cor: '#EC8A7F', cor2: '#FBCCC4',
     alvo: '', rotuloAlvo: 'a conclusão', rotuloPontos: 'Pontos críticos da obra'
   }
 ];
+/* Gerente de loja enxerga só o projeto da unidade dela. Quem não estiver aqui
+   vê todos. O nome tem que ser igual ao da coluna Responsável da planilha. */
+const SO_VEEM = {
+  'Mariana': ['Mercearia Liberdade'],
+  'Fernanda': ['Gogui']
+};
 const LS_USUARIO = 'gogui_usuario';
 const LS_PROJETO = 'gogui_projeto';
 const AUTO_REFRESH_MS = 90000;
@@ -525,11 +525,14 @@ function projetoDe(id) {
    tem e a config não conhece — assim nenhuma pendência fica invisível. */
 function projetosVisiveis() {
   const daPlanilha = S.listas.operacao || [];
-  const out = PROJETOS.filter(function (p) { return daPlanilha.indexOf(p.id) >= 0; });
+  var out = PROJETOS.filter(function (p) { return daPlanilha.indexOf(p.id) >= 0; });
   daPlanilha.forEach(function (op) {
     if (!out.some(function (p) { return p.id === op; })) out.push(projetoDe(op));
   });
-  return out.length ? out : PROJETOS.slice();
+  if (!out.length) out = PROJETOS.slice();
+  const limite = SO_VEEM[S.usuario];
+  if (limite) out = out.filter(function (p) { return limite.indexOf(p.id) >= 0; });
+  return out;
 }
 function projAtual() { return projetoDe(S.projeto); }
 function tarefasProj(id) {
@@ -599,6 +602,8 @@ async function carregar(silencioso) {
     S.log = d.log || [];
     S.carregado = true;
     if (S.usuario && S.listas.usuarios.indexOf(S.usuario) < 0) sair();
+    const lim = SO_VEEM[S.usuario];
+    if (S.projeto && lim && lim.indexOf(S.projeto) < 0) { S.projeto = null; localStorage.removeItem(LS_PROJETO); }
     render();
   } catch (e) {
     console.error('[Gogui] Falha na sincronização:', e && e.message ? e.message : e);
@@ -680,6 +685,8 @@ function entrar(nome) {
 }
 
 function escolherProjeto(id) {
+  const limite = SO_VEEM[S.usuario];
+  if (limite && limite.indexOf(id) < 0) { S.projeto = null; localStorage.removeItem(LS_PROJETO); render(); return; }
   S.projeto = id;
   localStorage.setItem(LS_PROJETO, id);
   const gestor = S.listas.gestores.indexOf(S.usuario) >= 0;
@@ -728,6 +735,8 @@ function render() {
   if (!logado) { if (S.carregado) renderLogin(); return; }
 
   if (!noProjeto) {
+    const podeVer = S.carregado ? projetosVisiveis() : [];
+    if (podeVer.length === 1) { escolherProjeto(podeVer[0].id); return; }
     $('#pIni').textContent = inicial(S.usuario);
     $('#pNome').textContent = S.usuario;
     renderProjetos();
@@ -735,6 +744,7 @@ function render() {
   }
 
   const P = projAtual();
+  $('#btnTrocarProj').classList.toggle('oculto', projetosVisiveis().length < 2);
   $('#mTitulo').textContent = window.matchMedia('(max-width:720px)').matches ? (P.curto || P.titulo) : P.titulo;
   const ico = $('#mIco');
   ico.className = 'ico' + (P.ico === 'contain' ? ' contain' : '');
@@ -1308,7 +1318,7 @@ const Demo = {
   dados: null,
   init() {
     if (!this.dados) {
-      const nomes = ['Barbara', 'Fabricia', 'Marques', 'Tairine', 'Túlio'];
+      const nomes = ['Barbara', 'Fabricia', 'Fernanda', 'Mariana', 'Túlio', 'Leorick'];
       const base = [
         ['Gogui', 'Obra e Instalações', 'Finalização geral da obra', 'Crítica'],
         ['Gogui', 'Obra e Instalações', 'Fechamento da boqueta', 'Crítica'],
