@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1A1816">
-<title>Gogui · Checklist de abertura</title>
+<title>Projetos Q Food · Acompanhamento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,6 +28,9 @@
   --serif:'Cinzel', 'Times New Roman', serif;
   --sans:'Figtree', system-ui, sans-serif;
 }
+/* Cada projeto tem sua cor de acento. O fundo e os status não mudam. */
+body[data-proj="cozinha"]{--ouro:#9EB1C2;--ouro-2:#DDE8F1;--fogo:#C8372C;--linha:#39393B}
+body[data-proj="mercearia"]{--ouro:#DF9A3C;--ouro-2:#F7C87E;--fogo:#C0392B;--linha:#3D362C}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 html{background:var(--carvao)}
@@ -65,6 +68,39 @@ button{cursor:pointer}
 .nome.gestor{grid-column:1/-1}
 .nome.gestor .ini{border-color:var(--fogo);color:#F3A79F}
 .login-aviso{margin-top:22px;color:var(--suave);font-size:13px;text-align:center;max-width:420px}
+.marcas-topo{display:flex;align-items:center;justify-content:center;gap:26px;margin:18px 0 26px;flex-wrap:wrap}
+.marcas-topo img{height:46px;width:auto;opacity:.5;filter:grayscale(.55)}
+.marcas-topo .sep{width:1px;height:28px;background:var(--linha)}
+
+/* ---------- Escolha de projeto ---------- */
+#telaProjetos{min-height:100vh;max-width:1020px;margin:0 auto;padding:22px 16px 48px}
+.proj-topo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.proj-topo h1{margin:0;font-family:var(--serif);font-weight:500;font-size:21px;color:var(--ouro-2)}
+.proj-topo .usuario{margin-left:auto}
+.proj-sub{margin:0 0 22px;color:var(--suave);font-size:14px}
+.proj-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:14px;align-items:stretch}
+.proj-card{display:flex;flex-direction:column;background:var(--brasa);border:1px solid var(--linha);
+  border-top:3px solid var(--c);border-radius:var(--raio);padding:0 0 16px;text-align:left;overflow:hidden;
+  transition:border-color .15s,transform .15s}
+.proj-card:hover{border-color:var(--c);transform:translateY(-2px)}
+.proj-marca{flex:none;height:138px;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;background:
+  radial-gradient(ellipse 70% 90% at 50% 45%, color-mix(in srgb, var(--c) 16%, transparent), transparent 72%)}
+.proj-marca img{max-height:98px;max-width:62%;width:auto;height:auto;object-fit:contain;display:block}
+.proj-marca b{font-family:var(--serif);font-size:24px;color:var(--c);letter-spacing:.06em;text-align:center;line-height:1.2}
+.proj-nome,.proj-desc,.proj-medidor,.proj-selos{flex:none}
+.proj-nome{padding:0 16px;font-family:var(--serif);font-weight:500;font-size:18px;color:var(--texto)}
+.proj-desc{padding:2px 16px 0;color:var(--suave);font-size:12.5px;min-height:32px}
+.proj-medidor{display:flex;align-items:center;gap:12px;padding:10px 16px 0}
+.proj-medidor svg{width:92px;flex:none}
+.proj-medidor div{min-width:0}
+.proj-medidor b{display:block;font-size:14px;font-weight:600}
+.proj-medidor span{color:var(--suave);font-size:12.5px}
+.proj-selos{display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px 0}
+.selo{border:1px solid var(--linha);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--suave)}
+.selo.alerta{color:#F6B1AA;border-color:rgba(224,73,61,.5);background:rgba(208,55,44,.12);font-weight:600}
+.selo.minhas{color:var(--ouro-2);border-color:rgba(201,164,92,.5);font-weight:600}
+.proj-vazio{color:var(--suave);padding:40px 0;text-align:center}
+.btn-trocar{background:none;border:0;color:var(--suave);font-size:12.5px;text-decoration:underline;padding:2px 0;text-align:left}
 .esqueleto{height:70px;border-radius:var(--raio);background:linear-gradient(90deg,var(--brasa) 0%,var(--brasa-2) 50%,var(--brasa) 100%);background-size:200% 100%;animation:brilho 1.2s linear infinite}
 @keyframes brilho{to{background-position:-200% 0}}
 
@@ -76,7 +112,10 @@ button{cursor:pointer}
 .marca{display:flex;align-items:center;gap:10px;min-width:0}
 .marca .ico{flex:none;width:44px;height:44px;border-radius:10px;overflow:hidden;position:relative;background:#1B1A18}
 .marca .ico img{position:absolute;width:190%;left:-45%;top:-9%}
-.marca h1{margin:0;font-family:var(--serif);font-weight:700;font-size:19px;color:var(--ouro);letter-spacing:.04em;line-height:1.1}
+.marca .ico.contain img{position:static;width:100%;height:100%;object-fit:contain;padding:3px}
+.marca .troca{display:block;background:none;border:0;padding:0;color:var(--suave);font-size:12px;text-decoration:underline}
+.marca h1{margin:0;font-family:var(--serif);font-weight:700;font-size:19px;color:var(--ouro);letter-spacing:.04em;line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .marca p{margin:0;color:var(--suave);font-size:12.5px}
 .usuario{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--brasa);border:1px solid var(--linha);
   border-radius:999px;padding:4px 12px 4px 4px;white-space:nowrap}
@@ -193,6 +232,7 @@ select.campo{padding-right:28px}
 .pontos{margin:0;padding-left:22px}
 .pontos li{padding:4px 0}
 .pontos li::marker{color:var(--ouro);font-family:var(--serif)}
+.pt-obs{display:block;font-style:normal;color:var(--suave);font-size:12.5px;margin-top:1px}
 .feed{list-style:none;margin:0;padding:0;font-size:13.5px}
 .feed li{padding:8px 0;border-top:1px solid var(--linha)}
 .feed li:first-child{border-top:0}
@@ -274,7 +314,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 @media (max-width:720px){
   .painel-topo,.grade-2{grid-template-columns:1fr}
-  .marca p{display:none}
+  .marca h1{font-size:16px;letter-spacing:.02em}
   .usuario span{display:none}
   .lb{grid-template-columns:minmax(0,1fr) auto;}
   .lb .trilho{grid-column:1/-1;grid-row:2}
@@ -295,7 +335,12 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 <!-- ============ LOGIN ============ -->
 <main id="telaLogin">
   <div class="logo-grande" id="logoGrande"><img src="https://rodsilveira-rs.github.io/plus-liberdade/gogui-logo.jpg" alt="Gogui Korean BBQ" onerror="this.closest('.logo-grande').outerHTML='<div class=&quot;logo-texto&quot;>GOGUI</div>'"></div>
-  <p class="login-titulo">Checklist de abertura</p>
+  <div class="marcas-topo">
+    <img src="https://rodsilveira-rs.github.io/plus-liberdade/cozinha-logo.jpg" alt="Cozinha de Produção" onerror="this.remove()">
+    <span class="sep"></span>
+    <img src="https://rodsilveira-rs.github.io/plus-liberdade/mercearia-logo.png" alt="Mercearia Liberdade" onerror="this.previousElementSibling.remove();this.remove()">
+  </div>
+  <p class="login-titulo">Acompanhamento de projetos</p>
   <p class="login-sub">Toque no seu nome para entrar</p>
   <div class="nomes" id="listaNomes">
     <div class="esqueleto"></div><div class="esqueleto"></div><div class="esqueleto"></div>
@@ -304,13 +349,25 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <p class="login-aviso" id="loginAviso">O aparelho lembra quem entrou. Para trocar de pessoa, use o seu nome no topo da tela.</p>
 </main>
 
+<!-- ============ PROJETOS ============ -->
+<main id="telaProjetos" class="oculto">
+  <div class="proj-topo">
+    <h1>Projetos em implantação</h1>
+    <button class="usuario" data-act="sair" title="Trocar de pessoa">
+      <span class="ini" id="pIni"></span><span id="pNome"></span><small>trocar</small>
+    </button>
+  </div>
+  <p class="proj-sub">Escolha o projeto que você quer acompanhar.</p>
+  <div class="proj-grade" id="projGrade"></div>
+</main>
+
 <!-- ============ APP ============ -->
 <div id="telaApp" class="oculto">
   <header class="topo">
     <div class="topo-linha">
       <div class="marca">
-        <span class="ico"><img src="https://rodsilveira-rs.github.io/plus-liberdade/gogui-logo.jpg" alt="" onerror="this.parentNode.remove()"></span>
-        <div><h1>GOGUI</h1><p>Checklist de abertura</p></div>
+        <span class="ico" id="mIco"></span>
+        <div><h1 id="mTitulo">—</h1><button class="troca" data-act="trocarProjeto">trocar de projeto</button></div>
       </div>
       <a class="btn-menu" id="btnMenu" href="https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html" title="Voltar ao Menu">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Menu
@@ -351,8 +408,32 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
    CONFIGURAÇÃO
    ===================================================================== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbwi1qoM4RW92uHvL4MKZCFuuUBiUc9VTM19fjmmkLMUw2zlezz6tBcnSIBtrmjtigAl/exec';   // URL /exec da implantação do Code_Gogui.gs
-const DATA_ABERTURA = '';                      // 'AAAA-MM-DD' quando a data oficial for definida
+/* Um projeto por Operação da planilha. O "id" tem que ser idêntico ao texto da
+   coluna Operação, senão as pendências não aparecem. Operação que existir na
+   planilha e não estiver aqui ganha um card simples, sem logo. */
+const BASE_IMG = 'https://rodsilveira-rs.github.io/plus-liberdade/';
+const PROJETOS = [
+  {
+    id: 'Gogui', tema: 'gogui', titulo: 'GOGUI', curto: 'GOGUI',
+    nome: 'Gogui Korean BBQ', desc: 'Checklist de abertura do restaurante',
+    logo: BASE_IMG + 'gogui-logo.jpg', ico: 'zoom', cor: '#C9A45C', cor2: '#F0D9A0',
+    alvo: '', rotuloAlvo: 'a abertura', rotuloPontos: 'Pontos críticos para a abertura'
+  },
+  {
+    id: 'Cozinha de Produção', tema: 'cozinha', titulo: 'COZINHA DE PRODUÇÃO', curto: 'COZINHA',
+    nome: 'Cozinha de Produção', desc: 'Implantação da planta industrial',
+    logo: BASE_IMG + 'cozinha-logo.jpg', ico: 'contain', cor: '#9EB1C2', cor2: '#DDE8F1',
+    alvo: '', rotuloAlvo: 'a entrega', rotuloPontos: 'Pontos críticos do projeto'
+  },
+  {
+    id: 'Mercearia Liberdade', tema: 'mercearia', titulo: 'MERCEARIA LIBERDADE', curto: 'MERCEARIA',
+    nome: 'Mercearia Liberdade', desc: 'Obras e infraestrutura da loja',
+    logo: BASE_IMG + 'mercearia-logo.png', ico: 'contain', cor: '#DF9A3C', cor2: '#F7C87E',
+    alvo: '', rotuloAlvo: 'a conclusão', rotuloPontos: 'Pontos críticos da obra'
+  }
+];
 const LS_USUARIO = 'gogui_usuario';
+const LS_PROJETO = 'gogui_projeto';
 const AUTO_REFRESH_MS = 90000;
 
 const API_OK = !!API_URL && API_URL.indexOf('COLE_AQUI') < 0;
@@ -374,10 +455,11 @@ const S = {
   usuario: null,
   listas: { status: [], prioridade: [], operacao: [], responsaveis: [], gestores: [], usuarios: [] },
   tarefas: [],
-  pontos: [],
+  pontos: {},
   log: [],
+  projeto: null,
   aba: 'minhas',
-  filtros: { op: 'Todas', status: 'abertas', prio: '', resp: '', busca: '' },
+  filtros: { status: 'abertas', prio: '', resp: '', busca: '' },
   reguaResp: '',
   fechados: new Set(),
   salvando: 0,
@@ -416,6 +498,44 @@ function addDias(iso, n) {
 }
 function vence7(t) { if (!aberta(t) || !t.prazo) return false; const d = diasAte(t.prazo); return d >= 0 && d <= 7; }
 function normTxt(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+
+/* O backend antigo mandava uma lista (só do Gogui); o novo manda um mapa por
+   projeto, com texto e observação. Aqui os dois viram o mesmo formato. */
+function normalizarPontos_(p) {
+  if (!p) return {};
+  const bruto = Array.isArray(p) ? { 'Gogui': p } : p;
+  const out = {};
+  Object.keys(bruto).forEach(function (op) {
+    out[op] = (bruto[op] || []).map(function (x) {
+      return typeof x === 'string' ? { texto: x, obs: '' } : { texto: x.texto || '', obs: x.obs || '' };
+    }).filter(function (x) { return x.texto; });
+  });
+  return out;
+}
+
+/* ---------- Projetos ---------- */
+function projetoDe(id) {
+  return PROJETOS.filter(function (p) { return p.id === id; })[0] ||
+    { id: id, tema: 'gogui', titulo: String(id || '').toUpperCase(), nome: id,
+      curto: String(id || '').toUpperCase().split(' ')[0],
+      desc: 'Acompanhamento do projeto', logo: '', ico: 'contain', cor: '#C9A45C', cor2: '#F0D9A0',
+      alvo: '', rotuloAlvo: 'a conclusão', rotuloPontos: 'Pontos críticos' };
+}
+/* Projetos da config que existem na planilha, mais as operações que a planilha
+   tem e a config não conhece — assim nenhuma pendência fica invisível. */
+function projetosVisiveis() {
+  const daPlanilha = S.listas.operacao || [];
+  const out = PROJETOS.filter(function (p) { return daPlanilha.indexOf(p.id) >= 0; });
+  daPlanilha.forEach(function (op) {
+    if (!out.some(function (p) { return p.id === op; })) out.push(projetoDe(op));
+  });
+  return out.length ? out : PROJETOS.slice();
+}
+function projAtual() { return projetoDe(S.projeto); }
+function tarefasProj(id) {
+  const alvo = id || S.projeto;
+  return S.tarefas.filter(function (t) { return t.operacao === alvo; });
+}
 
 function ordenar(lista) {
   return lista.slice().sort((a, b) => {
@@ -475,7 +595,7 @@ async function carregar(silencioso) {
     const d = await Api.carregar();
     S.listas = d.listas;
     S.tarefas = d.tarefas;
-    S.pontos = d.pontos || [];
+    S.pontos = normalizarPontos_(d.pontos);
     S.log = d.log || [];
     S.carregado = true;
     if (S.usuario && S.listas.usuarios.indexOf(S.usuario) < 0) sair();
@@ -554,16 +674,43 @@ function renderLogin() {
 function entrar(nome) {
   S.usuario = nome;
   localStorage.setItem(LS_USUARIO, nome);
-  const gestor = S.listas.gestores.indexOf(nome) >= 0;
-  S.aba = gestor ? 'painel' : 'minhas';
-  S.filtros = { op: 'Todas', status: 'abertas', prio: '', resp: '', busca: '' };
+  S.projeto = null;
   render();
   window.scrollTo(0, 0);
 }
 
+function escolherProjeto(id) {
+  S.projeto = id;
+  localStorage.setItem(LS_PROJETO, id);
+  const gestor = S.listas.gestores.indexOf(S.usuario) >= 0;
+  S.aba = gestor ? 'painel' : 'minhas';
+  S.filtros = { status: 'abertas', prio: '', resp: '', busca: '' };
+  S.reguaResp = '';
+  S.fechados = new Set();
+  S.primeiraAgulha = true;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function trocarProjeto() {
+  S.projeto = null;
+  localStorage.removeItem(LS_PROJETO);
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* Cor de acento e título da aba seguem o projeto aberto. */
+function aplicarTema() {
+  const p = S.projeto ? projAtual() : null;
+  document.body.setAttribute('data-proj', p ? p.tema : 'gogui');
+  document.title = p ? (p.nome + ' · Acompanhamento') : 'Projetos Q Food · Acompanhamento';
+}
+
 function sair() {
   S.usuario = null;
+  S.projeto = null;
   localStorage.removeItem(LS_USUARIO);
+  localStorage.removeItem(LS_PROJETO);
   render();
 }
 
@@ -572,23 +719,71 @@ function sair() {
    ===================================================================== */
 function render() {
   const logado = !!S.usuario;
+  const noProjeto = logado && !!S.projeto;
+  aplicarTema();
   $('#telaLogin').classList.toggle('oculto', logado);
-  $('#telaApp').classList.toggle('oculto', !logado);
+  $('#telaProjetos').classList.toggle('oculto', !logado || noProjeto);
+  $('#telaApp').classList.toggle('oculto', !noProjeto);
   $('#avisoDemo').classList.toggle('oculto', !DEMO);
   if (!logado) { if (S.carregado) renderLogin(); return; }
 
+  if (!noProjeto) {
+    $('#pIni').textContent = inicial(S.usuario);
+    $('#pNome').textContent = S.usuario;
+    renderProjetos();
+    return;
+  }
+
+  const P = projAtual();
+  $('#mTitulo').textContent = window.matchMedia('(max-width:720px)').matches ? (P.curto || P.titulo) : P.titulo;
+  const ico = $('#mIco');
+  ico.className = 'ico' + (P.ico === 'contain' ? ' contain' : '');
+  ico.innerHTML = P.logo ? '<img src="' + esc(P.logo) + '" alt="" onerror="this.remove()">' : '';
   $('#uIni').textContent = inicial(S.usuario);
   $('#uNome').textContent = S.usuario;
-  const minhasAbertas = S.tarefas.filter(t => t.responsavel === S.usuario && aberta(t)).length;
-  const todasAbertas = S.tarefas.filter(aberta).length;
-  $('#cMinhas').textContent = minhasAbertas;
-  $('#cTodas').textContent = todasAbertas;
+
+  const doProjeto = tarefasProj();
+  $('#cMinhas').textContent = doProjeto.filter(t => t.responsavel === S.usuario && aberta(t)).length;
+  $('#cTodas').textContent = doProjeto.filter(aberta).length;
   document.querySelectorAll('.aba').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === S.aba));
   document.querySelector('.fab').classList.toggle('oculto', S.aba === 'painel');
 
   if (!S.carregado) { $('#conteudo').innerHTML = '<div class="vazio"><b>Carregando o checklist</b>Sincronizando as pendências.</div>'; return; }
   if (S.aba === 'painel') renderPainel();
   else renderLista();
+}
+
+/* ---------- Tela de escolha de projeto ---------- */
+function renderProjetos() {
+  const lista = projetosVisiveis();
+  if (!lista.length) {
+    $('#projGrade').innerHTML = '<p class="proj-vazio">Nenhum projeto encontrado na planilha.</p>';
+    return;
+  }
+  $('#projGrade').innerHTML = lista.map(function (P) {
+    const it = tarefasProj(P.id);
+    const ok = it.filter(t => !aberta(t)).length;
+    const atras = it.filter(atrasada).length;
+    const criticas = it.filter(t => aberta(t) && t.prioridade === 'Crítica').length;
+    const minhas = it.filter(t => t.responsavel === S.usuario && aberta(t)).length;
+    const marca = P.logo
+      ? '<img src="' + esc(P.logo) + '" alt="' + esc(P.nome) + '" onerror="this.outerHTML=\'<b>' + esc(P.titulo) + '</b>\'">'
+      : '<b>' + esc(P.titulo) + '</b>';
+    const selos =
+      (minhas ? '<span class="selo minhas">' + minhas + ' com você</span>' : '') +
+      (atras ? '<span class="selo alerta">' + plural(atras, 'atrasada', 'atrasadas') + '</span>' : '') +
+      (criticas ? '<span class="selo">' + criticas + ' críticas</span>' : '') +
+      (it.length ? '' : '<span class="selo">Sem pendências ainda</span>');
+    return '<button class="proj-card" style="--c:' + P.cor + '" data-act="projeto" data-id="' + esc(P.id) + '">' +
+      '<span class="proj-marca">' + marca + '</span>' +
+      '<span class="proj-nome">' + esc(P.nome) + '</span>' +
+      '<span class="proj-desc">' + esc(P.desc) + '</span>' +
+      '<span class="proj-medidor">' + gaugeSVG(pct(ok, it.length), { pequeno: true, cor: P.cor, cor2: P.cor2 }) +
+        '<span><b>' + ok + ' de ' + it.length + ' concluídas</b>' +
+        '<span>' + (it.length - ok) + ' em aberto</span></span></span>' +
+      (selos ? '<span class="proj-selos">' + selos + '</span>' : '') +
+      '</button>';
+  }).join('');
 }
 
 /* =====================================================================
@@ -602,7 +797,7 @@ function filtrar() {
     if (S.aba === 'todas' && f.resp) {
       if (f.resp === '__sem__' ? t.responsavel : t.responsavel !== f.resp) return false;
     }
-    if (f.op !== 'Todas' && t.operacao !== f.op) return false;
+    if (t.operacao !== S.projeto) return false;
     if (f.status === 'abertas' && !aberta(t)) return false;
     if (f.status === 'atrasadas' && !atrasada(t)) return false;
     if (f.status === 'semana' && !vence7(t)) return false;
@@ -616,12 +811,9 @@ function filtrar() {
 
 function renderLista() {
   const f = S.filtros, L = S.listas;
-  const ops = ['Todas'].concat(L.operacao);
   const opcao = (v, rot, sel) => '<option value="' + esc(v) + '"' + (v === sel ? ' selected' : '') + '>' + esc(rot) + '</option>';
 
-  let filtrosHtml = '<div class="filtros"><div class="chips">' +
-    ops.map(o => '<button class="chip" data-act="op" data-v="' + esc(o) + '" aria-pressed="' + (f.op === o) + '">' + esc(o) + '</button>').join('') +
-    '</div></div><div class="filtros">' +
+  let filtrosHtml = '<div class="filtros">' +
     '<input class="campo busca" type="search" id="fBusca" placeholder="Buscar pendência" value="' + esc(f.busca) + '">' +
     '<select class="campo" id="fStatus" aria-label="Status">' +
       opcao('abertas', 'Em aberto', f.status) + opcao('atrasadas', 'Atrasadas', f.status) + opcao('semana', 'Vencem em 7 dias', f.status) +
@@ -645,7 +837,7 @@ function renderLista() {
   });
 
   // totais por grupo (independente do filtro de status) para a barrinha de progresso
-  const base = S.tarefas.filter(t => S.aba !== 'minhas' || t.responsavel === S.usuario);
+  const base = tarefasProj().filter(t => S.aba !== 'minhas' || t.responsavel === S.usuario);
   const totais = {};
   base.forEach(t => {
     const k = t.operacao + '||' + t.area;
@@ -660,11 +852,9 @@ function renderLista() {
       ? '<div class="vazio"><b>Nenhuma pendência com seu nome ainda</b>Veja a aba Todas e assuma o que for seu: abra a pendência e escolha você como responsável.</div>'
       : '<div class="vazio"><b>Nada por aqui</b>Nenhuma pendência combina com esses filtros.</div>';
   } else {
-    const ordemOp = L.operacao;
     const ordemPlan = [];
     S.tarefas.forEach(t => { const k = t.operacao + '||' + t.area; if (ordemPlan.indexOf(k) < 0) ordemPlan.push(k); });
-    const chaves = Array.from(grupos.keys()).sort((a, b) =>
-      (ordemOp.indexOf(a.split('||')[0]) - ordemOp.indexOf(b.split('||')[0])) || (ordemPlan.indexOf(a) - ordemPlan.indexOf(b)));
+    const chaves = Array.from(grupos.keys()).sort((a, b) => ordemPlan.indexOf(a) - ordemPlan.indexOf(b));
     corpo = chaves.map(k => {
       const [op, area] = k.split('||');
       const itens = grupos.get(k);
@@ -673,7 +863,7 @@ function renderLista() {
       return '<section class="grupo' + (fechado ? ' fechado' : '') + '">' +
         '<button class="grupo-cab" data-act="grupo" data-k="' + esc(k) + '" aria-expanded="' + !fechado + '">' +
           '<svg class="seta" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>' +
-          '<h3>' + esc(area) + '</h3>' + (f.op === 'Todas' && op !== 'Gogui' ? '<small>' + esc(op) + '</small>' : '') +
+          '<h3>' + esc(area) + '</h3>' +
           '<span class="cont">' + tt.ok + ' de ' + tt.tot + ' concluídas</span>' +
         '</button>' +
         '<div class="barra-mini"><i style="width:' + pct(tt.ok, tt.tot) + '%"></i></div>' +
@@ -719,39 +909,43 @@ function cartaoHtml(t) {
 /* =====================================================================
    PAINEL
    ===================================================================== */
-let gaugeSeq = 0;
+let gaugeSeq = 0;   // nunca reinicia: cada gradiente precisa de um id unico na pagina
 function gaugeSVG(p, opts = {}) {
   const id = 'g' + (++gaugeSeq);
   const r = 90, cx = 110, cy = 112;
   const arco = Math.PI * r;
   const dash = arco * Math.max(0, Math.min(100, p)) / 100;
   const ang = S.primeiraAgulha && opts.animar ? 0 : p * 1.8;
+  /* Atributo de SVG não entende var(): as cores entram como valor literal.
+     Na tela de projetos vem a cor do card; no app, a do projeto aberto. */
+  const base = opts.cor ? opts : (S.projeto ? projAtual() : PROJETOS[0]);
+  const ac = base.cor || '#C9A45C';
+  const ac2 = base.cor2 || '#F0D9A0';
   let ticks = '';
   for (let i = 0; i <= 10; i++) {
     const a = Math.PI * (1 - i / 10);
     const r1 = r + 12, r2 = r + (i % 5 === 0 ? 20 : 16);
     ticks += '<line x1="' + (cx + r1 * Math.cos(a)).toFixed(1) + '" y1="' + (cy - r1 * Math.sin(a)).toFixed(1) +
       '" x2="' + (cx + r2 * Math.cos(a)).toFixed(1) + '" y2="' + (cy - r2 * Math.sin(a)).toFixed(1) +
-      '" stroke="' + (i % 5 === 0 ? '#C9A45C' : '#5A4F42') + '" stroke-width="' + (i % 5 === 0 ? 2 : 1.4) + '"/>';
+      '" stroke="' + (i % 5 === 0 ? ac : '#5A4F42') + '" stroke-width="' + (i % 5 === 0 ? 2 : 1.4) + '"/>';
   }
   const tam = opts.pequeno ? 48 : 52;
   return '<svg viewBox="0 -4 220 ' + (opts.pequeno ? 176 : 184) + '" role="img" aria-label="' + p + '% concluído">' +
     '<defs><linearGradient id="' + id + '" x1="0" x2="1" y1="0" y2="0">' +
-      '<stop offset="0" stop-color="#B8281F"/><stop offset=".45" stop-color="#E0602F"/>' +
-      '<stop offset=".75" stop-color="#C9A45C"/><stop offset="1" stop-color="#F0D9A0"/></linearGradient></defs>' +
+      '<stop offset="0" stop-color="#C13428"/><stop offset=".45" stop-color="#E0602F"/>' +
+      '<stop offset=".75" stop-color="' + ac + '"/><stop offset="1" stop-color="' + ac2 + '"/></linearGradient></defs>' +
     (opts.pequeno ? '' : ticks) +
     '<path d="M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy + '" fill="none" stroke="#2F2A24" stroke-width="16" stroke-linecap="round"/>' +
     (dash < 1 ? '' : '<path d="M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy + '" fill="none" stroke="url(#' + id + ')" stroke-width="16" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(1) + ' ' + arco.toFixed(1) + '"/>') +
     '<g class="agulha" data-ang="' + (p * 1.8) + '" style="transform-origin:' + cx + 'px ' + cy + 'px;transform:rotate(' + ang + 'deg)">' +
       '<path d="M ' + (cx - r + 20) + ' ' + cy + ' L ' + cx + ' ' + (cy - 3.5) + ' L ' + cx + ' ' + (cy + 3.5) + ' Z" fill="#F1E8D8"/></g>' +
     '<circle cx="' + cx + '" cy="' + cy + '" r="7" fill="#F1E8D8"/><circle cx="' + cx + '" cy="' + cy + '" r="3" fill="#1A1816"/>' +
-    '<text x="' + cx + '" y="' + (cy + (opts.pequeno ? 50 : 58)) + '" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="' + tam + '" fill="#F1E8D8">' + p + '<tspan font-size="' + (tam * .5) + '" fill="#C9A45C">%</tspan></text>' +
+    '<text x="' + cx + '" y="' + (cy + (opts.pequeno ? 50 : 58)) + '" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="' + tam + '" fill="#F1E8D8">' + p + '<tspan font-size="' + (tam * .5) + '" fill="' + ac + '">%</tspan></text>' +
     '</svg>';
 }
 
 function renderPainel() {
-  gaugeSeq = 0;
-  const T = S.tarefas, L = S.listas;
+  const T = tarefasProj(), L = S.listas, P = projAtual();
   const total = T.length;
   const ok = T.filter(t => !aberta(t)).length;
   const andamento = T.filter(t => t.status === 'Em andamento').length;
@@ -763,16 +957,16 @@ function renderPainel() {
   const p = pct(ok, total);
 
   let contagem = '';
-  if (DATA_ABERTURA) {
-    const d = diasAte(DATA_ABERTURA);
-    contagem = '<div class="contagem">' + (d > 0 ? '<b>' + d + '</b><span>' + (d === 1 ? 'dia' : 'dias') + ' para a abertura (' + fmtData(DATA_ABERTURA) + ')</span>'
-      : d === 0 ? '<b>Hoje</b><span>é o dia da abertura</span>' : '<span>Aberto desde ' + fmtData(DATA_ABERTURA) + '</span>') + '</div>';
+  if (P.alvo) {
+    const d = diasAte(P.alvo);
+    contagem = '<div class="contagem">' + (d > 0 ? '<b>' + d + '</b><span>' + (d === 1 ? 'dia' : 'dias') + ' para ' + esc(P.rotuloAlvo) + ' (' + fmtData(P.alvo) + ')</span>'
+      : d === 0 ? '<b>Hoje</b><span>é o dia</span>' : '<span>Data prevista: ' + fmtData(P.alvo) + '</span>') + '</div>';
   }
 
   const num = (v, rot, cls, filtro) => '<button class="num ' + (cls || '') + '" data-act="irFiltro" data-f="' + filtro + '"><b>' + v + '</b><span>' + rot + '</span></button>';
 
   const topo = '<div class="painel-topo">' +
-    '<div class="bloco gauge-principal"><h2>Pronto para abrir</h2>' + gaugeSVG(p, { animar: true }) +
+    '<div class="bloco gauge-principal"><h2>' + esc(P.titulo === 'GOGUI' ? 'Pronto para abrir' : 'Andamento do projeto') + '</h2>' + gaugeSVG(p, { animar: true }) +
       '<div class="gauge-legenda"><b>' + ok + '</b> de <b>' + total + '</b> pendências concluídas</div>' + contagem + '</div>' +
     '<div class="bloco"><h2>Situação agora</h2><div class="numeros">' +
       num(total - ok, 'Em aberto', '', 'abertas') +
@@ -784,14 +978,6 @@ function renderPainel() {
     '</div>' +
     (semResp ? '<button class="aviso-resp" data-act="irFiltro" data-f="semresp"><b>' + plural(semResp, 'pendência', 'pendências') + '</b> ainda sem responsável. Toque para ver e distribuir.</button>' : '') +
     '</div></div>';
-
-  const porOp = '<div class="bloco mt"><h2>Por operação</h2><div class="gauges-op">' +
-    L.operacao.map(op => {
-      const it = T.filter(t => t.operacao === op);
-      const o = it.filter(t => !aberta(t)).length;
-      return '<button class="gauge-op" data-act="irOp" data-v="' + esc(op) + '">' + gaugeSVG(pct(o, it.length), { pequeno: true }) +
-        '<b>' + esc(op) + '</b><small>' + o + ' de ' + it.length + '</small></button>';
-    }).join('') + '</div></div>';
 
   const areas = [];
   T.forEach(t => { const k = t.operacao + '||' + t.area; if (areas.indexOf(k) < 0) areas.push(k); });
@@ -805,6 +991,7 @@ function renderPainel() {
 
   const linhasResp = L.responsaveis.map(r => {
     const it = T.filter(t => t.responsavel === r);
+    if (!it.length) return '';
     const ab = it.filter(aberta).length, at = it.filter(atrasada).length, o = it.length - ab;
     return '<tr data-resp="' + esc(r) + '"><td>' + esc(r) + '</td><td class="n">' + ab + '</td><td class="n"' + (at ? ' style="color:#F6B1AA;font-weight:600"' : '') + '>' + at + '</td><td class="n">' + o + '/' + it.length + '</td></tr>';
   }).join('');
@@ -813,12 +1000,14 @@ function renderPainel() {
     '<tr data-resp="__sem__"><td style="color:var(--st-and)">Sem responsável</td><td class="n">' + semResp + '</td><td class="n">' + T.filter(t => atrasada(t) && !t.responsavel).length + '</td><td class="n"></td></tr>' +
     '</tbody></table></div>';
 
-  const pontos = S.pontos.length ? '<div class="bloco"><h2>Pontos críticos para a abertura</h2><ol class="pontos">' +
-    S.pontos.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol></div>' : '';
+  const pts = (S.pontos || {})[S.projeto] || [];
+  const pontos = pts.length ? '<div class="bloco"><h2>' + esc(P.rotuloPontos || 'Pontos críticos') + '</h2><ol class="pontos">' +
+    pts.map(x => '<li>' + esc(x.texto) + (x.obs ? '<em class="pt-obs">' + esc(x.obs) + '</em>' : '') + '</li>').join('') +
+    '</ol></div>' : '';
 
   const nomeCampo = { 'Status': 'status', 'Responsável': 'responsável', 'Prazo de Entrega': 'prazo', 'Observações': 'observação', 'Evidência / Link': 'evidência', 'Prioridade': 'prioridade' };
   const feed = '<div class="bloco"><h2>Atividade recente</h2>' + (S.log.length ? '<ul class="feed">' +
-    S.log.slice(0, 15).map(l => {
+    S.log.filter(l => { const t = S.tarefas.filter(x => x.id === l.id)[0]; return !t || t.operacao === S.projeto; }).slice(0, 15).map(l => {
       let txt;
       if (l.campo === 'Criada') txt = '<b>' + esc(l.usuario) + '</b> criou “' + esc(l.pendencia) + '”';
       else if (l.campo === 'Status') txt = '<b>' + esc(l.usuario) + '</b> mudou “' + esc(l.pendencia) + '” para <b>' + esc(l.para) + '</b>';
@@ -829,9 +1018,9 @@ function renderPainel() {
 
   const rgAntes = $('#rgScroll');
   const scrollAntes = rgAntes ? rgAntes.scrollLeft : null;
-  $('#conteudo').innerHTML = topo + reguaHtml(T) + porOp +
+  $('#conteudo').innerHTML = topo + reguaHtml(T) +
     '<div class="grade-2">' + porResp + porArea + '</div>' +
-    '<div class="grade-2">' + (pontos || '<div></div>') + feed + '</div>';
+    (pontos ? '<div class="grade-2">' + pontos + feed + '</div>' : '<div class="mt">' + feed + '</div>');
 
   const rg = $('#rgScroll');
   if (rg) {
@@ -866,7 +1055,8 @@ function reguaHtml(T) {
   // intervalo da régua
   let ini = addDias(hoje, -3), fim = addDias(hoje, 21);
   const datas = pontos.map(t => t.prazo);
-  if (DATA_ABERTURA) datas.push(DATA_ABERTURA);
+  const Pr = projAtual();
+  if (Pr.alvo) datas.push(Pr.alvo);
   datas.forEach(d => { if (d < addDias(ini, 1)) ini = addDias(d, -2); if (d > addDias(fim, -2)) fim = addDias(d, 3); });
   const N = diasAte(fim) - diasAte(ini);
   const pos = iso => ((diasAte(iso) - diasAte(ini)) + 0.5) / (N + 1) * 100;
@@ -910,7 +1100,8 @@ function reguaHtml(T) {
   const marcos =
     '<div class="rg-passado" style="width:' + pos(hoje).toFixed(3) + '%"></div>' +
     '<div class="rg-marco" style="left:' + pos(hoje).toFixed(3) + '%"><span>Hoje</span></div>' +
-    (DATA_ABERTURA ? '<div class="rg-marco abertura" style="left:' + pos(DATA_ABERTURA).toFixed(3) + '%"><span>Abertura</span></div>' : '');
+    (Pr.alvo ? '<div class="rg-marco abertura" style="left:' + pos(Pr.alvo).toFixed(3) + '%"><span>' +
+       esc(Pr.titulo === 'GOGUI' ? 'Abertura' : 'Entrega') + '</span></div>' : '');
 
   const opt = (v, r) => '<option value="' + esc(v) + '"' + (v === rf ? ' selected' : '') + '>' + esc(r) + '</option>';
   const num = (v, rot, cls, filtro) => '<button class="num ' + (cls || '') + '" data-act="irFiltro" data-f="' + filtro + '"><b>' + v + '</b><span>' + rot + '</span></button>';
@@ -944,7 +1135,7 @@ function reguaHtml(T) {
 }
 
 function irFiltro(f) {
-  const base = { op: 'Todas', status: 'abertas', prio: '', resp: '', busca: '' };
+  const base = { status: 'abertas', prio: '', resp: '', busca: '' };
   if (f === 'criticas') base.prio = 'Crítica';
   else if (f === 'atrasadas') base.status = 'atrasadas';
   else if (f === 'semresp') base.resp = '__sem__';
@@ -1009,20 +1200,16 @@ function salvarEditor(id) {
 }
 
 function abrirNova() {
-  const L = S.listas;
-  const areas = Array.from(new Set(S.tarefas.map(t => t.area)));
-  const opPadrao = S.filtros.op !== 'Todas' ? S.filtros.op : (L.operacao[0] || '');
+  const L = S.listas, P = projAtual();
+  /* Sugere as áreas que já existem neste projeto. */
+  const areas = Array.from(new Set(tarefasProj().map(t => t.area)));
   const ehResp = L.responsaveis.indexOf(S.usuario) >= 0;
   $('#folha').innerHTML =
-    '<div class="folha-cab"><div><h2>Nova pendência</h2><p>Fica visível para toda a equipe assim que for criada.</p></div>' +
+    '<div class="folha-cab"><div><h2>Nova pendência</h2><p>Entra em ' + esc(P.nome) + ' e fica visível para toda a equipe.</p></div>' +
       '<button class="fechar" data-act="fechar" aria-label="Fechar">×</button></div>' +
     '<label class="rot" for="nPend">O que precisa ser feito</label><input class="campo" id="nPend" placeholder="Ex.: Instalar suporte das TVs do salão">' +
-    '<div class="dupla">' +
-      '<div><label class="rot" for="nOp">Operação</label><select class="campo" id="nOp">' +
-        L.operacao.map(o => '<option' + (o === opPadrao ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select></div>' +
-      '<div><label class="rot" for="nArea">Área</label><input class="campo" id="nArea" list="dlAreas" placeholder="Escolha ou digite">' +
-        '<datalist id="dlAreas">' + areas.map(a => '<option value="' + esc(a) + '">').join('') + '</datalist></div>' +
-    '</div>' +
+    '<label class="rot" for="nArea">Área</label><input class="campo" id="nArea" list="dlAreas" placeholder="Escolha ou digite">' +
+    '<datalist id="dlAreas">' + areas.map(a => '<option value="' + esc(a) + '">').join('') + '</datalist>' +
     '<div class="dupla">' +
       '<div><label class="rot" for="nPrio">Prioridade</label><select class="campo" id="nPrio">' +
         L.prioridade.map(p => '<option' + (p === 'Alta' ? ' selected' : '') + '>' + esc(p) + '</option>').join('') + '</select></div>' +
@@ -1039,7 +1226,7 @@ function abrirNova() {
 async function criar() {
   const tarefa = {
     pendencia: $('#nPend').value.trim(),
-    operacao: $('#nOp').value,
+    operacao: S.projeto,
     area: $('#nArea').value.trim(),
     prioridade: $('#nPrio').value,
     prazo: $('#nPrazo').value,
@@ -1075,14 +1262,15 @@ document.addEventListener('click', e => {
   if (!el) return;
   if (el.dataset.aba) { S.aba = el.dataset.aba; render(); window.scrollTo(0, 0); return; }
   if (el.matches('tr[data-resp]')) {
-    S.filtros = { op: 'Todas', status: 'abertas', prio: '', resp: el.dataset.resp, busca: '' };
+    S.filtros = { status: 'abertas', prio: '', resp: el.dataset.resp, busca: '' };
     S.aba = 'todas'; render(); window.scrollTo(0, 0); return;
   }
   const act = el.dataset.act;
   if (act === 'entrar') entrar(el.dataset.nome);
   else if (act === 'sair') sair();
   else if (act === 'atualizar') carregar();
-  else if (act === 'op') { S.filtros.op = el.dataset.v; render(); }
+  else if (act === 'projeto') escolherProjeto(el.dataset.id);
+  else if (act === 'trocarProjeto') trocarProjeto();
   else if (act === 'grupo') { const k = el.dataset.k; S.fechados.has(k) ? S.fechados.delete(k) : S.fechados.add(k); render(); }
   else if (act === 'check') alternarConcluida(el.dataset.id);
   else if (act === 'editar') abrirEditor(el.dataset.id);
@@ -1091,7 +1279,7 @@ document.addEventListener('click', e => {
   else if (act === 'nova') abrirNova();
   else if (act === 'criar') criar();
   else if (act === 'irFiltro') irFiltro(el.dataset.f);
-  else if (act === 'irOp') { S.filtros = { op: el.dataset.v, status: 'abertas', prio: '', resp: '', busca: '' }; S.aba = 'todas'; render(); window.scrollTo(0, 0); }
+
 });
 
 document.addEventListener('input', e => {
@@ -1146,8 +1334,17 @@ const Demo = {
         ['Gogui', 'Salão, Ambientação e Marketing', 'Playlist/sonorização definida', 'Média'],
         ['Mercearia Liberdade', 'Infraestrutura', 'Conserto do forno', 'Crítica'],
         ['Mercearia Liberdade', 'Infraestrutura', 'Finalização da parte elétrica da Mercearia Liberdade', 'Crítica'],
-        ['Cozinha de Produção', 'Projetos e Infraestrutura', 'Entrega da planta elétrica da Cozinha de Produção', 'Crítica'],
-        ['Cozinha de Produção', 'Projetos e Infraestrutura', 'Validação da planta de equipamentos da Cozinha de Produção', 'Crítica']
+        ['Cozinha de Produção', 'Projetos e Infraestrutura', 'Entrega da planta elétrica', 'Crítica'],
+        ['Cozinha de Produção', 'Projetos e Infraestrutura', 'Validação da planta de equipamentos', 'Crítica'],
+        ['Cozinha de Produção', 'Projetos e Infraestrutura', 'Compatibilização elétrica x equipamentos', 'Crítica'],
+        ['Cozinha de Produção', 'Obra Civil', 'Execução do piso monolítico', 'Alta'],
+        ['Cozinha de Produção', 'Obra Civil', 'Instalação das câmaras frias', 'Crítica'],
+        ['Cozinha de Produção', 'Equipamentos', 'Chegada dos fornos combinados', 'Crítica'],
+        ['Cozinha de Produção', 'Equipamentos', 'Instalação da linha de produção', 'Alta'],
+        ['Cozinha de Produção', 'Equipamentos', 'Teste de carga elétrica', 'Alta'],
+        ['Cozinha de Produção', 'Documentação', 'Licença sanitária da planta', 'Crítica'],
+        ['Cozinha de Produção', 'Documentação', 'Manual de Boas Práticas da planta', 'Média'],
+        ['Cozinha de Produção', 'Equipe', 'Dimensionamento do quadro de produção', 'Alta']
       ];
       const sts = ['Não iniciado', 'Em andamento', 'Concluído', 'Aguardando terceiro', 'Concluído', 'Bloqueado', 'Em andamento', 'Não iniciado'];
       const hoje = new Date();
@@ -1166,9 +1363,25 @@ const Demo = {
           prazo: i % 4 === 3 ? '' : iso(((i * 5) % 30) - 6), obs: i % 4 === 0 ? 'Aguardando retorno do fornecedor' : '', link: '',
           atualizadoEm: '', atualizadoPor: ''
         })),
-        pontos: ['Corpo de Bombeiros', 'Finalização da obra / boqueta', 'Mesas, mobiliário e novas grelhas', 'Chopeira e máquina de gelo',
-          'Sistema / KDS / cardápio digital', 'Equipe e treinamentos', 'Convites, quadros e comunicação visual',
-          'Mercearia elétrica / forno / plantas da Cozinha de Produção'],
+        pontos: {
+          'Gogui': [
+            { texto: 'Corpo de Bombeiros', obs: 'AVCB em análise' },
+            { texto: 'Finalização da obra / boqueta', obs: '' },
+            { texto: 'Mesas, mobiliário e novas grelhas', obs: '' },
+            { texto: 'Chopeira e máquina de gelo', obs: 'Aguardando entrega' },
+            { texto: 'Sistema / KDS / cardápio digital', obs: '' },
+            { texto: 'Equipe e treinamentos', obs: '' }
+          ],
+          'Cozinha de Produção': [
+            { texto: 'Planta elétrica aprovada', obs: 'Depende do projetista' },
+            { texto: 'Chegada das câmaras frias', obs: '' },
+            { texto: 'Licença sanitária da planta', obs: '' }
+          ],
+          'Mercearia Liberdade': [
+            { texto: 'Conserto do forno', obs: 'Orçamento aprovado' },
+            { texto: 'Finalização da parte elétrica', obs: '' }
+          ]
+        },
         log: []
       };
     }
@@ -1243,7 +1456,13 @@ setTimeout(checarVersao, 15000);
   // Botão "Menu": só aparece para quem tem sessão aberta no Index_Menu (mesmo endereço github.io)
   try { if (localStorage.getItem('qfood_session')) $('#btnMenu').classList.remove('oculto'); } catch (_) {}
   const salvo = localStorage.getItem(LS_USUARIO);
-  if (salvo) { S.usuario = salvo; S.aba = salvo === 'Rodrigo' ? 'painel' : 'minhas'; }
+  if (salvo) {
+    S.usuario = salvo;
+    S.aba = salvo === 'Rodrigo' ? 'painel' : 'minhas';
+    /* ?projeto=Gogui no link abre direto nele; senão, retoma o último. */
+    const naUrl = decodeURIComponent((location.search.match(/[?&]projeto=([^&]*)/) || [])[1] || '');
+    S.projeto = naUrl || localStorage.getItem(LS_PROJETO) || null;
+  }
   render();
   carregar();
 })();
