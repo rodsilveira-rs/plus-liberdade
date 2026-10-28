@@ -204,6 +204,13 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
 .tl li.c:before{border-color:var(--amber)}
 .tl li small{display:block;color:var(--mute);font-size:12px}
 
+/* Assinatura */
+.pad{position:relative;border:1.5px dashed var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.pad canvas{display:block;width:100%;height:160px;touch-action:none;cursor:crosshair}
+.pad-limpar{position:absolute;top:6px;right:6px}
+.pad-linha{position:absolute;left:16px;right:16px;bottom:34px;border-bottom:1px solid #D5D7DB;pointer-events:none}
+.assin-img{display:block;width:100%;max-width:520px;border:1px solid var(--line);border-radius:10px;background:#fff}
+#nova-modo button{font-size:14px;padding:10px 6px}
 /* Indicadores */
 :root{--viz-1:#2a78d6}
 .kpi.stat{cursor:default}
@@ -302,7 +309,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.10.28-a',
+  VERSAO: '2026.10.28-b',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -687,6 +694,18 @@ function aplicarLocal(it) {
         aplicarLocal({ action: 'criarSolicitacao', payload: Object.assign({}, p, { itens: undefined, sol_id: x.sol_id, data: x.data }) });
       });
       break;
+    case 'registrarAssinado': {
+      if (s) break;
+      const q = Object.assign({}, p); delete q.assin_freela; delete q.assin_gestor;
+      aplicarLocal({ action: 'criarSolicitacao', payload: Object.assign(q, { vagas: 1 }) });
+      const ns = solDe(p.sol_id), pe = pessoaDe(p.pessoa_id);
+      if (!ns || d.escalas.some(x => x.esc_id === p.esc_id)) break;
+      d.escalas.push({ esc_id: p.esc_id, sol_id: p.sol_id, numero: ns.numero, pessoa_id: p.pessoa_id, pessoa_nome: pe ? pe.nome : '', empresa: up(p.empresa), unidade: p.unidade, setor: p.setor,
+        funcao_id: p.funcao_id, data: p.data, hora_ini: p.hora_ini, hora_fim: p.hora_fim, status: 'CONFIRMADO', escalado_por: u.email, escalado_por_nome: u.nome, escalado_em: p.feito_em,
+        valor_combinado: String(p.valor_combinado), valor_final: String(p.valor_combinado), valor_base: ns.valor_previsto, assinado_em: p.feito_em, assin_gestor_nome: u.nome, _pend: true });
+      recalc(ns);
+      break;
+    }
     case 'decidirSerie':
       if (s) serieDe(s).filter(x => x.status === 'SOLICITADA' && podeAprovar(x)).forEach(x => aplicarLocal({ action: 'decidirSolicitacao', payload: Object.assign({}, p, { sol_id: x.sol_id }) }));
       break;
@@ -854,7 +873,8 @@ function contar() {
   const vagas = d.solicitacoes.filter(s => ['APROVADA', 'EM_ESCALA'].indexOf(s.status) >= 0 && turno(s).ini > am && podeEscalar(s))
     .map(s => ({ s, falta: num(s.vagas) - ocupadas(s) })).filter(x => x.falta > 0)
     .sort((a, b) => turno(a.s).ini - turno(b.s).ini);
-  const validar = d.escalas.filter(e => (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && turno(e).ini <= am && solDe(e.sol_id) && podeValidar(solDe(e.sol_id)))
+  const validar = d.escalas.filter(e => (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && turno(e).ini <= am && solDe(e.sol_id) && podeValidar(solDe(e.sol_id)) &&
+    solDe(e.sol_id).status !== 'SOLICITADA' && !(e.assinado_em && am < turno(e).fim + 30))
     .sort((a, b) => turno(a).fim - turno(b).fim);
   const pagar = U().financeiro ? d.escalas.filter(e => e.status === 'VALIDADO' && (e.status_fin === 'LIBERADO' || (e.status_fin === 'AGENDADO' && e.pag_data_prevista <= h))) : [];
   const risco = d.pessoas.filter(p => p.status !== 'INATIVO' && riscoHoje(p) !== 'verde');
@@ -1497,6 +1517,7 @@ function abrirSol(id) {
     if (podeE && e.status === 'CONVIDADO') acoes.push('<button class="btn ok sm" data-act="esc-acao" data-a="CONFIRMAR" data-id="' + esc(e.esc_id) + '">Confirmou</button>', '<button class="btn ghost sm" data-act="esc-acao" data-a="RECUSOU" data-id="' + esc(e.esc_id) + '">Não aceitou</button>');
     if (podeE && (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && am < turno(e).fim) acoes.push('<button class="btn ghost sm" data-act="esc-acao" data-a="CANCELAR" data-id="' + esc(e.esc_id) + '">Tirar da escala</button>');
     if (podeV && (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && am >= turno(e).ini) acoes.push('<button class="btn sm" data-act="validar" data-id="' + esc(e.esc_id) + '">Validar turno</button>');
+    if (e.assinado_em && !e._pend) acoes.push('<button class="btn ghost sm" data-act="ver-assin" data-id="' + esc(e.esc_id) + '">Ver assinaturas</button>');
     if ((podeV || U().financeiro) && e.status === 'VALIDADO' && ['LIBERADO', 'AGENDADO'].indexOf(e.status_fin) >= 0 && !e.lote_id && !e._pend) acoes.push('<button class="btn ghost sm" data-act="corrigir-valor" data-id="' + esc(e.esc_id) + '">Corrigir valor</button>');
     if (pes && pes.telefone && (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && am < turno(e).ini) acoes.push('<a class="btn wa sm" target="_blank" rel="noopener" href="' + linkWhats(pes, s) + '">' + ic('zap', 'sm') + 'WhatsApp</a>');
     return '<div class="item' + (e._pend ? ' pend' : '') + '"><span class="avatar">' + esc(iniciais(e.pessoa_nome)) + '</span><div class="grow"><div class="t">' + esc(e.pessoa_nome) + ' ' + pill(rotuloEsc(e)) +
@@ -1504,6 +1525,8 @@ function abrirSol(id) {
       '<div class="m">' + (e.status === 'VALIDADO' ? esc(e.hora_ini_real) + '–' + esc(e.hora_fim_real) + ' · ' + dinheiro(e.valor_final) + ' · validado por ' + esc(e.validador_nome || '') :
         'escalado por ' + esc(e.escalado_por_nome || nomeDe(e.escalado_por))) + '</div>' +
       (e.justificativa ? '<div class="m">Justificativa: ' + esc(e.justificativa) + '</div>' : '') +
+      (e.assinado_em ? '<div class="m">✍️ Assinou na chegada às ' + esc(String(e.assinado_em).slice(11, 16)) + ' com ' + esc(e.assin_gestor_nome || '') + ' · combinado ' + dinheiro(e.valor_combinado) +
+        (e.status === 'CONFIRMADO' ? (s.status === 'SOLICITADA' ? ' · esperando aprovação' : ' · vai sozinho para o financeiro às ' + esc(e.hora_fim) + '. Se o horário mudou, valide antes.') : '') + '</div>' : '') +
       (acoes.length ? '<div class="acts">' + acoes.join('') + '</div>' : '') + '</div></div>';
   }).join('') + '</div>' : '<div class="empty">Ninguém escalado ainda.</div>';
   h += '</div>';
@@ -1560,7 +1583,8 @@ function abrirNova() {
     '<div class="row2"><div class="field"><label>Unidade <span class="req">*</span></label><select name="unidade" required><option value="">—</option></select></div>' +
     '<div class="field"><label>Setor <span class="req">*</span></label><select name="setor" required><option value="">—</option></select></div></div>' +
     '<div class="field"><label>Função <span class="req">*</span></label><select name="funcao_id" required><option value="">Escolha</option>' + d.funcoes.map(f => '<option value="' + esc(f.funcao_id) + '">' + esc(f.nome) + ' · ' + esc(f.grupo) + '</option>').join('') + '</select></div>' +
-    '<div class="field"><label>Quando</label><div class="seg" id="nova-modo"><button type="button" class="on" data-act="nova-modo" data-m="um">Um dia</button><button type="button" data-act="nova-modo" data-m="varios">Dias fixos / várias datas</button></div></div>' +
+    '<div class="field"><label>Quando</label><div class="seg" id="nova-modo"><button type="button" class="on" data-act="nova-modo" data-m="um">Um dia</button><button type="button" data-act="nova-modo" data-m="varios">Dias fixos</button><button type="button" data-act="nova-modo" data-m="assin">Chegou agora ✍️</button></div>' +
+      '<span class="hint" id="nova-modo-hint" hidden>Para quem já está aqui para trabalhar: escolha a pessoa, combine o valor e os dois assinam.</span></div>' +
     '<div id="nova-varios" hidden>' +
       '<div class="field"><label>Dias da semana <span class="req">*</span></label><div class="chips" id="nova-sem">' + ORDEM_SEM.map(w => '<button type="button" class="chip" data-act="nova-dia" data-d="' + w + '">' + SEM_CURTA[w] + '</button>').join('') + '</div></div>' +
       '<div class="row2"><div class="field"><label>De <span class="req">*</span></label><input type="date" name="de" value="' + amanha + '"></div>' +
@@ -1570,9 +1594,17 @@ function abrirNova() {
     '<div class="row3" id="nova-horas"><div class="field" id="nova-data-f"><label>Data <span class="req">*</span></label><input type="date" name="data" value="' + amanha + '"></div>' +
     '<div class="field"><label>Início <span class="req">*</span></label><input type="time" name="hora_ini" value="18:00" required></div>' +
     '<div class="field"><label>Fim <span class="req">*</span></label><input type="time" name="hora_fim" value="00:00" required></div></div>' +
-    '<div class="row2"><div class="field"><label>Vagas <span class="req">*</span></label><div class="stepper"><button type="button" data-act="vagas" data-d="-1" aria-label="Menos">−</button><input name="vagas" inputmode="numeric" value="1"><button type="button" data-act="vagas" data-d="1" aria-label="Mais">+</button></div></div>' +
+    '<div class="row2"><div class="field" id="nova-vagas-f"><label>Vagas <span class="req">*</span></label><div class="stepper"><button type="button" data-act="vagas" data-d="-1" aria-label="Menos">−</button><input name="vagas" inputmode="numeric" value="1"><button type="button" data-act="vagas" data-d="1" aria-label="Mais">+</button></div></div>' +
     '<div class="field"><label>Intervalo (min)</label><input name="intervalo_min" inputmode="numeric" value="0"><span class="hint">Pausa sem pagamento dentro do turno</span></div></div>' +
     '<div class="resumo" id="nova-resumo">Preencha para ver o valor previsto.</div>' +
+    '<div id="nova-assin" hidden>' +
+      '<div class="field"><label>Quem chegou <span class="req">*</span></label><select name="pessoa_id"></select><span class="hint" id="nova-pes-hint"></span></div>' +
+      '<div id="nova-risco"></div>' +
+      '<div class="field" id="nova-just-f" hidden><label>Justificativa <span class="req">*</span></label><textarea name="justificativa" placeholder="Por que precisa ser esta pessoa (pelo menos 10 letras)"></textarea></div>' +
+      '<div class="field"><label>Valor combinado (R$) <span class="req">*</span></label><input name="valor_combinado" inputmode="decimal"><span class="hint" id="nova-valor-hint"></span></div>' +
+      '<div class="field"><label>Assinatura do freelancer <span class="req">*</span></label>' + padAssin('pad-freela') + '<span class="hint" id="pad-freela-nome">Peça para a pessoa assinar com o dedo.</span></div>' +
+      '<div class="field"><label>Sua assinatura (' + esc(U().nome) + ') <span class="req">*</span></label>' + padAssin('pad-gestor') + '</div>' +
+    '</div>' +
     '<div class="field"><label>Motivo <span class="req">*</span></label><select name="motivo" required><option value="">Escolha</option>' + d.motivos.map(m => '<option>' + esc(m) + '</option>').join('') + '</select></div>' +
     '<div class="field"><label>Detalhe do motivo</label><input name="motivo_detalhe" placeholder="Ex.: férias da Ana; evento de sábado"></div>' +
     '<div class="field"><label>Observações</label><textarea name="obs" placeholder="Algo que a pessoa precisa saber (uniforme, horário de chegada…)"></textarea></div>' +
@@ -1580,6 +1612,38 @@ function abrirNova() {
   modal('Nova solicitação', h, '<div id="nova-botoes" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%"></div>');
   atualizarNova();
 }
+/* ---------- Assinatura com o dedo (canvas) ---------- */
+function padAssin(id) {
+  return '<div class="pad"><canvas id="' + id + '" aria-label="Quadro de assinatura"></canvas><button type="button" class="btn ghost sm pad-limpar" data-act="pad-limpar" data-id="' + id + '">Limpar</button>' +
+    '<span class="pad-linha"></span></div>';
+}
+function prepararPad(cv) {
+  if (!cv) return;
+  const r = cv.getBoundingClientRect(), dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  if (!r.width) return;
+  const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+  if (cv.width === w && cv.height === h) return;
+  cv.width = w; cv.height = h; cv.dataset.tracos = '0';
+  const g = cv.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+  g.lineWidth = 2.4 * dpr; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#111';
+  if (cv._ligado) return;
+  cv._ligado = true;
+  let ult = null, pontos = 0;
+  const pos = ev => { const b = cv.getBoundingClientRect(); return [(ev.clientX - b.left) * dpr, (ev.clientY - b.top) * dpr]; };
+  cv.addEventListener('pointerdown', ev => { ev.preventDefault(); cv.setPointerCapture(ev.pointerId); ult = pos(ev); pontos = 0; });
+  cv.addEventListener('pointermove', ev => {
+    if (!ult) return;
+    const q = pos(ev), g2 = cv.getContext('2d');
+    g2.beginPath(); g2.moveTo(ult[0], ult[1]); g2.lineTo(q[0], q[1]); g2.stroke();
+    ult = q; pontos++;
+  });
+  const fim = () => { if (ult && pontos > 2) cv.dataset.tracos = String(Number(cv.dataset.tracos || 0) + 1); ult = null; };
+  cv.addEventListener('pointerup', fim); cv.addEventListener('pointercancel', fim); cv.addEventListener('pointerleave', fim);
+}
+function limparPad(id) { const cv = $('#' + id); if (!cv) return; cv.width = 0; prepararPad(cv); }
+const padAssinado = id => { const cv = $('#' + id); return !!cv && Number(cv.dataset.tracos || 0) > 0; };
+const padImagem = id => $('#' + id).toDataURL('image/png');
 function formDados(f) { const o = {}; new FormData(f).forEach((v, k) => { o[k] = String(v).trim(); }); return o; }
 /* Datas da série: período De/Até, só os dias da semana marcados, menos as tiradas. */
 function datasNova(x) {
@@ -1595,8 +1659,8 @@ function datasNova(x) {
   return out;
 }
 function atualizarNova(campo) {
-  const f = $('#f-nova'); if (!f) return;
-  const d = S.d, v = formDados(f), c = S.modalCtx, varios = c.modo === 'varios';
+  const f = $('#f-nova'); if (!f || !S.modalCtx || S.modalCtx.tipo !== 'nova') return;
+  const d = S.d, v = formDados(f), c = S.modalCtx, varios = c.modo === 'varios', assin = c.modo === 'assin';
   if (campo === 'empresa' || campo === undefined) {
     const us = []; d.estrutura.filter(r => r.empresa === v.empresa).forEach(r => { if (us.indexOf(r.unidade) < 0) us.push(r.unidade); });
     f.unidade.innerHTML = us.length ? us.map(u => '<option>' + esc(u) + '</option>').join('') : '<option value="">—</option>';
@@ -1607,10 +1671,20 @@ function atualizarNova(campo) {
     const antes = f.setor.value;
     f.setor.innerHTML = ss.length ? ss.map(s => '<option' + (s === antes ? ' selected' : '') + '>' + esc(s) + '</option>').join('') : '<option value="">—</option>';
   }
-  /* Modo: um dia ou dias fixos */
+  /* Modo: um dia, dias fixos ou chegou agora (com assinatura) */
   $('#nova-varios').hidden = !varios;
   $('#nova-data-f').hidden = varios;
   $('#nova-horas').className = varios ? 'row2' : 'row3';
+  $('#nova-assin').hidden = !assin;
+  $('#nova-modo-hint').hidden = !assin;
+  $('#nova-vagas-f').hidden = assin;
+  if (assin && campo === 'modo' && !c.horaPosta) {
+    /* Chegou agora: hoje, a partir de agora */
+    c.horaPosta = true;
+    const a = agoraStr(), m = Math.floor(+a.slice(14, 16) / 5) * 5;
+    f.data.value = a.slice(0, 10); f.hora_ini.value = a.slice(11, 13) + ':' + pad(m); f.vagas.value = '1';
+  }
+  if (assin) { atualizarAssin(f, campo); requestAnimationFrame(() => { prepararPad($('#pad-freela')); prepararPad($('#pad-gestor')); }); }
   $$('#nova-modo button').forEach(b => b.classList.toggle('on', b.dataset.m === c.modo));
   $$('#nova-sem .chip').forEach(b => b.classList.toggle('on', c.dias.indexOf(Number(b.dataset.d)) >= 0));
   const x = formDados(f);
@@ -1639,11 +1713,53 @@ function atualizarNova(campo) {
   const auto = x.empresa && autoaprova(alvo);
   const n = varios ? datasNova(x).datas.length : 1;
   const sufixo = varios && n > 1 ? ' (' + n + ')' : '';
+  if (assin) {
+    $('#nova-botoes').innerHTML = auto ? '<button class="btn ok" data-act="nova-enviar" data-auto="1">Registrar (já aprovado)</button>'
+      : '<button class="btn" data-act="nova-enviar" data-auto="0">Registrar e enviar para aprovação</button>';
+    return;
+  }
   $('#nova-botoes').innerHTML = (auto ? '<button class="btn ghost" data-act="nova-enviar" data-auto="0">Enviar para aprovação' + sufixo + '</button><button class="btn ok" data-act="nova-enviar" data-auto="1">Aprovar e abrir ' + (varios && n > 1 ? 'as vagas' : 'vaga') + sufixo + '</button>'
     : '<button class="btn" data-act="nova-enviar" data-auto="0">Enviar para aprovação' + sufixo + '</button>');
 }
+/* Pessoa, risco e valor do registro com assinatura */
+function atualizarAssin(f, campo) {
+  const c = S.modalCtx, x = formDados(f);
+  const sel = f.pessoa_id, antes = sel.value;
+  if (['funcao_id', 'modo', undefined].indexOf(campo) >= 0 || !sel.options.length) {
+    const ativos = S.d.pessoas.filter(p => p.status !== 'INATIVO').sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const hab = ativos.filter(p => x.funcao_id && (p.funcoes || []).indexOf(x.funcao_id) >= 0), outros = ativos.filter(p => hab.indexOf(p) < 0);
+    const op = p => '<option value="' + esc(p.pessoa_id) + '"' + (p.pessoa_id === antes ? ' selected' : '') + '>' + esc(p.nome) + '</option>';
+    sel.innerHTML = '<option value="">Escolha no banco de extras</option>' + (hab.length ? '<optgroup label="Habilitados para a função">' + hab.map(op).join('') + '</optgroup>' : '') +
+      (outros.length ? '<optgroup label="' + (x.funcao_id ? 'Outras pessoas do banco' : 'Banco de extras') + '">' + outros.map(op).join('') + '</optgroup>' : '');
+    $('#nova-pes-hint').textContent = 'Não está na lista? Cadastre antes em Banco de extras.';
+  }
+  const p = pessoaDe(sel.value);
+  $('#pad-freela-nome').textContent = p ? p.nome + ' assina com o dedo.' : 'Peça para a pessoa assinar com o dedo.';
+  let alerta = '', nivel = 'verde';
+  if (p && x.funcao_id && x.data && x.hora_ini && x.hora_fim) {
+    const cand = { data: x.data, hora_ini: x.hora_ini, hora_fim: x.hora_fim, funcao_id: x.funcao_id, empresa: up(x.empresa), unidade: f.unidade.value, setor: f.setor.value };
+    const t = extTurno_(x.data, x.hora_ini, x.hora_fim);
+    const choque = S.d.escalas.find(e => e.pessoa_id === p.pessoa_id && ATIVAS.indexOf(e.status) >= 0 && (o => o.ini < t.fim && t.ini < o.fim)(extTurno_(e.data, e.hora_ini_real || e.hora_ini, e.hora_fim_real || e.hora_fim)));
+    const r = riscoDe(p, cand); nivel = r.nivel;
+    if (choque) alerta = '<div class="alerta vermelho">' + esc(p.nome) + ' já está em outro extra nesse horário (' + esc(choque.numero) + ', ' + esc(choque.hora_ini) + '–' + esc(choque.hora_fim) + '). Não vai entrar.</div>';
+    else if (r.nivel !== 'verde') alerta = '<div class="alerta ' + (r.nivel === 'vermelho' ? 'vermelho' : 'amarelo') + '"><b>Recorrência ' + r.nivel + '</b><ul>' + r.fatores.map(z => '<li>' + esc(z) + '</li>').join('') + '</ul>' +
+      (r.nivel === 'vermelho' ? (podeAprovar(cand) ? 'Escreva a justificativa abaixo.' : 'Só o aprovador do setor pode registrar esta pessoa.') : '') + '</div>';
+    if ((p.funcoes || []).indexOf(x.funcao_id) < 0) alerta += '<div class="alerta amarelo">' + esc(p.nome) + ' não está habilitada para ' + esc(funcaoNome(x.funcao_id)) + '.</div>';
+  }
+  $('#nova-risco').innerHTML = alerta;
+  $('#nova-just-f').hidden = nivel !== 'vermelho';
+  c.nivel = nivel;
+  /* Valor: o que a pessoa recebeu da última vez (mesma função e tipo de dia) ou a tabela */
+  if (x.funcao_id && x.data && x.hora_ini && x.hora_fim) {
+    const hs = horasTurno(x.data, x.hora_ini, x.hora_fim, x.intervalo_min), tab = valorDe(x.funcao_id, hs, x.data);
+    const ult = p ? ultimoValor({ esc_id: '', pessoa_id: p.pessoa_id, funcao_id: x.funcao_id, data: x.data }) : null;
+    if (!c.valorEditado) f.valor_combinado.value = (ult ? num(ult.valor_final) : tab).toFixed(2).replace('.', ',');
+    $('#nova-valor-hint').textContent = 'Tabela: ' + dinheiro(tab) + (ult ? ' · última vez (' + diaCurto(ult.data) + '): ' + dinheiro(ult.valor_final) : '') + '. No fim do turno vai sozinho para o financeiro com este valor.';
+  }
+}
 function enviarNova(auto) {
   const f = $('#f-nova'), x = formDados(f), varios = S.modalCtx.modo === 'varios';
+  if (S.modalCtx.modo === 'assin') return enviarAssinado(auto);
   const falta = [];
   if (!x.empresa) falta.push('empresa'); if (!x.unidade) falta.push('unidade'); if (!x.setor) falta.push('setor'); if (!x.funcao_id) falta.push('função');
   if (!varios && !x.data) falta.push('data'); if (!x.hora_ini || !x.hora_fim) falta.push('horário'); if (!x.motivo) falta.push('motivo');
@@ -1667,6 +1783,30 @@ function enviarNova(auto) {
     Fila.add('criarSolicitacao', Object.assign(base, { sol_id: uid('sol'), data: x.data }));
     if (navigator.onLine) toast(auto ? 'Aprovada. Agora é escalar as pessoas.' : 'Enviada para aprovação.');
   }
+  S.view = 'solicitacoes'; S.f.solEscopo = 'abertas'; render();
+}
+
+function enviarAssinado(auto) {
+  const f = $('#f-nova'), x = formDados(f), c = S.modalCtx;
+  const falta = [];
+  if (!x.empresa) falta.push('empresa'); if (!x.unidade) falta.push('unidade'); if (!x.setor) falta.push('setor'); if (!x.funcao_id) falta.push('função');
+  if (!x.data) falta.push('data'); if (!x.hora_ini || !x.hora_fim) falta.push('horário'); if (!x.pessoa_id) falta.push('quem chegou'); if (!x.motivo) falta.push('motivo');
+  if (falta.length) return toast('Falta preencher: ' + falta.join(', '), 'err');
+  if (x.motivo === 'Outros' && x.motivo_detalhe.length < 5) return toast('Em "Outros", descreva o motivo.', 'err');
+  const hs = horasTurno(x.data, x.hora_ini, x.hora_fim, x.intervalo_min);
+  if (hs <= 0 || hs > 16) return toast('Confira o horário: o turno ficou com ' + hFmt(hs) + '.', 'err');
+  const v = Math.round(num(x.valor_combinado) * 100) / 100;
+  if (!(v > 0)) return toast('Informe o valor combinado.', 'err');
+  if (c.nivel === 'vermelho' && (x.justificativa || '').length < 10) return toast('Recorrência alta: escreva a justificativa (pelo menos 10 letras).', 'err');
+  if (!padAssinado('pad-freela')) return toast('Falta a assinatura do freelancer.', 'err');
+  if (!padAssinado('pad-gestor')) return toast('Falta a sua assinatura.', 'err');
+  const payload = { sol_id: uid('sol'), esc_id: uid('esc'), empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, data: x.data,
+    hora_ini: x.hora_ini, hora_fim: x.hora_fim, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: x.obs,
+    pessoa_id: x.pessoa_id, valor_combinado: v, justificativa: x.justificativa || '', autoaprovar: auto,
+    assin_freela: padImagem('pad-freela'), assin_gestor: padImagem('pad-gestor') };
+  fechar();
+  Fila.add('registrarAssinado', payload);
+  if (navigator.onLine) toast(auto ? 'Registrado. No fim do turno vai sozinho para o financeiro.' : 'Registrado e enviado para aprovação.');
   S.view = 'solicitacoes'; S.f.solEscopo = 'abertas'; render();
 }
 
@@ -1769,13 +1909,13 @@ function calcValidar() {
   /* Sugestão: o que essa pessoa recebeu da última vez na mesma função e no
      mesmo tipo de dia (semana ou fim de semana). Sem histórico, a tabela. */
   const ult = ultimoValor(e);
-  const sug = ult ? num(ult.valor_final) : base;
+  const sug = e.valor_combinado ? num(e.valor_combinado) : (ult ? num(ult.valor_final) : base);
   const inp = $('#v-valor');
   if (!c.editado) inp.value = sug.toFixed(2).replace('.', ',');
   const fin = Math.max(0, Math.round(num(inp.value) * 100) / 100);
   c.valor = fin; c.horas = hs; c.base = base; c.ult = ult;
   const dif = Math.abs(fin - base) >= 0.01;
-  $('#v-valor-hint').innerHTML = 'Tabela: ' + dinheiro(base) + (ult ? ' · última vez (' + esc(diaCurto(ult.data)) + '): ' + dinheiro(ult.valor_final) : '');
+  $('#v-valor-hint').innerHTML = 'Tabela: ' + dinheiro(base) + (e.valor_combinado ? ' · combinado na chegada: ' + dinheiro(e.valor_combinado) : (ult ? ' · última vez (' + esc(diaCurto(ult.data)) + '): ' + dinheiro(ult.valor_final) : ''));
   $('#v-mot-box').hidden = !dif;
   $('#v-obs-l').innerHTML = dif ? 'Observação <span class="req">*</span>' : 'Observação';
   $('#val-resumo').innerHTML = '<b>' + hFmt(hs) + '</b> trabalhadas · <b>a pagar ' + dinheiro(fin) + '</b>' +
@@ -1804,7 +1944,8 @@ function enviarValidar() {
   let motivo = obs;
   if (Math.abs(c.valor - c.base) >= 0.01 && motivo.length < 3) {
     /* Repetiu o valor da última vez: o próprio sistema registra o motivo */
-    if (c.ult && Math.abs(c.valor - num(c.ult.valor_final)) < 0.01) motivo = 'Mesmo valor do turno de ' + dataBr(c.ult.data);
+    if (e.valor_combinado && Math.abs(c.valor - num(e.valor_combinado)) < 0.01) motivo = 'Valor combinado na chegada (assinado)';
+    else if (c.ult && Math.abs(c.valor - num(c.ult.valor_final)) < 0.01) motivo = 'Mesmo valor do turno de ' + dataBr(c.ult.data);
     else return toast('O valor ficou diferente da tabela: escolha o motivo.', 'err');
   }
   const dataPag = $('#v-data').value;
@@ -1814,6 +1955,18 @@ function enviarValidar() {
     valor_final: c.valor, obs: motivo, pag_modo: c.modo, pag_data: c.modo === 'AGENDADO' ? dataPag : '', visto: e.status, _valor: c.valor });
   if (navigator.onLine) toast('Turno validado. ' + (c.modo === 'AGENDADO' ? 'Pagamento agendado.' : 'O financeiro já foi avisado.'));
   render();
+}
+
+/* ---------- Assinaturas guardadas no Drive (só com internet) ---------- */
+async function verAssinaturas(escId) {
+  if (!navigator.onLine) return toast('Para ver as assinaturas precisa de internet.', 'err');
+  gravando(true, 'Buscando assinaturas…');
+  try {
+    const r = await apiGet('assinatura', { esc_id: escId });
+    const bloco = (rot, img) => '<div class="field"><label>' + esc(rot) + '</label>' + (img ? '<img class="assin-img" alt="' + esc(rot) + '" src="' + img + '">' : '<div class="empty">Não encontrei a imagem.</div>') + '</div>';
+    modal('Assinaturas', '<div class="resumo">Assinado em ' + esc(dataBr(String(r.assinado_em).slice(0, 10))) + ' às ' + esc(String(r.assinado_em).slice(11, 16)) + '</div>' +
+      bloco('Freelancer: ' + r.pessoa, r.freela) + bloco('Gestor: ' + r.gestor_nome, r.gestor), '<button class="btn ghost" data-act="fechar">Fechar</button>');
+  } catch (e) { toast(e.message, 'err'); } finally { gravando(false); }
 }
 
 /* ---------- Corrigir valor de turno já validado (só com internet) ---------- */
@@ -2113,6 +2266,8 @@ document.addEventListener('click', ev => {
     case 'val-real': S.modalCtx.realizou = el.dataset.v === '1'; $$('[data-act=val-real]').forEach(b => { b.className = b === el ? 'on ' + (el.dataset.v === '1' ? 'ok' : 'no') : ''; }); calcValidar(); break;
     case 'val-modo': S.modalCtx.modo = el.dataset.v; $$('[data-act=val-modo]').forEach(b => b.classList.toggle('on', b === el)); $('#v-data-box').hidden = el.dataset.v !== 'AGENDADO'; break;
     case 'val-enviar': enviarValidar(); break;
+    case 'pad-limpar': limparPad(id); break;
+    case 'ver-assin': verAssinaturas(id); break;
     case 'corrigir-valor': abrirCorrigir(id, el.dataset.lista === '1'); break;
     case 'corrigir-enviar': enviarCorrigir(); break;
     case 'val-mot': { const t = $('#v-obs'), m = el.dataset.v; if (t.value.indexOf(m) < 0) t.value = (t.value.trim() ? t.value.trim() + ' · ' : '') + m; $$('[data-act=val-mot]').forEach(b => b.classList.toggle('on', t.value.indexOf(b.dataset.v) >= 0)); break; }
@@ -2159,6 +2314,7 @@ document.addEventListener('change', ev => {
 });
 document.addEventListener('input', ev => {
   const el = ev.target;
+  if (el.name === 'valor_combinado' && S.modalCtx) S.modalCtx.valorEditado = true;
   if (el.id === 'esc-busca') { clearTimeout(el._t); el._t = setTimeout(() => abrirEscalar(S.modalCtx.id, el.value), 250); return; }
   if (el.dataset && (el.dataset.f === 'solBusca' || el.dataset.f === 'banco')) {
     clearTimeout(el._t);
