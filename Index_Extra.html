@@ -301,6 +301,10 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
 .lib-barra span{flex:1;min-width:140px;font-size:14px}
 @media (min-width:900px){.lib-barra{bottom:12px}}
 .cards-prev{display:flex;flex-direction:column;gap:10px;margin:6px 0 10px}
+.res-ja{display:flex;align-items:center;gap:4px;color:var(--green-ink)!important;font-weight:600}
+.txt-red{color:var(--red-ink)}
+.pdf-arq{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:4px 0 10px;background:var(--card)}
+.pdf-arq>div{flex:1;min-width:0}.pdf-arq b{display:block;font-size:14px;overflow-wrap:anywhere}.pdf-arq small{color:var(--mute);font-size:12.5px}
 .cards-prev img{width:100%;max-width:420px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.18);align-self:center}
 </style>
 </head>
@@ -331,7 +335,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.11.05-a',
+  VERSAO: '2026.11.11-a',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -614,7 +618,7 @@ function sair() {
 const S = {
   sessao: null, base: null, d: null, fila: [], enviando: false,
   view: 'inicio', sync: { estado: 'mute', hora: '' },
-  f: { solEscopo: 'abertas', solEmp: '', solBusca: '', banco: '', bancoFun: '', bancoSem: '', pagTab: 'apagar', valTab: 'pendentes', indAba: 'resumo', indPer: '30', indEmp: '', indUni: '', indSet: '', indCc: '', indFun: '', indVin: '' },
+  f: { solEscopo: 'abertas', solEmp: '', solBusca: '', banco: '', bancoFun: '', bancoSem: '', pagTab: 'apagar', valTab: 'pendentes', resEnv: 'novos', resEmp: '', indAba: 'resumo', indPer: '30', indEmp: '', indUni: '', indSet: '', indCc: '', indFun: '', indVin: '' },
   sel: {}, modalCtx: null
 };
 const U = () => S.d.usuario;
@@ -1007,6 +1011,9 @@ function render() {
   renderMoldura(c);
   const v = { inicio: vInicio, solicitacoes: vSolicitacoes, validacao: vValidacao, banco: vBanco, pagamentos: vPagamentos, risco: vRisco, indicadores: vIndicadores, config: vConfig }[S.view] || vInicio;
   $('#view').innerHTML = v(c);
+  /* Aba ativa sempre à vista (no celular as abas rolam de lado) */
+  const tb = $('#view .tabs'), on = tb && tb.querySelector('.on');
+  if (on) { const a = tb.getBoundingClientRect(), b = on.getBoundingClientRect(); if (b.left < a.left || b.right > a.right) tb.scrollLeft += b.left - a.left - (a.width - b.width) / 2; }
   pintarSync();
 }
 function ph(titulo, sub, dir) {
@@ -1141,6 +1148,7 @@ function vValidacao(c) {
   let corpo;
   if (tab === 'fotos') corpo = c.fotos.length ? '<div class="list">' + c.fotos.map(itemFoto).join('') + '</div>' : '<div class="empty">Nenhum extra com foto faltando foto.</div>';
   else if (tab === 'liberar' && U().liberaRH) corpo = vLiberar(c);
+  else if (tab === 'resumo') corpo = vResumo();
   else if (tab === 'pendentes') corpo = c.validar.length ? '<div class="list">' + c.validar.map(itemValidar).join('') + '</div>' : '<div class="empty">Nenhum turno esperando validação.</div>';
   else {
     const l = S.d.escalas.filter(e => (e.status === 'VALIDADO' || e.status === 'FALTOU') && e.data >= addDias(h, -14) && solDe(e.sol_id) && podeValidar(solDe(e.sol_id)))
@@ -1156,6 +1164,7 @@ function vValidacao(c) {
     '<div class="tabs"><button class="' + (tab === 'pendentes' ? 'on' : '') + '" data-act="f-val" data-v="pendentes">Para validar (' + c.validar.length + ')</button>' +
     '<button class="' + (tab === 'fotos' ? 'on' : '') + '" data-act="f-val" data-v="fotos">Fotos (' + c.fotos.length + ')</button>' +
     (U().liberaRH ? '<button class="' + (tab === 'liberar' ? 'on' : '') + '" data-act="f-val" data-v="liberar">Liberar ao RH (' + c.liberar.length + ')</button>' : '') +
+    '<button class="' + (tab === 'resumo' ? 'on' : '') + '" data-act="f-val" data-v="resumo">PDF pagamento</button>' +
     '<button class="' + (tab === 'feitos' ? 'on' : '') + '" data-act="f-val" data-v="feitos">Validados recentes</button></div>' + corpo;
 }
 
@@ -1608,6 +1617,7 @@ function abrirSol(id) {
       (e.justificativa ? '<div class="m">Justificativa: ' + esc(e.justificativa) + '</div>' : '') +
       (ehFoto(e) ? '<div class="m">📷 Extra com foto · combinado ' + dinheiro(e.valor_combinado) + (e.enviado_rh_em ? ' · liberado ao RH por ' + esc(e.enviado_rh_nome) + ' em ' + esc(dataBr(e.enviado_rh_em) + ' ' + String(e.enviado_rh_em).slice(11, 16)) : '') + '</div>' + linhaFotos(e) +
         (e.justif_rh ? '<div class="m">Justificativa da liberação: ' + esc(e.justif_rh) + '</div>' : '') : '') +
+      (e.resumo_em ? '<div class="m res-ja">' + ic('check', 'sm') + 'Foi no resumo de pagamento de ' + esc(dataBr(e.resumo_em)) + ' (' + esc(e.resumo_por_nome || '') + ')</div>' : '') +
       (e.assinado_em ? '<div class="m">✍️ Assinou na chegada às ' + esc(String(e.assinado_em).slice(11, 16)) + ' com ' + esc(e.assin_gestor_nome || '') + ' · combinado ' + dinheiro(e.valor_combinado) +
         (e.status === 'CONFIRMADO' ? (s.status === 'SOLICITADA' ? ' · esperando aprovação' : ' · vai sozinho para o financeiro às ' + esc(e.hora_fim) + '. Se o horário mudou, valide antes.') : '') + '</div>' : '') +
       (acoes.length ? '<div class="acts">' + acoes.join('') + '</div>' : '') + '</div></div>';
@@ -1617,7 +1627,7 @@ function abrirSol(id) {
   const tl = S.d.log.filter(l => l.sol_id === s.sol_id && l.tipo !== 'STATUS').sort((a, b) => a.data_hora.localeCompare(b.data_hora));
   const TXT = { SOLICITADA: 'solicitou', APROVADA: 'aprovou', RECUSADA: 'recusou', CANCELADA: 'cancelou', ESCALADO: 'escalou', CONFIRMADO: 'registrou que confirmou',
     RECUSOU: 'registrou que não aceitou', ESCALA_CANCELADA: 'tirou da escala', VALIDADO: 'validou', FALTOU: 'registrou falta', PAGO: 'pagou', AGENDADO: 'agendou o pagamento',
-    CONFLITO: 'teve uma ação que não entrou', REJEITADO: 'teve uma escala recusada pelo servidor', VALOR_CORRIGIDO: 'corrigiu o valor', FOTO_ENTRADA: 'registrou a foto de entrada', FOTO_SAIDA: 'registrou a foto de saída', LIBERADO_RH: 'liberou para o RH pagar' };
+    CONFLITO: 'teve uma ação que não entrou', REJEITADO: 'teve uma escala recusada pelo servidor', VALOR_CORRIGIDO: 'corrigiu o valor', FOTO_ENTRADA: 'registrou a foto de entrada', FOTO_SAIDA: 'registrou a foto de saída', LIBERADO_RH: 'liberou para o RH pagar', RESUMO_PDF: 'mandou no resumo de pagamento (PDF)' };
   h += '<div class="sec"><div class="sec-t">Histórico</div>' + (tl.length ? '<ul class="tl">' + tl.map(l => '<li class="' + (l.tipo === 'CONFLITO' || l.tipo === 'REJEITADO' ? 'c' : '') + '"><b>' + esc(l.usuario_nome || nomeDe(l.usuario)) + '</b> ' + esc(TXT[l.tipo] || l.tipo.toLowerCase()) +
     (l.texto ? '<div>' + esc(l.texto) + '</div>' : '') + '<small>' + dataBr(l.data_hora.slice(0, 10)) + ' ' + horaDe(l.data_hora) + '</small></li>').join('') + '</ul>' : '<div class="small mute">O histórico aparece quando a solicitação chega ao servidor.</div>') + '</div>';
 
@@ -2563,6 +2573,7 @@ async function prepararCards(ids, rh) {
       '<div class="cards-prev">' + cards.map(c => '<img alt="Card de ' + esc(c.nome) + '" src="' + c.url + '">').join('') + '</div>' +
       '<div class="tiny mute">No WhatsApp, escolha a conversa do RH (+' + esc(S.cards.rh) + '). Deixe ela fixada para achar rápido.</div>',
       '<a class="btn ghost" target="_blank" rel="noopener" href="https://wa.me/' + esc(S.cards.rh) + '?text=' + encodeURIComponent(textoRH(escs)) + '">Abrir conversa do RH</a>' +
+      '<button class="btn ghost" data-act="res-pdf-cards">' + ic('baixar') + 'PDF</button>' +
       '<button class="btn ok" data-act="cards-enviar">Enviar ao WhatsApp</button>');
   } catch (x) { toast('Liberado, mas não consegui montar os cards: ' + x.message, 'err'); } finally { gravando(false); }
 }
@@ -2634,6 +2645,296 @@ async function desenharCard(e, f) {
 }
 
 /* ════════════════════════════════════════════════════════════════
+   RESUMO EM PDF PARA O FINANCEIRO — o gestor escolhe os extras já
+   validados (e, os com foto, já liberados) e gera um PDF com foto,
+   horário, valor e PIX de cada um, mais o total por pessoa. O PIX vem
+   do servidor só na hora (chamada "resumo") e não fica no aparelho.
+   ════════════════════════════════════════════════════════════════ */
+const RES = { sel: {}, max: 60 };
+const podeResumo = s => !!s && (U().admin || U().financeiro || podeValidar(s) || podeLiberar(s));
+const FIN_ABERTO = ['LIBERADO', 'AGENDADO', 'EM_LOTE'];
+function paraResumo() {
+  return S.d.escalas.filter(e => e.status === 'VALIDADO' && FIN_ABERTO.indexOf(e.status_fin) >= 0 && !e._pend && podeResumo(solDe(e.sol_id)))
+    .sort((a, b) => b.data.localeCompare(a.data) || a.pessoa_nome.localeCompare(b.pessoa_nome, 'pt-BR'));
+}
+function vResumo() {
+  const f = S.f, todos = paraResumo(), novos = todos.filter(e => !e.resumo_em);
+  let l = f.resEnv === 'todos' ? todos : novos;
+  const emps = []; todos.forEach(e => { if (emps.indexOf(e.empresa) < 0) emps.push(e.empresa); });
+  if (f.resEmp) l = l.filter(e => up(e.empresa) === up(f.resEmp));
+  Object.keys(RES.sel).forEach(id => { if (!l.some(e => e.esc_id === id)) delete RES.sel[id]; });
+  const sel = l.filter(e => RES.sel[e.esc_id]), tot = sel.reduce((t, e) => t + num(e.valor_final), 0);
+  const esperando = S.d.escalas.filter(e => e.status_fin === 'AGUARDA_LIB' && podeResumo(solDe(e.sol_id))).length;
+  const chip = (v, t) => '<button type="button" class="chip' + ((f.resEnv || 'novos') === v ? ' on' : '') + '" data-act="res-env" data-v="' + v + '">' + t + '</button>';
+  const tipo = e => ehFoto(e) ? pill(['Com foto', 'p-blue']) : (e.assinado_em ? pill(['Assinado', 'p-slate']) : '');
+  let h = '<div class="resumo">Marque os extras e gere um PDF para o financeiro pagar. Sai com foto, horário, valor e o PIX de cada pessoa, e o total por pessoa.</div>' +
+    '<div class="filtros"><div class="chips">' + chip('novos', 'Ainda não enviados (' + novos.length + ')') + chip('todos', 'Todos a pagar (' + todos.length + ')') + '</div>' +
+    (emps.length > 1 ? '<select data-f="resEmp"><option value="">Todas as empresas</option>' + emps.map(x => '<option value="' + esc(x) + '"' + (up(f.resEmp) === up(x) ? ' selected' : '') + '>' + esc(empNome(x)) + '</option>').join('') + '</select>' : '') + '</div>';
+  if (esperando) h += '<div class="small mute" style="margin:-4px 0 10px">' + plural(esperando, 'extra com foto ainda espera', 'extras com foto ainda esperam') + ' a liberação da gestora. Entra' + (esperando === 1 ? '' : 'm') + ' aqui depois de liberado' + (esperando === 1 ? '' : 's') + '.</div>';
+  if (!l.length) return h + '<div class="empty">' + (f.resEnv === 'todos' ? 'Nenhum extra validado esperando pagamento.' : 'Tudo o que está para pagar já foi em algum resumo. Veja em "Todos a pagar".') + '</div>';
+  h += '<div class="list">' + l.map(e => {
+    const s = solDe(e.sol_id), on = !!RES.sel[e.esc_id];
+    return '<div class="item lib"><input type="checkbox" class="lib-ck" data-act="res-sel" data-id="' + esc(e.esc_id) + '"' + (on ? ' checked' : '') + ' aria-label="Selecionar ' + esc(e.pessoa_nome) + '">' +
+      '<div class="grow"><div class="t">' + esc(e.pessoa_nome) + ' ' + (e.status_fin !== 'LIBERADO' ? pill(rotuloEsc(e)) : '') + tipo(e) + '</div>' +
+      '<div class="m">' + esc(s.funcao_nome) + ' · ' + esc(local(s)) + ' · ' + esc(s.setor) + '</div>' +
+      '<div class="m">' + esc(diaCurto(e.data)) + ' · ' + esc(e.hora_ini_real || e.hora_ini) + '–' + esc(e.hora_fim_real || e.hora_fim) + ' · ' + esc(e.numero) + '</div>' +
+      (e.resumo_em ? '<div class="m res-ja">' + ic('check', 'sm') + 'Já foi no resumo de ' + esc(dataBr(e.resumo_em)) + ' às ' + esc(String(e.resumo_em).slice(11, 16)) + ' (' + esc(e.resumo_por_nome || '') + ')</div>' : '') +
+      '</div><div class="r"><b class="num">' + dinheiro(e.valor_final) + '</b></div></div>';
+  }).join('') + '</div>';
+  h += '<div class="lib-barra"><span>' + plural(sel.length, 'selecionado') + ' · <b>' + dinheiro(tot) + '</b></span>' +
+    '<button class="btn sm ghost" data-act="res-todos">' + (sel.length === l.length ? 'Desmarcar todos' : 'Marcar todos') + '</button>' +
+    '<button class="btn" data-act="res-gerar"' + (sel.length ? '' : ' disabled') + '>' + ic('baixar') + 'Gerar PDF (' + sel.length + ')</button></div>';
+  return h;
+}
+function resumoTodos() {
+  const f = S.f, l = (f.resEnv === 'todos' ? paraResumo() : paraResumo().filter(e => !e.resumo_em)).filter(e => !f.resEmp || up(e.empresa) === up(f.resEmp));
+  const todos = l.every(e => RES.sel[e.esc_id]);
+  l.forEach(e => { RES.sel[e.esc_id] = !todos; });
+  render();
+}
+
+/* ---------- Gerar ---------- */
+let JSPDF = null;
+function carregarJsPdf() {
+  if (JSPDF) return Promise.resolve(JSPDF);
+  if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(JSPDF = window.jspdf.jsPDF);
+  return new Promise((ok, erro) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => (window.jspdf && window.jspdf.jsPDF) ? ok(JSPDF = window.jspdf.jsPDF) : erro(new Error('Gerador de PDF não carregou.'));
+    s.onerror = () => { s.remove(); erro(new Error('Não consegui carregar o gerador de PDF. Confira a internet e tente de novo.')); };
+    document.head.appendChild(s);
+  });
+}
+async function gerarResumo(ids) {
+  ids = (ids || Object.keys(RES.sel).filter(id => RES.sel[id])).filter(id => S.d.escalas.some(e => e.esc_id === id));
+  if (!ids.length) return;
+  if (ids.length > RES.max) return toast('No máximo ' + RES.max + ' extras por PDF. Divida em dois.', 'err');
+  if (!navigator.onLine) return toast('Para gerar o PDF precisa de internet (as fotos e o PIX vêm do servidor).', 'err');
+  gravando(true, 'Buscando fotos e PIX…');
+  let pdf;
+  try {
+    const [Pdf, dados] = await Promise.all([carregarJsPdf(), apiGet('resumo', { esc_ids: ids.join(',') })]);
+    const escs = ids.map(id => S.d.escalas.find(e => e.esc_id === id)).filter(e => e && dados[e.esc_id]);
+    if (!escs.length) throw new Error('O servidor não liberou nenhum desses extras para o resumo.');
+    const fotos = await buscarFotos(escs.filter(e => ehFoto(e) && (e.foto_ent_em || e.foto_sai_em)).map(e => e.esc_id));
+    const assin = {};
+    for (const e of escs.filter(x => !ehFoto(x) && x.assinado_em)) {
+      try { assin[e.esc_id] = (await apiGet('assinatura', { esc_id: e.esc_id })).freela; } catch (x) { }
+    }
+    gravando(true, 'Montando o PDF…');
+    pdf = await montarPdfResumo(Pdf, escs, dados, fotos, assin);
+  } catch (x) { gravando(false); return toast(x.message, 'err'); }
+  gravando(false);
+  /* Marca no servidor que esses extras já foram em um resumo */
+  let marcou = true;
+  try { await online('marcarResumo', { esc_ids: pdf.escs.map(e => e.esc_id) }, 'Registrando o envio…'); }
+  catch (x) { marcou = false; }
+  pdf.escs.forEach(e => { delete RES.sel[e.esc_id]; });
+  S.pdf = pdf;
+  if (marcou) await carregar();
+  abrirPdfPronto(marcou);
+}
+function abrirPdfPronto(marcou) {
+  const p = S.pdf, rh = cfg().rh_whatsapp || '';
+  modal('PDF pronto', '<div class="resumo"><b>' + plural(p.escs.length, 'extra') + '</b> · ' + plural(p.pessoas, 'pessoa') + ' · total <b>' + dinheiro(p.total) + '</b>' +
+    (p.semPix ? '<div class="txt-red" style="margin-top:6px">' + plural(p.semPix, 'pessoa está', 'pessoas estão') + ' sem PIX cadastrado. Está marcado no PDF.</div>' : '') +
+    (marcou ? '' : '<div class="txt-red" style="margin-top:6px">Não consegui registrar o envio no sistema. O PDF está pronto mesmo assim.</div>') + '</div>' +
+    '<div class="pdf-arq">' + ic('anexo') + '<div><b>' + esc(p.file.name) + '</b><small>' + Math.max(1, Math.round(p.file.size / 1024)) + ' KB · ' + plural(p.paginas, 'página') + '</small></div>' +
+    '<a class="btn ghost sm" href="' + p.url + '" target="_blank" rel="noopener">Abrir</a></div>' +
+    '<div class="tiny mute">No WhatsApp, escolha a conversa do financeiro' + (rh ? ' (+' + esc(rh) + ')' : '') + '. O PDF tem PIX: não mande para fora do financeiro.</div>',
+    '<a class="btn ghost" href="' + p.url + '" download="' + esc(p.file.name) + '">' + ic('baixar') + 'Baixar</a>' +
+    '<button class="btn ok" data-act="res-enviar">' + ic('enviar') + 'Enviar ao financeiro</button>');
+}
+async function enviarResumo() {
+  const p = S.pdf; if (!p) return;
+  const text = 'Resumo de extras para pagamento · ' + plural(p.escs.length, 'extra') + ' · total ' + dinheiro(p.total) + ' · ' + U().nome;
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [p.file] })) { await navigator.share({ files: [p.file], text, title: p.file.name }); return; }
+  } catch (x) { if (x && x.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = p.url; a.download = p.file.name; document.body.appendChild(a); a.click(); a.remove();
+  const rh = cfg().rh_whatsapp || '';
+  window.open('https://wa.me/' + rh + '?text=' + encodeURIComponent(text + '\n(PDF baixado no aparelho: anexe na conversa)'), '_blank', 'noopener');
+}
+
+/* ---------- O PDF (A4, texto de verdade: dá para copiar o PIX) ---------- */
+const pdfTxt = s => String(s == null ? '' : s).replace(/→/g, '-').replace(/[^\x20-\x7E -ÿ–—‘’“”•…]/g, '').trim();
+function recortar(src, w, h, cobrir) {
+  return new Promise(ok => {
+    if (!src) return ok('');
+    const i = new Image();
+    i.onload = () => {
+      const k = 3, cv = document.createElement('canvas'); cv.width = w * k; cv.height = h * k;
+      const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+      const sc = (cobrir ? Math.max : Math.min)(cv.width / i.width, cv.height / i.height);
+      g.drawImage(i, (cv.width - i.width * sc) / 2, (cv.height - i.height * sc) / 2, i.width * sc, i.height * sc);
+      ok(cv.toDataURL('image/jpeg', 0.82));
+    };
+    i.onerror = () => ok('');
+    i.src = src;
+  });
+}
+async function montarPdfResumo(Pdf, escs, dados, fotos, assin) {
+  escs = escs.slice().sort((a, b) => a.pessoa_nome.localeCompare(b.pessoa_nome, 'pt-BR') || a.data.localeCompare(b.data) || a.hora_ini.localeCompare(b.hora_ini));
+  const doc = new Pdf({ unit: 'mm', format: 'a4' });
+  const W = 210, M = 14, R = W - M, BAIXO = 279;
+  const COR = { red: [200, 22, 31], ink: [24, 24, 27], mute: [87, 83, 78], line: [228, 228, 231], soft: [244, 244, 245], redSoft: [253, 236, 237],
+    green: [22, 101, 52], greenSoft: [220, 252, 231], amber: [146, 64, 14], amberSoft: [254, 243, 199] };
+  const cor = (c, f) => { doc[f || 'setTextColor'](c[0], c[1], c[2]); };
+  const fonte = (peso, tam, c) => { doc.setFont('helvetica', peso); doc.setFontSize(tam); cor(c || COR.ink); };
+  const txt = (s, x, y, o) => doc.text(pdfTxt(s), x, y, o || {});
+  const corta = (s, max) => { s = pdfTxt(s); if (doc.getTextWidth(s) <= max) return s; while (s.length > 3 && doc.getTextWidth(s + '...') > max) s = s.slice(0, -1); return s + '...'; };
+  const u = U(), agora = agoraStr();
+  const PIXN = { CPF: 'CPF', TELEFONE: 'Telefone', EMAIL: 'E-mail', ALEATORIA: 'Aleatória', CNPJ: 'CNPJ' };
+  const pixDe = e => { const d = dados[e.esc_id] || {}; return d.pix_chave ? (PIXN[d.pix_tipo] || d.pix_tipo || 'PIX') + ': ' + d.pix_chave : ''; };
+  const hm = h => { const m = Math.round(num(h) * 60); return Math.floor(m / 60) + 'h' + pad(m % 60); };
+
+  /* Por pessoa: um PIX só por pessoa */
+  const porPes = [];
+  escs.forEach(e => {
+    let g = porPes.find(x => x.id === e.pessoa_id);
+    if (!g) porPes.push(g = { id: e.pessoa_id, nome: e.pessoa_nome, escs: [], total: 0, pix: pixDe(e), cpf: (dados[e.esc_id] || {}).cpf_mascara || '' });
+    g.escs.push(e); g.total += num(e.valor_final);
+  });
+  porPes.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  const total = escs.reduce((t, e) => t + num(e.valor_final), 0);
+  const datas = escs.map(e => e.data).sort();
+  const periodo = datas[0] === datas[datas.length - 1] ? extDataCurta(datas[0]) : extDataCurta(datas[0]) + ' a ' + extDataCurta(datas[datas.length - 1]);
+  const empresas = []; escs.forEach(e => { const n = empNome(e.empresa); if (empresas.indexOf(n) < 0) empresas.push(n); });
+
+  const cabecalho = (primeira) => {
+    cor(COR.red, 'setFillColor'); doc.rect(0, 0, W, 4, 'F');
+    fonte('bold', primeira ? 20 : 14, COR.red); txt('Q', M, primeira ? 17 : 13);
+    const wq = doc.getTextWidth('Q'); cor(COR.ink); txt('Food', M + wq, primeira ? 17 : 13);
+    const wf = doc.getTextWidth('Food'); fonte('normal', primeira ? 11 : 9, COR.mute); txt('Extras', M + wq + wf + 2, primeira ? 17 : 13);
+    if (primeira) {
+      fonte('bold', 13); txt('Resumo para pagamento', R, 13, { align: 'right' });
+      fonte('normal', 8.5, COR.mute); txt('Gerado em ' + dataBr(agora) + ' às ' + agora.slice(11, 16) + ' por ' + u.nome, R, 18.5, { align: 'right' });
+      txt(corta(empresas.join(', '), 120), R, 23, { align: 'right' });
+    } else { fonte('normal', 8.5, COR.mute); txt('Resumo para pagamento · ' + dataBr(agora) + ' · ' + u.nome, R, 13, { align: 'right' }); }
+    return primeira ? 30 : 20;
+  };
+  let y = cabecalho(true);
+  const novaPagina = () => { doc.addPage(); y = cabecalho(false); };
+  const cabe = h => { if (y + h > BAIXO) { novaPagina(); return false; } return true; };
+
+  /* Números do topo */
+  const caixas = [['EXTRAS', String(escs.length)], ['PESSOAS', String(porPes.length)], ['PERÍODO', periodo], ['TOTAL A PAGAR', dinheiro(total)]];
+  const cw = (R - M - 3 * 4) / 4;
+  caixas.forEach((c, i) => {
+    const x = M + i * (cw + 4), ult = i === 3;
+    cor(ult ? COR.redSoft : COR.soft, 'setFillColor'); doc.roundedRect(x, y, cw, 19, 2.5, 2.5, 'F');
+    fonte('bold', 7, COR.mute); txt(c[0], x + 4, y + 6);
+    fonte('bold', c[1].length > 12 ? 11 : 14, ult ? COR.red : COR.ink); txt(corta(c[1], cw - 8), x + 4, y + 14.5);
+  });
+  y += 27;
+
+  /* Tabela por pessoa */
+  fonte('bold', 12); txt('Pagar por pessoa', M, y);
+  fonte('normal', 8.5, COR.mute); txt('Um PIX por pessoa, com a soma dos extras dela.', M, y + 4.5);
+  y += 8;
+  const colX = [M + 3, M + 74, M + 90], rowH = 11;
+  const cabTab = () => {
+    cor(COR.ink, 'setFillColor'); doc.roundedRect(M, y, R - M, 7, 1.5, 1.5, 'F');
+    fonte('bold', 7.5, [255, 255, 255]); txt('PESSOA', colX[0], y + 4.8); txt('EXTRAS', colX[1], y + 4.8); txt('CHAVE PIX', colX[2], y + 4.8); txt('VALOR', R - 3, y + 4.8, { align: 'right' });
+    y += 7;
+  };
+  cabTab();
+  let semPix = 0;
+  porPes.forEach((p, i) => {
+    if (y + rowH > BAIXO) { novaPagina(); cabTab(); }
+    if (i % 2) { cor(COR.soft, 'setFillColor'); doc.rect(M, y, R - M, rowH, 'F'); }
+    fonte('bold', 9.5); txt(corta(p.nome, 68), colX[0], y + 4.8);
+    fonte('normal', 7.5, COR.mute); txt(p.cpf ? 'CPF ' + p.cpf : 'sem CPF', colX[0], y + 8.6);
+    fonte('normal', 9.5); txt(String(p.escs.length), colX[1] + 4, y + 6.6, { align: 'center' });
+    if (p.pix) { fonte('bold', 9.5); txt(corta(p.pix, R - colX[2] - 30), colX[2], y + 6.6); }
+    else { semPix++; fonte('bold', 9, COR.red); txt('SEM PIX CADASTRADO', colX[2], y + 6.6); }
+    fonte('bold', 10); txt(dinheiro(p.total), R - 3, y + 6.6, { align: 'right' });
+    y += rowH;
+  });
+  cor(COR.line, 'setDrawColor'); doc.setLineWidth(0.3); doc.line(M, y, R, y);
+  fonte('bold', 10.5); txt('Total', colX[0], y + 6.5); txt(dinheiro(total), R - 3, y + 6.5, { align: 'right' });
+  y += 15;
+
+  /* Um cartão por extra */
+  if (!cabe(14 + 46)) { /* já foi para a página seguinte */ }
+  fonte('bold', 12); txt('Detalhe de cada extra', M, y);
+  fonte('normal', 8.5, COR.mute); txt('Fotos ao vivo da entrada e da saída (ou a assinatura na chegada), horário trabalhado e quem pediu, validou e liberou.', M, y + 4.5);
+  y += 9;
+  const CH = 46, F = 30;
+  for (const e of escs) {
+    if (y + CH > BAIXO) novaPagina();
+    const s = solDe(e.sol_id) || {}, al = String(e.foto_alertas || '').split(' | ').filter(Boolean);
+    cor(al.length ? [242, 224, 189] : COR.line, 'setDrawColor'); doc.setLineWidth(0.35); doc.roundedRect(M, y, R - M, CH - 3, 2.5, 2.5, 'S');
+    /* Imagens */
+    const ix = M + 4, iy = y + 4;
+    const quadro = async (src, x, w, rot) => {
+      const img = await recortar(src, w * 4, F * 4, true);
+      if (img) doc.addImage(img, 'JPEG', x, iy, w, F);
+      else { cor(COR.soft, 'setFillColor'); doc.rect(x, iy, w, F, 'F'); fonte('normal', 7.5, COR.mute); txt('sem foto', x + w / 2, iy + F / 2 + 1, { align: 'center' }); }
+      cor(COR.line, 'setDrawColor'); doc.setLineWidth(0.3); doc.rect(x, iy, w, F, 'S');
+      fonte('bold', 7, COR.mute); txt(rot, x + w / 2, iy + F + 4, { align: 'center' });
+    };
+    if (ehFoto(e)) {
+      const f = fotos[e.esc_id] || {};
+      await quadro(f.ent, ix, F, 'Entrada ' + String(e.foto_ent_em || '').slice(11, 16));
+      await quadro(f.sai, ix + F + 3, F, e.foto_sai_em ? 'Saída ' + String(e.foto_sai_em).slice(11, 16) : 'Sem saída');
+    } else if (assin[e.esc_id]) {
+      const img = await recortar(assin[e.esc_id], (2 * F + 3) * 4, F * 4, false);
+      if (img) doc.addImage(img, 'JPEG', ix, iy, 2 * F + 3, F);
+      cor(COR.line, 'setDrawColor'); doc.rect(ix, iy, 2 * F + 3, F, 'S');
+      fonte('bold', 7, COR.mute); txt('Assinatura na chegada ' + String(e.assinado_em || '').slice(11, 16), ix + F + 1.5, iy + F + 4, { align: 'center' });
+    } else {
+      cor(COR.soft, 'setFillColor'); doc.rect(ix, iy, 2 * F + 3, F, 'F');
+      fonte('bold', 18, COR.mute); txt(iniciais(e.pessoa_nome), ix + F + 1.5, iy + F / 2 + 2, { align: 'center' });
+      fonte('bold', 7, COR.mute); txt('Validado no sistema (sem foto)', ix + F + 1.5, iy + F + 4, { align: 'center' });
+    }
+    /* Texto */
+    const tx = ix + 2 * F + 9, larg = R - 4 - tx - 38;
+    fonte('bold', 12); txt(corta(e.pessoa_nome, larg + 10), tx, y + 9);
+    fonte('normal', 8.5, COR.mute); txt(corta((s.funcao_nome || '') + ' · ' + local(s) + ' · ' + (s.setor || ''), larg + 30), tx, y + 14);
+    fonte('normal', 9); txt(DIAS[diaSemana(e.data)] + ', ' + dataBr(e.data) + '  ·  ' + (e.hora_ini_real || e.hora_ini) + ' às ' + (e.hora_fim_real || e.hora_fim) + '  ·  ' + hm(e.horas), tx, y + 20);
+    fonte('normal', 8, COR.mute);
+    txt(corta('Pedido: ' + (s.solicitante_nome || '-') + '  ·  Validado: ' + (e.validador_nome || '-') + (e.enviado_rh_nome ? '  ·  Liberado: ' + e.enviado_rh_nome : ''), R - 4 - tx), tx, y + 25);
+    const px = pixDe(e);
+    if (px) { fonte('bold', 9.5); txt(corta('PIX ' + px, R - 4 - tx), tx, y + 31); }
+    else { fonte('bold', 9.5, COR.red); txt('SEM PIX CADASTRADO', tx, y + 31); }
+    const obs = al.concat(e.justif_rh ? ['Justificativa: ' + e.justif_rh] : []).concat(e.obs_validacao && !ehFoto(e) ? [e.obs_validacao] : []);
+    if (obs.length) { fonte('normal', 7.5, COR.amber); txt(corta(obs.join(' · '), R - 4 - tx), tx, y + 36.5); }
+    /* Valor e situação */
+    fonte('bold', 15); txt(dinheiro(e.valor_final), R - 4, y + 9.5, { align: 'right' });
+    const st = e.status_fin === 'AGENDADO' ? 'Agendado ' + extDataCurta(e.pag_data_prevista) : (e.status_fin === 'EM_LOTE' ? 'Em lote' : 'Liberado para pagar');
+    fonte('bold', 7.5, COR.green); const sw = doc.getTextWidth(st) + 5;
+    cor(COR.greenSoft, 'setFillColor'); doc.roundedRect(R - 4 - sw, y + 12, sw, 5, 2.5, 2.5, 'F'); txt(st, R - 4 - sw / 2, y + 15.4, { align: 'center' });
+    fonte('normal', 7.5, COR.mute); txt(e.numero, R - 4, y + 22, { align: 'right' });
+    if (num(e.valor_final) !== num(e.valor_base) && num(e.valor_base) > 0) txt('tabela ' + dinheiro(e.valor_base), R - 4, y + 26, { align: 'right' });
+    y += CH;
+  }
+
+  /* Conferência */
+  if (y + 24 > BAIXO) novaPagina();
+  y += 4;
+  fonte('normal', 9, COR.mute);
+  cor(COR.mute, 'setDrawColor'); doc.setLineWidth(0.25);
+  txt('Conferido por', M, y + 12); doc.line(M + 24, y + 12.5, M + 95, y + 12.5);
+  txt('Pago em', M + 104, y + 12); doc.line(M + 119, y + 12.5, R, y + 12.5);
+
+  /* Rodapé em todas as páginas */
+  const n = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i);
+    cor(COR.line, 'setDrawColor'); doc.setLineWidth(0.3); doc.line(M, 286, R, 286);
+    fonte('normal', 7, COR.mute);
+    txt('Documento interno com dados de pagamento (PIX). Não encaminhe para fora do financeiro.', M, 290);
+    txt('Página ' + i + ' de ' + n, R, 290, { align: 'right' });
+  }
+  const blob = doc.output('blob');
+  const nome = ('Resumo-extras-' + hojeStr() + '-' + String(u.nome || '').split(' ')[0]).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9-]+/g, '-') + '.pdf';
+  if (S.pdf && S.pdf.url) { try { URL.revokeObjectURL(S.pdf.url); } catch (x) { } }
+  return { file: new File([blob], nome, { type: 'application/pdf' }), url: URL.createObjectURL(blob), escs, total, pessoas: porPes.length, semPix, paginas: n };
+}
+
+/* ════════════════════════════════════════════════════════════════
    CLIQUES
    ════════════════════════════════════════════════════════════════ */
 document.addEventListener('click', ev => {
@@ -2641,7 +2942,7 @@ document.addEventListener('click', ev => {
   if (!el || !S.d) return;
   const a = el.dataset.act, id = el.dataset.id;
   if (el.tagName === 'A' && el.getAttribute('href') === '#') ev.preventDefault();
-  if (a === 'sel' || a === 'selpag' || a === 'esc-todos' || a === 'lib-sel') return;   // tratados no change
+  if (a === 'sel' || a === 'selpag' || a === 'esc-todos' || a === 'lib-sel' || a === 'res-sel') return;   // tratados no change
   switch (a) {
     case 'fechar': fechar(); break;
     case 'ir': fechar(); S.view = el.dataset.v; S.sel = {}; render(); window.scrollTo(0, 0); break;
@@ -2661,6 +2962,11 @@ document.addEventListener('click', ev => {
     case 'lib-todos': { const l = paraLiberar(), todos = l.every(e => LIB.sel[e.esc_id]); l.forEach(e => { LIB.sel[e.esc_id] = !todos; }); render(); break; }
     case 'lib-enviar': liberarEnviar(); break;
     case 'cards-enviar': enviarCards(); break;
+    case 'res-env': S.f.resEnv = el.dataset.v; render(); break;
+    case 'res-todos': resumoTodos(); break;
+    case 'res-gerar': gerarResumo(); break;
+    case 'res-enviar': enviarResumo(); break;
+    case 'res-pdf-cards': { const ids = (S.cards && S.cards.escs || []).map(e => e.esc_id); fechar(); gerarResumo(ids); break; }
     case 'gerar-card': fechar(); prepararCards([id], cfg().rh_whatsapp); break;
     case 'recarregar': Fila.enviar(); carregar(); break;
     case 'sair': sair(); break;
@@ -2733,6 +3039,7 @@ document.addEventListener('change', ev => {
   if (el.dataset.act === 'sel') { S.sel[el.dataset.id] = el.checked; render(); return; }
   if (el.dataset.act === 'selpag') { S.sel['p:' + el.dataset.id] = el.checked; return; }
   if (el.dataset.act === 'lib-sel') { LIB.sel[el.dataset.id] = el.checked; render(); return; }
+  if (el.dataset.act === 'res-sel') { RES.sel[el.dataset.id] = el.checked; render(); return; }
   if (el.dataset.act === 'esc-todos') { S.modalCtx.todos = el.checked; abrirEscalar(S.modalCtx.id); return; }
   if (el.dataset.f) { S.f[el.dataset.f] = el.value; render(); return; }
   if (el.closest('#f-nova')) atualizarNova(el.name);
