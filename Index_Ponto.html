@@ -67,6 +67,13 @@ h1{font-size:26px;line-height:1.15;margin:4px 0 6px;letter-spacing:-.02em}
 .espera{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--mute);padding:40px 0}
 .roda{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--red);border-radius:50%;animation:g 1s linear infinite}
 @keyframes g{to{transform:rotate(360deg)}}
+.hora{display:flex;align-items:center;gap:8px}
+.hora select{flex:1;text-align:center;text-align-last:center;font-size:30px;font-weight:800;padding:12px 8px;border:1.5px solid #D6D3D1;border-radius:14px;background:#fff;appearance:none;-webkit-appearance:none}
+.hora select:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft);outline:none}
+.hora b{font-size:30px;font-weight:800}
+.sug{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.sug button{border:1.5px solid #D6D3D1;background:#fff;border-radius:999px;padding:9px 14px;font-size:15px;font-weight:600;cursor:pointer}
+.sug button.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .rodape{color:#A8A29E;font-size:12px;text-align:center;margin-top:18px}
 @media (prefers-reduced-motion:reduce){.roda{animation-duration:3s}}
 </style>
@@ -202,12 +209,40 @@ function telaEu(silencioso) {
 
 /* ---------- Pedido sem escala / cadastro novo ---------- */
 function opcoesSetor() { return S.info.setores.map(s => '<option>' + esc(s) + '</option>').join(''); }
-function horaSugerida() { const d = new Date(Date.now() + 8 * 3600e3); return pad(d.getHours()) + ':00'; }
+/* Escolher a hora sem o relógio de ponteiro do celular: hora e minutos em listas, mais atalhos */
+function campoHora(rotulo, valor) {
+  const [h, m] = valor.split(':');
+  const ops = (l, v) => l.map(x => '<option' + (x === v ? ' selected' : '') + '>' + x + '</option>').join('');
+  const sug = [];
+  [4, 6, 8, 10].forEach(n => {
+    const d = new Date(Date.now() + n * 3600e3), mi = d.getMinutes();
+    const t = pad((d.getHours() + (mi >= 45 ? 1 : 0)) % 24) + ':' + (mi >= 15 && mi < 45 ? '30' : '00');
+    if (sug.indexOf(t) < 0) sug.push(t);
+  });
+  return '<div class="campo"><label id="hf-rot">' + rotulo + '</label><input type="hidden" name="hora_fim" id="hf" value="' + valor + '">' +
+    '<div class="hora" role="group" aria-labelledby="hf-rot"><select data-hh aria-label="Hora">' + ops(Array.from({ length: 24 }, (_, i) => pad(i)), h) + '</select><b>:</b>' +
+    '<select data-mm aria-label="Minutos">' + ops(['00', '15', '30', '45'], m) + '</select></div>' +
+    '<div class="sug">' + sug.map(t => '<button type="button" data-hora="' + t + '"' + (t === valor ? ' class="on"' : '') + '>até ' + t + '</button>').join('') + '</div></div>';
+}
+function marcarHora(v) {
+  const i = $('#hf'); if (!i) return;
+  i.value = v; $('[data-hh]').value = v.slice(0, 2); $('[data-mm]').value = v.slice(3, 5);
+  document.querySelectorAll('[data-hora]').forEach(b => b.classList.toggle('on', b.dataset.hora === v));
+}
+document.addEventListener('change', ev => {
+  if (ev.target.matches('[data-hh],[data-mm]')) marcarHora($('[data-hh]').value + ':' + $('[data-mm]').value);
+});
+function horaSugerida() {
+  /* 8 horas a partir de agora, na meia hora; se passar da meia-noite, sugere 23:00 */
+  const agora = new Date(), d = new Date(agora.getTime() + 8 * 3600e3);
+  if (d.getDate() !== agora.getDate()) return '23:00';
+  return pad(d.getHours()) + (d.getMinutes() < 30 ? ':00' : ':30');
+}
 function telaPedido() {
   parar();
   tela('<h1>Pedir liberação</h1><p class="sub">O gestor recebe na hora. Quando ele liberar, você registra a entrada.</p>' +
     '<form id="f-ped" class="card"><div class="campo"><label for="setor">Setor</label><select id="setor" name="setor">' + opcoesSetor() + '</select></div>' +
-    '<div class="campo"><label for="hf">Até que horas você vai ficar?</label><input id="hf" name="hora_fim" type="time" value="' + horaSugerida() + '" required></div>' +
+    campoHora('Até que horas você vai ficar?', horaSugerida()) +
     '<div class="campo"><label for="obs">Quem te chamou? (opcional)</label><textarea id="obs" name="obs" maxlength="300" placeholder="Ex.: a Fabrícia me chamou ontem"></textarea></div>' +
     '<button class="btn" type="submit">Enviar pedido</button></form><button class="btn link" data-acao="voltar">Voltar</button>');
   $('#f-ped').addEventListener('submit', async ev => {
@@ -230,7 +265,7 @@ function telaCadastro() {
     '<div class="campo"><label for="pt">Tipo da chave PIX</label><select id="pt" name="pix_tipo" required><option value="">Escolha</option><option value="CPF">CPF</option><option value="TELEFONE">Celular</option><option value="EMAIL">E-mail</option><option value="ALEATORIA">Chave aleatória</option></select></div>' +
     '<div class="campo"><label for="pc">Chave PIX</label><input id="pc" name="pix_chave" required autocomplete="off"><span class="dica">É para onde vai o pagamento. Confira com cuidado.</span></div>' +
     '<div class="campo"><label for="setor">Setor em que vai trabalhar hoje</label><select id="setor" name="setor">' + opcoesSetor() + '</select></div>' +
-    '<div class="campo"><label for="hf">Até que horas vai ficar?</label><input id="hf" name="hora_fim" type="time" value="' + horaSugerida() + '" required></div>' +
+    campoHora('Até que horas vai ficar?', horaSugerida()) +
     '<div class="campo"><label for="obs">Quem te chamou? (opcional)</label><textarea id="obs" name="obs" maxlength="300"></textarea></div>' +
     '<label class="check"><input type="checkbox" name="lgpd" required><span>Autorizo o Q Food Group a usar meu nome, celular, CPF e PIX só para registrar e pagar meus extras, e a selfie e a localização só para comprovar a presença.</span></label>' +
     '<button class="btn" type="submit">Enviar cadastro</button></form><button class="btn link" data-acao="trocar">Voltar</button>');
@@ -327,6 +362,7 @@ async function enviar() {
 
 /* ---------- Cliques ---------- */
 document.addEventListener('click', ev => {
+  const hb = ev.target.closest('[data-hora]'); if (hb) return marcarHora(hb.dataset.hora);
   const el = ev.target.closest('[data-acao],[data-foto]'); if (!el) return;
   if (el.dataset.foto) return telaCamera(el.dataset.id, el.dataset.foto);
   switch (el.dataset.acao) {
