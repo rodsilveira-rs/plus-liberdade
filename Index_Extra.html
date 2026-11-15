@@ -303,6 +303,8 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
 .cards-prev{display:flex;flex-direction:column;gap:10px;margin:6px 0 10px}
 .res-ja{display:flex;align-items:center;gap:4px;color:var(--green-ink)!important;font-weight:600}
 .txt-red{color:var(--red-ink)}
+.dobra-ck{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;margin:-4px 0 12px;cursor:pointer}
+.dobra-ck input{width:20px;height:20px;accent-color:var(--red-q);margin:0}
 .btn.danger{background:var(--red-q);color:#fff}
 .lib-topo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--green-soft, #DCFCE7);border-radius:14px;padding:12px 14px;margin-bottom:12px}
 .lib-topo span{flex:1;min-width:160px;font-size:14px}
@@ -338,7 +340,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.11.15-a',
+  VERSAO: '2026.11.15-b',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -655,6 +657,29 @@ function papel() {
   if (u.gestor) return 'Validador';
   return 'Solicitante';
 }
+
+/* Duas dobras no mesmo dia: a pessoa sai e volta. Vira um extra só: início da
+   1ª, fim da 2ª e a pausa entre elas no intervalo (calculado sozinho). */
+function camposDobras() {
+  return '<label class="dobra-ck"><input type="checkbox" name="dobras" value="1"> Duas dobras (sai e volta no mesmo dia)</label>' +
+    '<div class="row2" data-dobras hidden><div class="field"><label>Fim da 1ª dobra</label><input type="time" name="d1_fim" value="15:00"></div>' +
+    '<div class="field"><label>Volta para a 2ª dobra</label><input type="time" name="d2_ini" value="18:00"></div></div>';
+}
+function aplicarDobras(f) {
+  if (!f || !f.dobras) return true;
+  const on = f.dobras.checked, box = f.querySelector('[data-dobras]');
+  box.hidden = !on; f.intervalo_min.readOnly = on;
+  const rot = (i, t) => { const l = i.closest('.field').querySelector('label'); if (l && l.firstChild) l.firstChild.textContent = t; };
+  rot(f.hora_ini, on ? 'Início 1ª ' : 'Início '); rot(f.hora_fim, on ? 'Fim 2ª ' : 'Fim ');
+  if (!on) return true;
+  const m = t => { const p = String(t || '').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); };
+  const rel = t => (m(t) - m(f.hora_ini.value) + 1440) % 1440;
+  const a = rel(f.d1_fim.value), b = rel(f.d2_ini.value), c = rel(f.hora_fim.value) || 1440;
+  const ok = a > 0 && b > a && c > b;
+  f.intervalo_min.value = ok ? String(b - a) : '0';
+  return ok;
+}
+const obsDobras = x => x.dobras ? ((x.obs ? x.obs + ' · ' : '') + 'Duas dobras: ' + x.hora_ini + '–' + x.d1_fim + ' e ' + x.d2_ini + '–' + x.hora_fim) : x.obs;
 
 /* Valor da tabela: mesma regra do servidor */
 function valorDe(funcaoId, horas, data) {
@@ -1694,6 +1719,7 @@ function abrirNova() {
     '<div class="row3" id="nova-horas"><div class="field" id="nova-data-f"><label>Data <span class="req">*</span></label><input type="date" name="data" value="' + amanha + '"></div>' +
     '<div class="field"><label>Início <span class="req">*</span></label><input type="time" name="hora_ini" value="18:00" required></div>' +
     '<div class="field"><label>Fim <span class="req">*</span></label><input type="time" name="hora_fim" value="00:00" required></div></div>' +
+    camposDobras() +
     '<div class="row2"><div class="field" id="nova-vagas-f"><label>Vagas <span class="req">*</span></label><div class="stepper"><button type="button" data-act="vagas" data-d="-1" aria-label="Menos">−</button><input name="vagas" inputmode="numeric" value="1"><button type="button" data-act="vagas" data-d="1" aria-label="Mais">+</button></div></div>' +
     '<div class="field"><label>Intervalo (min)</label><input name="intervalo_min" inputmode="numeric" value="0"><span class="hint">Pausa sem pagamento dentro do turno</span></div></div>' +
     '<div class="resumo" id="nova-resumo">Preencha para ver o valor previsto.</div>' +
@@ -1758,6 +1784,7 @@ function datasNova(x) {
 }
 function atualizarNova(campo) {
   const f = $('#f-nova'); if (!f || !S.modalCtx || S.modalCtx.tipo !== 'nova') return;
+  aplicarDobras(f);
   const d = S.d, v = formDados(f), c = S.modalCtx, varios = c.modo === 'varios', assin = c.modo === 'foto';
   if (campo === 'empresa' || campo === undefined) {
     const us = []; d.estrutura.filter(r => r.empresa === v.empresa).forEach(r => { if (us.indexOf(r.unidade) < 0) us.push(r.unidade); });
@@ -1873,11 +1900,12 @@ function enviarNova(auto) {
   const datas = varios ? datasNova(x) : { datas: [x.data] };
   if (datas.erro) return toast(datas.erro, 'err');
   const hs = horasTurno(datas.datas[0], x.hora_ini, x.hora_fim, x.intervalo_min);
+  if (!aplicarDobras($('#f-nova'))) return toast('Confira as dobras: a volta precisa ser depois do fim da 1ª, e o fim da 2ª depois da volta.', 'err');
   if (hs <= 0 || hs > 16) return toast('Confira o horário: o turno ficou com ' + hFmt(hs) + '.', 'err');
   const retro = num(cfg().dias_retroativos || 7);
   if (extDia_(datas.datas[0]) < extDia_(hojeStr()) - retro) return toast('A data ' + dataBr(datas.datas[0]) + ' passou de ' + retro + ' dias.', 'err');
   const base = { empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, hora_ini: x.hora_ini, hora_fim: x.hora_fim,
-    motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: x.obs, vagas: vg, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), autoaprovar: auto };
+    motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: obsDobras(x), vagas: vg, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), autoaprovar: auto };
   fechar();
   if (varios) {
     Fila.add('criarSerie', Object.assign(base, { serie_id: uid('ser'), itens: datas.datas.map(dt => ({ sol_id: uid('sol'), data: dt })) }));
@@ -1897,6 +1925,7 @@ function enviarAssinado(auto) {
   if (falta.length) return toast('Falta preencher: ' + falta.join(', '), 'err');
   if (x.motivo === 'Outros' && x.motivo_detalhe.length < 5) return toast('Em "Outros", descreva o motivo.', 'err');
   const hs = horasTurno(x.data, x.hora_ini, x.hora_fim, x.intervalo_min);
+  if (!aplicarDobras($('#f-nova'))) return toast('Confira as dobras: a volta precisa ser depois do fim da 1ª, e o fim da 2ª depois da volta.', 'err');
   if (hs <= 0 || hs > 16) return toast('Confira o horário: o turno ficou com ' + hFmt(hs) + '.', 'err');
   const v = Math.round(num(x.valor_combinado) * 100) / 100;
   if (!(v > 0)) return toast('Informe o valor combinado.', 'err');
@@ -1904,7 +1933,7 @@ function enviarAssinado(auto) {
   if (!padAssinado('pad-freela')) return toast('Falta a assinatura do freelancer.', 'err');
   if (!padAssinado('pad-gestor')) return toast('Falta a sua assinatura.', 'err');
   const payload = { sol_id: uid('sol'), esc_id: uid('esc'), empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, data: x.data,
-    hora_ini: x.hora_ini, hora_fim: x.hora_fim, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: x.obs,
+    hora_ini: x.hora_ini, hora_fim: x.hora_fim, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: obsDobras(x),
     pessoa_id: x.pessoa_id, valor_combinado: v, justificativa: x.justificativa || '', autoaprovar: auto,
     assin_freela: padImagem('pad-freela'), assin_gestor: padImagem('pad-gestor') };
   fechar();
@@ -1921,13 +1950,14 @@ function enviarComFoto(auto) {
   if (falta.length) return toast('Falta preencher: ' + falta.join(', '), 'err');
   if (x.motivo === 'Outros' && x.motivo_detalhe.length < 5) return toast('Em "Outros", descreva o motivo.', 'err');
   const hs = horasTurno(x.data, x.hora_ini, x.hora_fim, x.intervalo_min);
+  if (!aplicarDobras($('#f-nova'))) return toast('Confira as dobras: a volta precisa ser depois do fim da 1ª, e o fim da 2ª depois da volta.', 'err');
   if (hs <= 0 || hs > 16) return toast('Confira o horário: o turno ficou com ' + hFmt(hs) + '.', 'err');
   if (extTurno_(x.data, x.hora_ini, x.hora_fim).ini + fotoJan() < agoraMin()) return toast('A janela da foto de entrada já passou. Confira a data e o início.', 'err');
   const v = Math.round(num(x.valor_combinado) * 100) / 100;
   if (!(v > 0)) return toast('Informe o valor combinado.', 'err');
   if (c.nivel === 'vermelho' && (x.justificativa || '').length < 10) return toast('Recorrência alta: escreva a justificativa (pelo menos 10 letras).', 'err');
   const payload = { sol_id: uid('sol'), esc_id: uid('esc'), empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, data: x.data,
-    hora_ini: x.hora_ini, hora_fim: x.hora_fim, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: x.obs,
+    hora_ini: x.hora_ini, hora_fim: x.hora_fim, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: obsDobras(x),
     pessoa_id: x.pessoa_id, valor_combinado: v, justificativa: x.justificativa || '', autoaprovar: auto };
   fechar();
   Fila.add('criarComFoto', payload);
@@ -2978,6 +3008,7 @@ function abrirPedidoQr(id) {
     '<form id="f-ped"><div class="row2"><div class="field"><label>Setor</label><select name="setor">' + setores.map(s => '<option' + (norm(s) === norm(q.setor) ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select></div>' +
     '<div class="field"><label>Função <span class="req">*</span></label><select name="funcao_id">' + funcs.map(f => '<option value="' + esc(f.funcao_id) + '"' + (fun0 && f.funcao_id === fun0.funcao_id ? ' selected' : '') + '>' + esc(f.nome) + '</option>').join('') + '</select></div></div>' +
     '<div class="row2"><div class="field"><label>Início</label><input type="time" name="hora_ini" value="' + esc(q.hora_ini) + '"></div><div class="field"><label>Fim</label><input type="time" name="hora_fim" value="' + esc(q.hora_fim) + '"></div></div>' +
+    camposDobras() +
     '<div class="row2"><div class="field"><label>Intervalo (min)</label><input name="intervalo_min" inputmode="numeric" value="0"></div>' +
     '<div class="field"><label>Valor combinado (R$) <span class="req">*</span></label><input name="valor_combinado" inputmode="decimal"><span class="hint" id="ped-hint"></span></div></div>' +
     '<div class="field"><label>Motivo</label><select name="motivo">' + S.d.motivos.map(m => '<option' + (m === 'Pico de movimento / evento' ? ' selected' : '') + '>' + esc(m) + '</option>').join('') + '</select></div>' +
@@ -2991,6 +3022,7 @@ function abrirPedidoQr(id) {
 }
 function atualizarPedidoQr(campo) {
   const f = $('#f-ped'); if (!f || !S.modalCtx) return;
+  aplicarDobras(f);
   if (campo === 'tipo_vinculo' && $('#ped-orig')) $('#ped-orig').hidden = f.tipo_vinculo.value !== 'CLT_GRUPO';
   const x = formDados(f), hs = horasTurno(S.modalCtx.data, x.hora_ini, x.hora_fim, x.intervalo_min);
   const v = valorDe(x.funcao_id, hs, S.modalCtx.data);
@@ -3001,8 +3033,9 @@ async function autorizarPedidoQr() {
   const c = S.modalCtx, f = $('#f-ped'); if (!c || !f) return;
   const x = formDados(f);
   if (!(num(x.valor_combinado) > 0)) return toast('Informe o valor combinado.', 'err');
+  if (!aplicarDobras(f)) return toast('Confira as dobras: a volta precisa ser depois do fim da 1ª, e o fim da 2ª depois da volta.', 'err');
   if (f.tipo_vinculo && !x.tipo_vinculo) return toast('Escolha o vínculo.', 'err');
-  const payload = Object.assign({}, x, { pedido_id: c.id, valor_combinado: Math.round(num(x.valor_combinado) * 100) / 100, sol_id: uid('sol'), esc_id: uid('esc') });
+  const payload = Object.assign({}, x, { obs: obsDobras(x), pedido_id: c.id, valor_combinado: Math.round(num(x.valor_combinado) * 100) / 100, sol_id: uid('sol'), esc_id: uid('esc') });
   try {
     await online('qrAutorizar', payload, 'Autorizando…');
     fechar(); await carregar();
