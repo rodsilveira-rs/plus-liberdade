@@ -299,10 +299,7 @@ function telaCamera(escId, modo) {
     '<div class="gps" id="gps">' + IC.local + 'Buscando sua localização…</div>' +
     (antes ? '<div class="campo"><label for="mot">Motivo da saída antes</label><textarea id="mot" placeholder="Ex.: o gestor liberou mais cedo"></textarea></div>' : '') +
     '<div class="pilha" id="bts"><button class="btn" data-acao="tirar">' + IC.camera + 'Tirar foto</button><button class="btn link" data-acao="voltar">Cancelar</button></div>');
-  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { $('.cam').innerHTML = '<div class="erro">Este navegador não abre a câmera. Abra o link no Chrome ou no Safari.</div>'; return; }
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 1280 } }, audio: false })
-    .then(st => { if (S.cam !== c) return st.getTracks().forEach(t => t.stop()); c.stream = st; const v = $('#v'); if (v) v.srcObject = st; })
-    .catch(() => { if (S.cam !== c) return; $('.cam').innerHTML = '<div class="erro">Não consegui abrir a câmera. Toque no cadeado ao lado do endereço, libere a <b>Câmera</b> e tente de novo.</div>'; });
+  ligarCamera(c);
   const ref = S.info.ref;
   if (navigator.geolocation) {
     const ok = p => {
@@ -316,6 +313,36 @@ function telaCamera(escId, modo) {
     navigator.geolocation.getCurrentPosition(ok, erro, { enableHighAccuracy: true, timeout: 15000, maximumAge: 20000 });
     try { c.watch = navigator.geolocation.watchPosition(ok, () => { }, { enableHighAccuracy: true, maximumAge: 10000 }); } catch (e) { }
   }
+}
+/* Navegador de outro app (o da câmera, Instagram, navegador do fabricante): muitos não liberam a câmera para a página */
+const ehAndroid = /Android/i.test(navigator.userAgent);
+const ehChrome = /Chrome\/\d/.test(navigator.userAgent) && !/EdgA|OPR|Opera|SamsungBrowser|HeyTap|Heytap|OppoBrowser|MiuiBrowser|XiaoMi|UCBrowser|YaBrowser|Instagram|FBAN|FBAV|Line\/|; wv\)/i.test(navigator.userAgent);
+const linkChrome = () => 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=com.android.chrome;end';
+function ligarCamera(c) {
+  const falha = (titulo, texto) => {
+    if (S.cam !== c) return;
+    const cam = $('.cam'); if (!cam) return;
+    cam.innerHTML = '<div class="erro"><b style="font-size:17px">' + titulo + '</b><br><span style="opacity:.85">' + texto + '</span></div>';
+    $('#bts').innerHTML = (ehAndroid && !ehChrome ? '<a class="btn" href="' + esc(linkChrome()) + '">Abrir no Chrome</a>' : '') +
+      '<button class="btn ' + (ehAndroid && !ehChrome ? 'claro' : '') + '" data-acao="cam-denovo">Tentar de novo</button><button class="btn link" data-acao="voltar">Cancelar</button>';
+  };
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+    return falha('Este navegador não abre a câmera.', ehAndroid ? 'Toque em <b>Abrir no Chrome</b>.' : 'Abra o link no Safari ou no Chrome.');
+  }
+  const pedir = cfg => navigator.mediaDevices.getUserMedia({ video: cfg, audio: false });
+  pedir({ facingMode: 'user', width: { ideal: 960 }, height: { ideal: 1280 } })
+    .catch(e => (e && /Overconstrained|NotFound|NotReadable|TrackStart|Abort/.test(e.name)) ? pedir(true) : Promise.reject(e))
+    .then(st => { if (S.cam !== c) return st.getTracks().forEach(t => t.stop()); c.stream = st; const v = $('#v'); if (v) v.srcObject = st; })
+    .catch(e => {
+      const n = (e && e.name) || '';
+      if (/NotAllowed|Security|PermissionDenied/.test(n)) {
+        if (ehAndroid && !ehChrome) return falha('Este navegador bloqueou a câmera.', 'Toque em <b>Abrir no Chrome</b> e, quando perguntar, toque em <b>Permitir</b>.');
+        return falha('A câmera está bloqueada para esta página.', 'Toque no ícone ao lado do endereço (cadeado ou ⓘ) › <b>Permissões</b> › <b>Câmera</b> › <b>Permitir</b>. Depois toque em <b>Tentar de novo</b>.');
+      }
+      if (/NotReadable|TrackStart|Abort/.test(n)) return falha('A câmera está ocupada.', 'Feche o app da câmera (o que leu o QR) e toque em <b>Tentar de novo</b>.');
+      if (/NotFound|DevicesNotFound/.test(n)) return falha('Não achei câmera neste aparelho.', 'Use outro celular para registrar.');
+      falha('Não consegui abrir a câmera.', ehAndroid && !ehChrome ? 'Toque em <b>Abrir no Chrome</b>.' : 'Toque em <b>Tentar de novo</b>.');
+    });
 }
 function tirar() {
   const c = S.cam, v = $('#v');
@@ -373,6 +400,7 @@ document.addEventListener('click', ev => {
     case 'tirar': return tirar();
     case 'denovo': return deNovo();
     case 'enviar': return enviar();
+    case 'cam-denovo': { const c = S.cam; if (!c) return; return telaCamera(c.id, c.antes ? 'ANTES' : c.tipo); }
   }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.eu && !S.cam && S.timer) atualizar(); });
