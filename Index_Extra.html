@@ -303,6 +303,9 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
 .cards-prev{display:flex;flex-direction:column;gap:10px;margin:6px 0 10px}
 .res-ja{display:flex;align-items:center;gap:4px;color:var(--green-ink)!important;font-weight:600}
 .txt-red{color:var(--red-ink)}
+.btn.danger{background:var(--red-q);color:#fff}
+.lib-topo{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--green-soft, #DCFCE7);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.lib-topo span{flex:1;min-width:160px;font-size:14px}
 .pdf-arq{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:4px 0 10px;background:var(--card)}
 .pdf-arq>div{flex:1;min-width:0}.pdf-arq b{display:block;font-size:14px;overflow-wrap:anywhere}.pdf-arq small{color:var(--mute);font-size:12.5px}
 .cards-prev img{width:100%;max-width:420px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.18);align-self:center}
@@ -335,7 +338,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.11.11-a',
+  VERSAO: '2026.11.15-a',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -941,13 +944,13 @@ function contar() {
     .map(s => ({ s, falta: num(s.vagas) - ocupadas(s) })).filter(x => x.falta > 0)
     .sort((a, b) => turno(a.s).ini - turno(b.s).ini);
   const validar = d.escalas.filter(e => (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') && turno(e).ini <= am && solDe(e.sol_id) && podeValidar(solDe(e.sol_id)) &&
-    solDe(e.sol_id).status !== 'SOLICITADA' && !ehFoto(e) && !(e.assinado_em && am < turno(e).fim + 30))
+    solDe(e.sol_id).status !== 'SOLICITADA' && !ehFoto(e) && !(e.assinado_em && am < turno(e).fim + 30) && !(usaQr(e.empresa) && am <= turno(e).ini + fotoJan()))
     .sort((a, b) => turno(a).fim - turno(b).fim);
   const pagar = U().financeiro ? d.escalas.filter(e => e.status === 'VALIDADO' && (e.status_fin === 'LIBERADO' || (e.status_fin === 'AGENDADO' && e.pag_data_prevista <= h))) : [];
-  const risco = d.pessoas.filter(p => p.status !== 'INATIVO' && riscoHoje(p) !== 'verde');
+  const risco = d.pessoas.filter(p => pessoaAtiva(p) && riscoHoje(p) !== 'verde');
   const meus = d.log.filter(l => (l.tipo === 'CONFLITO' || l.tipo === 'REJEITADO') && l.usuario === U().email && l.data_hora.slice(0, 10) >= addDias(h, -3));
-  const fotos = fotoPendentes(), liberar = paraLiberar();
-  return { aprovar, vagas, validar, pagar, risco, meus, fotos, liberar };
+  const fotos = fotoPendentes(), liberar = paraLiberar(), pedidos = pedidosPend();
+  return { aprovar, vagas, validar, pagar, risco, meus, fotos, liberar, pedidos };
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -956,7 +959,7 @@ function contar() {
 function navItens(c) {
   const u = U();
   const l = [
-    { v: 'inicio', t: 'Início', i: 'inicio', n: c.aprovar.length + c.validar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length + c.liberar.length },
+    { v: 'inicio', t: 'Início', i: 'inicio', n: c.aprovar.length + c.validar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length + c.liberar.length + c.pedidos.length },
     { v: 'solicitacoes', t: 'Solicitações', i: 'lista', n: c.vagas.length },
     { v: 'validacao', t: 'Validação', i: 'validar', n: c.validar.length + c.liberar.length, so: u.gestor || u.liberaRH },
     { v: 'banco', t: 'Banco de extras', i: 'pessoas' },
@@ -986,7 +989,7 @@ function renderMoldura(c) {
     '<button type="button" class="avatar" data-act="mais-menu" aria-label="Conta">' + esc(iniciais(u.nome)) + '</button>';
   const b = (v, t, i, n) => '<button type="button" data-act="ir" data-v="' + v + '" class="' + (S.view === v ? 'on' : '') + '">' + ic(i) +
     (n ? '<span class="bdg">' + n + '</span>' : '') + esc(t) + '</button>';
-  $('#bnav').innerHTML = b('inicio', 'Início', 'inicio', c.aprovar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length) + b('solicitacoes', 'Solicitações', 'lista', c.vagas.length) +
+  $('#bnav').innerHTML = b('inicio', 'Início', 'inicio', c.aprovar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length + c.pedidos.length) + b('solicitacoes', 'Solicitações', 'lista', c.vagas.length) +
     '<div><button type="button" class="fab" data-act="nova" aria-label="Nova solicitação">' + ic('mais') + '</button></div>' +
     (u.gestor || u.liberaRH ? b('validacao', 'Validar', 'validar', c.validar.length + c.liberar.length) : b('banco', 'Banco', 'pessoas')) +
     '<button type="button" data-act="mais-menu" class="' + (['banco', 'pagamentos', 'risco', 'config'].indexOf(S.view) >= 0 && u.gestor ? 'on' : '') + '">' + ic('menu') + 'Mais</button>';
@@ -1060,6 +1063,9 @@ function vInicio(c) {
   html += '<div class="kpis">' + k.join('') + '</div>';
 
   const partes = [];
+  if (c.pedidos.length) {
+    partes.push('<div class="sec"><div class="sec-t">🙋 Chegou sem escala (' + c.pedidos.length + ')<span class="grow"></span><span class="tiny mute">pediram pelo QR</span></div><div class="list">' + c.pedidos.map(itemPedido).join('') + '</div></div>');
+  }
   if (c.meus.length) {
     partes.push('<div class="sec"><div class="sec-t">Ações suas que não entraram</div><div class="list">' + c.meus.map(l =>
       '<div class="item"><div class="grow"><div class="t">' + pill(['Atenção', 'p-amber']) + ' ' + esc(l.numero) + '</div><div class="m">' + esc(l.texto) + '</div></div></div>').join('') + '</div></div>');
@@ -1473,14 +1479,14 @@ function vBanco() {
   if (f.banco) { const b = norm(f.banco); l = l.filter(p => norm(p.nome + ' ' + (p.cargo_origem || '')).indexOf(b) >= 0 || (p.telefone || '').indexOf(f.banco.replace(/\D/g, '') || '§') >= 0); }
   if (f.bancoFun) l = l.filter(p => (p.funcoes || []).indexOf(f.bancoFun) >= 0);
   if (f.bancoSem) l = l.filter(p => riscoHoje(p) === f.bancoSem);
-  const ativos = S.d.pessoas.filter(p => p.status !== 'INATIVO').length;
+  const ativos = S.d.pessoas.filter(pessoaAtiva).length;
   return ph('Banco de extras', ativos + ' pessoas ativas · CPF sempre mascarado', U().cadastra ? '<button class="btn" data-act="pessoa-nova">' + ic('mais') + 'Cadastrar pessoa</button>' : '') +
     '<div class="filtros"><input type="search" data-f="banco" placeholder="Buscar por nome ou telefone…" value="' + esc(f.banco) + '">' +
     '<select data-f="bancoFun"><option value="">Todas as funções</option>' + S.d.funcoes.map(x => '<option value="' + esc(x.funcao_id) + '"' + (f.bancoFun === x.funcao_id ? ' selected' : '') + '>' + esc(x.nome) + '</option>').join('') + '</select>' +
     '<select data-f="bancoSem"><option value="">Qualquer recorrência</option><option value="verde"' + (f.bancoSem === 'verde' ? ' selected' : '') + '>Verde</option><option value="amarelo"' + (f.bancoSem === 'amarelo' ? ' selected' : '') + '>Amarelo</option><option value="vermelho"' + (f.bancoSem === 'vermelho' ? ' selected' : '') + '>Vermelho</option></select></div>' +
     (l.length ? '<div class="list">' + l.map(p => '<button type="button" class="item" data-act="pessoa" data-id="' + esc(p.pessoa_id) + '">' +
       '<span class="avatar" style="background:' + (p.status === 'INATIVO' ? '#A3A8AC' : '#3B3F42') + '">' + esc(iniciais(p.nome)) + '</span>' +
-      '<div class="grow"><div class="t">' + esc(p.nome) + ' <span class="sem ' + riscoHoje(p) + '" title="Recorrência"></span>' + (p.status === 'INATIVO' ? pill(['Inativo', 'p-slate']) : '') + '</div>' +
+      '<div class="grow"><div class="t">' + esc(p.nome) + ' <span class="sem ' + riscoHoje(p) + '" title="Recorrência"></span>' + (p.status === 'INATIVO' ? pill(['Inativo', 'p-slate']) : p.status === 'PENDENTE' ? pill(['Cadastro pelo QR · confirmar', 'p-amber']) : p.status === 'RECUSADO' ? pill(['Recusado', 'p-slate']) : '') + (p.telefone ? '' : ' ' + pill(['Sem celular', 'p-slate'])) + '</div>' +
       '<div class="m">' + esc(VINCULO[p.tipo_vinculo] || p.tipo_vinculo) + (p.empresa_origem ? ' · ' + esc(empNome(p.empresa_origem)) : '') + ' · ' + esc((p.funcoes || []).map(funcaoNome).join(', ') || 'sem função habilitada') + '</div></div>' +
       '<div class="r"><span class="tiny mute">30 / 60 / 90 dias</span><b class="num">' + p.c30 + ' · ' + p.c60 + ' · ' + p.c90 + '</b></div></button>').join('') + '</div>'
       : '<div class="empty">' + (S.d.pessoas.length ? 'Ninguém neste filtro.' : 'O banco ainda está vazio. Cadastre quem já faz extras no grupo.') + '</div>');
@@ -1560,7 +1566,7 @@ function vConfig() {
     ['amarelo_30d', 'vermelho_30d', 'semanas_seguidas_amarelo', 'padrao_vermelho', 'interjornada_horas', 'pagamento_padrao', 'dias_retroativos', 'risco_copia']
       .map(k => '<div><small>' + esc(k) + '</small><b>' + esc(c[k]) + '</b></div>').join('') + '</div></div>' +
     '<div class="card"><h3>Outras abas</h3><p class="small mute" style="margin:0 0 10px">Empresas, unidades, setores e centro de custo: <b>EXT_ESTRUTURA</b>. Funções: <b>EXT_FUNCOES</b>. Valores por carga horária e vigência: <b>EXT_TABELA_VALORES</b>. Mudou a UUSR? Use o botão abaixo para valer na hora.</p>' +
-    '<button class="btn ghost sm" data-act="limpar-cache">' + ic('sync', 'sm') + 'Recarregar a UUSR agora</button></div></div>';
+    '<button class="btn ghost sm" data-act="limpar-cache">' + ic('sync', 'sm') + 'Recarregar a UUSR agora</button></div>' + vQrConfig() + '</div>';
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1615,7 +1621,8 @@ function abrirSol(id) {
       '<div class="m">' + (e.status === 'VALIDADO' ? esc(e.hora_ini_real) + '–' + esc(e.hora_fim_real) + ' · ' + dinheiro(e.valor_final) + ' · validado por ' + esc(e.validador_nome || '') :
         'escalado por ' + esc(e.escalado_por_nome || nomeDe(e.escalado_por))) + '</div>' +
       (e.justificativa ? '<div class="m">Justificativa: ' + esc(e.justificativa) + '</div>' : '') +
-      (ehFoto(e) ? '<div class="m">📷 Extra com foto · combinado ' + dinheiro(e.valor_combinado) + (e.enviado_rh_em ? ' · liberado ao RH por ' + esc(e.enviado_rh_nome) + ' em ' + esc(dataBr(e.enviado_rh_em) + ' ' + String(e.enviado_rh_em).slice(11, 16)) : '') + '</div>' + linhaFotos(e) +
+      (!ehFoto(e) && usaQr(s.empresa) && (e.status === 'CONVIDADO' || e.status === 'CONFIRMADO') ? '<div class="m">📲 A pessoa registra entrada e saída no QR da unidade.</div>' : '') +
+      (ehFoto(e) ? '<div class="m">' + (e.origem ? '📲 Registrado pela pessoa no QR' : '📷 Extra com foto') + ' · combinado ' + dinheiro(e.valor_combinado) + (e.enviado_rh_em ? ' · liberado ao RH por ' + esc(e.enviado_rh_nome) + ' em ' + esc(dataBr(e.enviado_rh_em) + ' ' + String(e.enviado_rh_em).slice(11, 16)) : '') + '</div>' + linhaFotos(e) +
         (e.justif_rh ? '<div class="m">Justificativa da liberação: ' + esc(e.justif_rh) + '</div>' : '') : '') +
       (e.resumo_em ? '<div class="m res-ja">' + ic('check', 'sm') + 'Foi no resumo de pagamento de ' + esc(dataBr(e.resumo_em)) + ' (' + esc(e.resumo_por_nome || '') + ')</div>' : '') +
       (e.assinado_em ? '<div class="m">✍️ Assinou na chegada às ' + esc(String(e.assinado_em).slice(11, 16)) + ' com ' + esc(e.assin_gestor_nome || '') + ' · combinado ' + dinheiro(e.valor_combinado) +
@@ -1627,7 +1634,7 @@ function abrirSol(id) {
   const tl = S.d.log.filter(l => l.sol_id === s.sol_id && l.tipo !== 'STATUS').sort((a, b) => a.data_hora.localeCompare(b.data_hora));
   const TXT = { SOLICITADA: 'solicitou', APROVADA: 'aprovou', RECUSADA: 'recusou', CANCELADA: 'cancelou', ESCALADO: 'escalou', CONFIRMADO: 'registrou que confirmou',
     RECUSOU: 'registrou que não aceitou', ESCALA_CANCELADA: 'tirou da escala', VALIDADO: 'validou', FALTOU: 'registrou falta', PAGO: 'pagou', AGENDADO: 'agendou o pagamento',
-    CONFLITO: 'teve uma ação que não entrou', REJEITADO: 'teve uma escala recusada pelo servidor', VALOR_CORRIGIDO: 'corrigiu o valor', FOTO_ENTRADA: 'registrou a foto de entrada', FOTO_SAIDA: 'registrou a foto de saída', LIBERADO_RH: 'liberou para o RH pagar', RESUMO_PDF: 'mandou no resumo de pagamento (PDF)' };
+    CONFLITO: 'teve uma ação que não entrou', REJEITADO: 'teve uma escala recusada pelo servidor', VALOR_CORRIGIDO: 'corrigiu o valor', FOTO_ENTRADA: 'registrou a foto de entrada', FOTO_SAIDA: 'registrou a foto de saída', LIBERADO_RH: 'liberou para o RH pagar', RESUMO_PDF: 'mandou no resumo de pagamento (PDF)', AUTORIZADO_QR: 'autorizou na hora (pedido pelo QR)' };
   h += '<div class="sec"><div class="sec-t">Histórico</div>' + (tl.length ? '<ul class="tl">' + tl.map(l => '<li class="' + (l.tipo === 'CONFLITO' || l.tipo === 'REJEITADO' ? 'c' : '') + '"><b>' + esc(l.usuario_nome || nomeDe(l.usuario)) + '</b> ' + esc(TXT[l.tipo] || l.tipo.toLowerCase()) +
     (l.texto ? '<div>' + esc(l.texto) + '</div>' : '') + '<small>' + dataBr(l.data_hora.slice(0, 10)) + ' ' + horaDe(l.data_hora) + '</small></li>').join('') + '</ul>' : '<div class="small mute">O histórico aparece quando a solicitação chega ao servidor.</div>') + '</div>';
 
@@ -1823,7 +1830,7 @@ function atualizarAssin(f, campo) {
   const c = S.modalCtx, x = formDados(f);
   const sel = f.pessoa_id, antes = sel.value;
   if (['funcao_id', 'modo', undefined].indexOf(campo) >= 0 || !sel.options.length) {
-    const ativos = S.d.pessoas.filter(p => p.status !== 'INATIVO').sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const ativos = S.d.pessoas.filter(pessoaAtiva).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     const hab = ativos.filter(p => x.funcao_id && (p.funcoes || []).indexOf(x.funcao_id) >= 0), outros = ativos.filter(p => hab.indexOf(p) < 0);
     const op = p => '<option value="' + esc(p.pessoa_id) + '"' + (p.pessoa_id === antes ? ' selected' : '') + '>' + esc(p.nome) + '</option>';
     sel.innerHTML = '<option value="">Escolha no banco de extras</option>' + (hab.length ? '<optgroup label="Habilitados para a função">' + hab.map(op).join('') + '</optgroup>' : '') +
@@ -1937,7 +1944,7 @@ function abrirEscalar(solId, busca) {
   const cand = { data: s.data, hora_ini: s.hora_ini, hora_fim: s.hora_fim, funcao_id: s.funcao_id, empresa: up(s.empresa), unidade: s.unidade, setor: s.setor };
   const t = turno(s);
   const b = norm(S.modalCtx.busca);
-  const lista = S.d.pessoas.filter(p => p.status !== 'INATIVO')
+  const lista = S.d.pessoas.filter(pessoaAtiva)
     .filter(p => S.modalCtx.todos || (p.funcoes || []).indexOf(s.funcao_id) >= 0)
     .filter(p => !b || norm(p.nome).indexOf(b) >= 0)
     .map(p => {
@@ -2531,7 +2538,11 @@ function vLiberar(c) {
   Object.keys(LIB.sel).forEach(id => { if (!l.some(e => e.esc_id === id)) delete LIB.sel[id]; });
   const sel = l.filter(e => LIB.sel[e.esc_id]);
   const tot = sel.reduce((t, e) => t + num(e.valor_final || e.valor_combinado), 0);
-  return '<div class="list">' + l.map(e => {
+  const limpos = l.filter(e => !alertasFoto(e).length);
+  return (limpos.length ? '<div class="lib-topo"><span><b>' + plural(limpos.length, 'extra sem alerta', 'extras sem alerta') + '</b> · ' + dinheiro(limpos.reduce((t, e) => t + num(e.valor_final || e.valor_combinado), 0)) +
+      '<br><small class="mute">Fotos no horário, na unidade e horas dentro do previsto.</small></span><button class="btn ok sm" data-act="lib-sem-alerta">Liberar os ' + limpos.length + ' de uma vez</button></div>' : '') +
+    (l.length > limpos.length ? '<div class="small mute" style="margin:0 0 8px">' + plural(l.length - limpos.length, 'extra com alerta precisa', 'extras com alerta precisam') + ' de justificativa, um a um.</div>' : '') +
+    '<div class="list">' + l.map(e => {
     const s = solDe(e.sol_id), al = alertasFoto(e), on = !!LIB.sel[e.esc_id];
     return '<div class="item lib' + (al.length ? ' lib-al' : '') + '"><input type="checkbox" class="lib-ck" data-act="lib-sel" data-id="' + esc(e.esc_id) + '"' + (on ? ' checked' : '') + ' aria-label="Selecionar ' + esc(e.pessoa_nome) + '">' +
       '<div class="grow"><div class="t">' + esc(e.pessoa_nome) + ' ' + pill(al.length ? ['Com alerta', 'p-amber'] : ['Fotos ok', 'p-green']) + '</div>' +
@@ -2935,6 +2946,138 @@ async function montarPdfResumo(Pdf, escs, dados, fotos, assin) {
 }
 
 /* ════════════════════════════════════════════════════════════════
+   QR DE PRESENÇA (Mercearia Liberdade e Gogui) — o gestor autoriza,
+   a própria pessoa registra entrada e saída no QR da parede. Aqui:
+   pedidos de quem chegou sem escala, e os QR para imprimir.
+   ════════════════════════════════════════════════════════════════ */
+const usaQr = emp => String(cfg().qr_empresas || '').split(',').map(x => up(x.trim())).indexOf(up(emp)) >= 0;
+const pessoaAtiva = p => !!p && ['INATIVO', 'PENDENTE', 'RECUSADO'].indexOf(p.status) < 0;
+const alvoPed = q => ({ empresa: q.empresa, unidade: q.unidade, setor: q.setor });
+const podeDecidirPedido = q => podeValidar(alvoPed(q)) || podeLiberar(alvoPed(q));
+function pedidosPend() {
+  return (S.d.pedidosQr || []).filter(q => q.status === 'PENDENTE' && podeDecidirPedido(q)).sort((a, b) => a.criado_em.localeCompare(b.criado_em));
+}
+function itemPedido(q) {
+  return '<div class="item"><span class="avatar" style="background:var(--red-q)">' + esc(iniciais(q.pessoa_nome)) + '</span><div class="grow"><div class="t">' + esc(q.pessoa_nome) + ' ' +
+    (q.novo_cadastro === 'SIM' ? pill(['Cadastro novo', 'p-amber']) : pill(['Do banco', 'p-slate'])) + '</div>' +
+    '<div class="m">' + esc(empNome(q.empresa)) + (norm(q.unidade) !== norm(empNome(q.empresa)) ? ' ' + esc(q.unidade) : '') + ' · ' + esc(q.setor) + ' · chegou às ' + esc(q.criado_em.slice(11, 16)) + ' · até ' + esc(q.hora_fim) + '</div>' +
+    (q.obs ? '<div class="m">“' + esc(q.obs) + '”</div>' : '') +
+    '<div class="acts"><button class="btn ok sm" data-act="ped-abrir" data-id="' + esc(q.pedido_id) + '">Autorizar</button><button class="btn ghost sm" data-act="ped-recusar" data-id="' + esc(q.pedido_id) + '">Recusar</button></div></div></div>';
+}
+function abrirPedidoQr(id) {
+  const q = (S.d.pedidosQr || []).find(x => x.pedido_id === id); if (!q) return;
+  const pes = S.d.pessoas.find(p => p.pessoa_id === q.pessoa_id) || {};
+  const novo = pes.status === 'PENDENTE';
+  const setores = S.d.estrutura.filter(r => up(r.empresa) === up(q.empresa) && norm(r.unidade) === norm(q.unidade)).map(r => r.setor);
+  const funcs = S.d.funcoes.slice().sort((a, b) => ((pes.funcoes || []).indexOf(b.funcao_id) >= 0) - ((pes.funcoes || []).indexOf(a.funcao_id) >= 0) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  const fun0 = funcs.find(f => norm(f.grupo) === norm(q.setor) && (pes.funcoes || []).indexOf(f.funcao_id) >= 0) || funcs.find(f => (pes.funcoes || []).indexOf(f.funcao_id) >= 0) || funcs.find(f => norm(f.grupo) === norm(q.setor)) || funcs[0];
+  S.modalCtx = { tipo: 'pedido', id, data: q.criado_em.slice(0, 10), valorEditado: false };
+  modal('Autorizar extra na hora',
+    '<div class="resumo"><b>' + esc(q.pessoa_nome) + '</b> leu o QR às ' + esc(q.criado_em.slice(11, 16)) + ' e pediu para trabalhar até ' + esc(q.hora_fim) + '.' +
+      (novo ? '<br>Cadastro feito agora pela própria pessoa (CPF e PIX já guardados no servidor). Confirme o vínculo.' : '') + (q.obs ? '<br>“' + esc(q.obs) + '”' : '') + '</div>' +
+    '<form id="f-ped"><div class="row2"><div class="field"><label>Setor</label><select name="setor">' + setores.map(s => '<option' + (norm(s) === norm(q.setor) ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '</select></div>' +
+    '<div class="field"><label>Função <span class="req">*</span></label><select name="funcao_id">' + funcs.map(f => '<option value="' + esc(f.funcao_id) + '"' + (fun0 && f.funcao_id === fun0.funcao_id ? ' selected' : '') + '>' + esc(f.nome) + '</option>').join('') + '</select></div></div>' +
+    '<div class="row2"><div class="field"><label>Início</label><input type="time" name="hora_ini" value="' + esc(q.hora_ini) + '"></div><div class="field"><label>Fim</label><input type="time" name="hora_fim" value="' + esc(q.hora_fim) + '"></div></div>' +
+    '<div class="row2"><div class="field"><label>Intervalo (min)</label><input name="intervalo_min" inputmode="numeric" value="0"></div>' +
+    '<div class="field"><label>Valor combinado (R$) <span class="req">*</span></label><input name="valor_combinado" inputmode="decimal"><span class="hint" id="ped-hint"></span></div></div>' +
+    '<div class="field"><label>Motivo</label><select name="motivo">' + S.d.motivos.map(m => '<option' + (m === 'Pico de movimento / evento' ? ' selected' : '') + '>' + esc(m) + '</option>').join('') + '</select></div>' +
+    (novo ? '<div class="field"><label>Vínculo <span class="req">*</span></label><select name="tipo_vinculo"><option value="">Escolha</option>' +
+      ['EXTERNO_AUTONOMO', 'CLT_GRUPO', 'OUTRO'].map(v => '<option value="' + v + '">' + esc(VINCULO[v]) + '</option>').join('') + '</select><span class="hint">MEI: confirme como Externo agora e complete o CNPJ no Banco depois.</span></div>' +
+      '<div class="field" id="ped-orig" hidden><label>Empresa de origem</label><select name="empresa_origem"><option value="">Escolha</option>' +
+      [...new Set(S.d.estrutura.map(r => r.empresa))].map(e => '<option value="' + esc(e) + '">' + esc(empNome(e)) + '</option>').join('') + '</select></div>' : '') +
+    '<div class="field"><label>Justificativa (se a recorrência estiver alta)</label><textarea name="justificativa" placeholder="Só se o sistema pedir"></textarea></div></form>',
+    '<button class="btn ghost" data-act="ped-recusar" data-id="' + esc(id) + '">Recusar</button><button class="btn ok" data-act="ped-autorizar">Autorizar</button>');
+  atualizarPedidoQr();
+}
+function atualizarPedidoQr(campo) {
+  const f = $('#f-ped'); if (!f || !S.modalCtx) return;
+  if (campo === 'tipo_vinculo' && $('#ped-orig')) $('#ped-orig').hidden = f.tipo_vinculo.value !== 'CLT_GRUPO';
+  const x = formDados(f), hs = horasTurno(S.modalCtx.data, x.hora_ini, x.hora_fim, x.intervalo_min);
+  const v = valorDe(x.funcao_id, hs, S.modalCtx.data);
+  if (!S.modalCtx.valorEditado) f.valor_combinado.value = v ? String(v).replace('.', ',') : '';
+  $('#ped-hint').textContent = hFmt(hs) + ' · tabela ' + dinheiro(v);
+}
+async function autorizarPedidoQr() {
+  const c = S.modalCtx, f = $('#f-ped'); if (!c || !f) return;
+  const x = formDados(f);
+  if (!(num(x.valor_combinado) > 0)) return toast('Informe o valor combinado.', 'err');
+  if (f.tipo_vinculo && !x.tipo_vinculo) return toast('Escolha o vínculo.', 'err');
+  const payload = Object.assign({}, x, { pedido_id: c.id, valor_combinado: Math.round(num(x.valor_combinado) * 100) / 100, sol_id: uid('sol'), esc_id: uid('esc') });
+  try {
+    await online('qrAutorizar', payload, 'Autorizando…');
+    fechar(); await carregar();
+    toast('Autorizado. A pessoa já pode registrar a entrada no QR.');
+  } catch (e) { /* toast já mostrado */ }
+}
+function recusarPedidoQr(id) {
+  const q = (S.d.pedidosQr || []).find(x => x.pedido_id === id); if (!q) return;
+  S.modalCtx = { tipo: 'pedido-recusa', id };
+  modal('Recusar pedido', '<div class="resumo">' + esc(q.pessoa_nome) + ' · ' + esc(q.setor) + ' · chegou às ' + esc(q.criado_em.slice(11, 16)) + '</div>' +
+    '<div class="field"><label>Motivo <span class="req">*</span></label><textarea id="ped-mot" placeholder="Ex.: não foi chamado(a) hoje"></textarea><span class="hint">A pessoa vê este motivo na tela do QR.</span></div>',
+    '<button class="btn ghost" data-act="fechar">Voltar</button><button class="btn danger" data-act="ped-recusar-ok">Recusar</button>');
+}
+async function recusarPedidoQrOk() {
+  const c = S.modalCtx, m = ($('#ped-mot').value || '').trim();
+  if (m.length < 3) return toast('Diga o motivo.', 'err');
+  try { await online('qrRecusar', { pedido_id: c.id, motivo: m }, 'Recusando…'); fechar(); await carregar(); toast('Pedido recusado.'); } catch (e) { }
+}
+
+/* ---------- QR para imprimir (admin) ---------- */
+const urlPonto = id => new URL('Index_Ponto.html?u=' + encodeURIComponent(id), location.href).href;
+let QRLIB = null;
+function carregarQrLib() {
+  if (QRLIB) return Promise.resolve(QRLIB);
+  if (window.qrcode) return Promise.resolve(QRLIB = window.qrcode);
+  return new Promise((ok, erro) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+    s.onload = () => window.qrcode ? ok(QRLIB = window.qrcode) : erro(new Error('Gerador de QR não carregou.'));
+    s.onerror = () => { s.remove(); erro(new Error('Não consegui carregar o gerador de QR. Confira a internet.')); };
+    document.head.appendChild(s);
+  });
+}
+function svgQr(lib, texto) { const q = lib(0, 'M'); q.addData(texto); q.make(); return q.createSvgTag({ cellSize: 8, margin: 2, scalable: true }); }
+function vQrConfig() {
+  const l = S.d.qr || [];
+  if (!U().admin) return '';
+  return '<div class="card"><h3>QR de presença (' + esc(String(cfg().qr_empresas || '')) + ')</h3><p class="small mute" style="margin:0 0 10px">Um QR por unidade, para colar na entrada. O extra lê, se identifica pelo celular e registra entrada e saída com selfie e GPS. ' +
+    'Se a foto de um QR vazar, mude <b>ativo</b> para NAO na aba <b>EXT_QR</b> e rode o EXT_setup: nasce um código novo.</p>' +
+    (l.length ? '<div class="list">' + l.map(q => '<div class="item"><div class="grow"><div class="t">' + esc(empNome(q.empresa)) + ' · ' + esc(q.unidade) + '</div><div class="m tiny">' + esc(urlPonto(q.qr_id)) + '</div></div>' +
+      '<div class="acts"><a class="btn ghost sm" href="' + esc(urlPonto(q.qr_id)) + '" target="_blank" rel="noopener">Testar</a></div></div>').join('') + '</div>' +
+      '<button class="btn sm" data-act="qr-imprimir" style="margin-top:10px">' + ic('baixar', 'sm') + 'Imprimir os QR</button>'
+      : '<div class="empty">Nenhum QR ainda. Rode o EXT_setup no Apps Script.</div>') + '</div>';
+}
+async function imprimirQr() {
+  const l = S.d.qr || []; if (!l.length) return;
+  const w = window.open('', '_blank');
+  if (!w) return toast('O navegador bloqueou a janela. Libere pop-up para este site.', 'err');
+  w.document.write('<p style="font-family:sans-serif;padding:20px">Gerando…</p>');
+  let lib;
+  try { lib = await carregarQrLib(); } catch (e) { w.close(); return toast(e.message, 'err'); }
+  const pag = l.map(q => '<section><div class="topo"><span class="lg"><b>Q</b>Food</span><span>' + esc(empNome(q.empresa)) + ' · ' + esc(q.unidade) + '</span></div>' +
+    '<h1>Veio fazer extra?</h1><p class="s">Registre sua <b>entrada</b> e sua <b>saída</b> aqui.</p><div class="qr">' + svgQr(lib, urlPonto(q.qr_id)) + '</div>' +
+    '<ol><li>Aponte a câmera do celular para o código.</li><li>Digite seu celular.</li><li>Tire a selfie na chegada e na saída.</li></ol>' +
+    '<p class="r">Sem a selfie de entrada e de saída, o extra não vai para pagamento.</p></section>').join('');
+  w.document.open();
+  w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>QR de presença</title><style>' +
+    '@page{size:A4;margin:14mm}body{margin:0;font-family:Inter,system-ui,sans-serif;color:#18181B}section{page-break-after:always;text-align:center;padding:10mm 6mm;min-height:250mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center}' +
+    '.topo{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:16pt;font-weight:600;color:#57534E;border-bottom:3px solid #C8161F;padding-bottom:4mm}.lg{font-size:24pt;font-weight:800;color:#18181B}.lg b{color:#C8161F}' +
+    'h1{font-size:40pt;margin:14mm 0 2mm;letter-spacing:-.02em}.s{font-size:18pt;margin:0 0 8mm;color:#44403C}.qr{width:120mm;height:120mm}.qr svg{width:100%;height:100%}' +
+    'ol{text-align:left;font-size:15pt;line-height:1.7;margin:8mm 0 0}.r{margin-top:auto;font-size:12pt;color:#57534E}</style></head><body>' + pag +
+    '<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>');
+  w.document.close();
+}
+
+/* ---------- Liberar de uma vez os que não têm alerta ---------- */
+function liberarSemAlerta() {
+  const l = paraLiberar().filter(e => !alertasFoto(e).length);
+  if (!l.length) return;
+  Object.keys(LIB.sel).forEach(k => { delete LIB.sel[k]; });
+  l.forEach(e => { LIB.sel[e.esc_id] = true; });
+  liberarEnviar();
+}
+
+/* ════════════════════════════════════════════════════════════════
    CLIQUES
    ════════════════════════════════════════════════════════════════ */
 document.addEventListener('click', ev => {
@@ -2962,6 +3105,12 @@ document.addEventListener('click', ev => {
     case 'lib-todos': { const l = paraLiberar(), todos = l.every(e => LIB.sel[e.esc_id]); l.forEach(e => { LIB.sel[e.esc_id] = !todos; }); render(); break; }
     case 'lib-enviar': liberarEnviar(); break;
     case 'cards-enviar': enviarCards(); break;
+    case 'ped-abrir': abrirPedidoQr(id); break;
+    case 'ped-recusar': recusarPedidoQr(id); break;
+    case 'ped-autorizar': autorizarPedidoQr(); break;
+    case 'ped-recusar-ok': recusarPedidoQrOk(); break;
+    case 'qr-imprimir': imprimirQr(); break;
+    case 'lib-sem-alerta': liberarSemAlerta(); break;
     case 'res-env': S.f.resEnv = el.dataset.v; render(); break;
     case 'res-todos': resumoTodos(); break;
     case 'res-gerar': gerarResumo(); break;
@@ -3043,12 +3192,14 @@ document.addEventListener('change', ev => {
   if (el.dataset.act === 'esc-todos') { S.modalCtx.todos = el.checked; abrirEscalar(S.modalCtx.id); return; }
   if (el.dataset.f) { S.f[el.dataset.f] = el.value; render(); return; }
   if (el.closest('#f-nova')) atualizarNova(el.name);
+  if (el.closest('#f-ped')) atualizarPedidoQr(el.name);
   if (el.closest('#val-sim')) calcValidar();
 });
 document.addEventListener('input', ev => {
   const el = ev.target;
   if (el.name === 'valor_combinado' && S.modalCtx) S.modalCtx.valorEditado = true;
   if (el.dataset && el.dataset.libJust) { LIB.just[el.dataset.libJust] = el.value; return; }
+  if (el.closest && el.closest('#f-ped') && el.name !== 'valor_combinado' && el.name !== 'justificativa') atualizarPedidoQr(el.name);
   if (el.id === 'esc-busca') { clearTimeout(el._t); el._t = setTimeout(() => abrirEscalar(S.modalCtx.id, el.value), 250); return; }
   if (el.dataset && (el.dataset.f === 'solBusca' || el.dataset.f === 'banco')) {
     clearTimeout(el._t);

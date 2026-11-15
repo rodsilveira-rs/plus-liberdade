@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#C8161F">
+<meta name="robots" content="noindex, nofollow">
+<title>Ponto do Extra · Q Food</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:#C8161F;--red-d:#9E1118;--red-soft:#FDECED;--ink:#18181B;--mute:#57534E;--line:#E7E5E4;--bg:#F5F5F4;--card:#FFFFFF;
+  --green:#16A34A;--green-ink:#166534;--green-soft:#DCFCE7;--amber-ink:#92400E;--amber-soft:#FEF3C7;--blue-ink:#1E40AF;--blue-soft:#DBEAFE}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{background:var(--card);border-bottom:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top)) 18px 14px;display:flex;align-items:center;gap:12px}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.02em}.logo b{color:var(--red)}
+.top .uni{display:flex;flex-direction:column;line-height:1.25;border-left:1px solid var(--line);padding-left:12px;min-width:0}
+.top .uni small{font-size:12px;color:var(--mute);font-weight:600}
+.top .uni span{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main{flex:1;width:100%;max-width:480px;margin:0 auto;padding:20px 18px calc(28px + env(safe-area-inset-bottom))}
+h1{font-size:26px;line-height:1.15;margin:4px 0 6px;letter-spacing:-.02em}
+.sub{color:var(--mute);font-size:15px;line-height:1.45;margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.campo{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.campo label{font-size:14px;font-weight:600}
+.campo input,.campo select,.campo textarea{width:100%;border:1.5px solid #D6D3D1;border-radius:12px;padding:13px 14px;font-size:17px;background:#fff;outline:none}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft)}
+.campo textarea{min-height:76px;font-size:15px;resize:vertical}
+.campo .dica{font-size:13px;color:var(--mute)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;background:var(--red);color:#fff;cursor:pointer;text-decoration:none}
+.btn:active{transform:scale(.99)}.btn[disabled]{opacity:.5;cursor:default}
+.btn.ok{background:var(--green)}.btn.claro{background:var(--card);color:var(--ink);border:1.5px solid #D6D3D1}
+.btn.link{background:none;color:var(--mute);font-weight:600;font-size:15px;padding:12px}
+.btn svg{width:22px;height:22px;flex:none}
+.pilha{display:flex;flex-direction:column;gap:10px}
+.ext .t{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ext .t b{font-size:18px}.ext .t .v{font-size:18px;font-weight:800;white-space:nowrap}
+.ext .m{color:var(--mute);font-size:14px;margin-top:2px}
+.ext .h{display:flex;gap:8px;margin:14px 0 12px}
+.ext .h div{flex:1;border-radius:12px;background:var(--bg);padding:10px 12px}
+.ext .h small{display:block;font-size:12px;color:var(--mute);font-weight:600}
+.ext .h strong{font-size:17px}
+.ext .h .feito{background:var(--green-soft)}.ext .h .feito strong{color:var(--green-ink)}
+.aviso{font-size:14px;line-height:1.45;border-radius:12px;padding:10px 12px;margin-bottom:12px;background:var(--bg);color:var(--mute)}
+.aviso.am{background:var(--amber-soft);color:var(--amber-ink)}.aviso.vd{background:var(--green-soft);color:var(--green-ink)}.aviso.az{background:var(--blue-soft);color:var(--blue-ink)}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--bg);color:var(--mute)}
+.pill.am{background:var(--amber-soft);color:var(--amber-ink)}.pill.vd{background:var(--green-soft);color:var(--green-ink)}.pill.vm{background:var(--red-soft);color:var(--red-d)}
+.cam{position:relative;background:#111;border-radius:20px;overflow:hidden;aspect-ratio:3/4;max-height:62vh;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.cam video,.cam img{width:100%;height:100%;object-fit:cover;display:block}
+.cam video{transform:scaleX(-1)}
+.oval{position:absolute;left:50%;top:44%;width:60%;height:58%;transform:translate(-50%,-50%);border:3px dashed rgba(255,255,255,.9);border-radius:50%;pointer-events:none}
+.vivo{position:absolute;top:12px;left:12px;background:var(--red);color:#fff;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+.cam img:not([hidden])~.oval,.cam img:not([hidden])~.vivo{display:none}
+.cam .erro{color:#fff;padding:24px;text-align:center;line-height:1.5}
+.gps{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;color:var(--mute);margin-bottom:12px}
+.gps svg{width:16px;height:16px}
+.ok-grande{width:84px;height:84px;border-radius:50%;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;margin:24px auto 16px}
+.ok-grande svg{width:44px;height:44px}
+.centro{text-align:center}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:var(--mute);margin-bottom:16px}
+.check input{width:22px;height:22px;accent-color:var(--red);flex:none;margin:1px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:15px;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:9;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}.toast.err{background:var(--red-d)}
+.espera{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--mute);padding:40px 0}
+.roda{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--red);border-radius:50%;animation:g 1s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+.rodape{color:#A8A29E;font-size:12px;text-align:center;margin-top:18px}
+@media (prefers-reduced-motion:reduce){.roda{animation-duration:3s}}
+</style>
+</head>
+<body>
+<header class="top"><span class="logo"><b>Q</b>Food</span><div class="uni"><small>Ponto do extra</small><span id="uni">…</span></div></header>
+<main id="app"><div class="espera"><span class="roda"></span>Carregando…</div></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const CFG = {
+  VERSAO: '2026.11.15-a',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec'
+};
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => ('0' + n).slice(-2);
+const dinheiro = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const IC = {
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  local: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>'
+};
+/* ---------- Guardado no aparelho: só o celular e um código do aparelho ---------- */
+const LS = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { } }
+};
+function disp() {
+  let d = LS.get('qfood_ponto_disp');
+  if (!d) { d = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9-]/g, ''); LS.set('qfood_ponto_disp', d); }
+  return d;
+}
+const S = { u: new URLSearchParams(location.search).get('u') || '', tel: LS.get('qfood_ponto_tel') || '', info: null, eu: null, cam: null, timer: null };
+
+function toast(m, tipo) {
+  const t = $('#toast'); t.textContent = m; t.className = 'toast on' + (tipo === 'err' ? ' err' : '');
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.className = 'toast'; }, 4200);
+}
+async function api(action, payload) {
+  let r;
+  try {
+    r = await fetch(CFG.GAS_URL + '?modulo=extras', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, payload: Object.assign({ u: S.u }, payload || {}) }) });
+  } catch (e) { throw new Error('Sem internet. Confira a conexão e tente de novo.'); }
+  let j;
+  try { j = await r.json(); } catch (e) { throw new Error('O sistema não respondeu. Tente de novo.'); }
+  if (!j.ok) throw new Error(j.error || 'Não deu certo. Tente de novo.');
+  return j.resultado;
+}
+function tela(h) { $('#app').innerHTML = h; window.scrollTo(0, 0); }
+function carregando(msg) { tela('<div class="espera"><span class="roda"></span>' + esc(msg || 'Carregando…') + '</div>'); }
+const telFmt = v => { const d = String(v || '').replace(/\D/g, '').slice(0, 11); if (d.length <= 2) return d; if (d.length <= 6) return '(' + d.slice(0, 2) + ') ' + d.slice(2); if (d.length <= 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6); return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7); };
+const cpfFmt = v => { const d = String(v || '').replace(/\D/g, '').slice(0, 11); return d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2'); };
+function parar() {
+  clearInterval(S.timer); S.timer = null;
+  const c = S.cam;
+  if (c) { if (c.stream) c.stream.getTracks().forEach(t => t.stop()); if (c.watch != null && navigator.geolocation) navigator.geolocation.clearWatch(c.watch); S.cam = null; }
+}
+
+/* ---------- Início ---------- */
+async function iniciar() {
+  if (!S.u) return tela('<h1>QR incompleto</h1><p class="sub">Leia de novo o QR que está na parede da unidade.</p>');
+  try { S.info = await api('qrInfo'); }
+  catch (e) { $('#uni').textContent = '—'; return tela('<h1>QR não vale mais</h1><p class="sub">' + esc(e.message) + '</p>'); }
+  $('#uni').textContent = S.info.nome;
+  if (S.tel) entrar(S.tel, true); else telaTel();
+}
+function telaTel(msg) {
+  parar();
+  tela('<h1>Olá! Vai trabalhar de extra hoje?</h1><p class="sub">Digite seu celular para registrar a entrada e a saída aqui no ' + esc(S.info.nome) + '.</p>' +
+    (msg ? '<div class="aviso am">' + esc(msg) + '</div>' : '') +
+    '<form id="f-tel" class="card" autocomplete="on"><div class="campo"><label for="tel">Seu celular com DDD</label>' +
+    '<input id="tel" name="tel" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="(27) 99999-0000" required></div>' +
+    '<button class="btn" type="submit">Continuar</button></form>' +
+    '<p class="rodape">Usamos o celular só para achar o seu extra. A foto e a localização servem só para comprovar a presença.</p>');
+  const i = $('#tel'); i.addEventListener('input', () => { i.value = telFmt(i.value); }); i.focus();
+  $('#f-tel').addEventListener('submit', ev => { ev.preventDefault(); const d = i.value.replace(/\D/g, ''); if (d.length < 10) return toast('Digite o celular com DDD.', 'err'); entrar(d, false); });
+}
+async function entrar(tel, auto) {
+  carregando('Procurando o seu extra…');
+  try {
+    const r = await api('qrEu', { tel });
+    S.tel = tel; LS.set('qfood_ponto_tel', tel);
+    if (r.novo) return telaNovo();
+    S.eu = r; telaEu();
+  } catch (e) {
+    if (auto) { LS.del('qfood_ponto_tel'); S.tel = ''; }
+    telaTel(e.message);
+  }
+}
+async function atualizar() {
+  try { S.eu = await api('qrEu', { tel: S.tel }); if (!S.cam && !$('form#f-ped') && !$('form#f-cad')) telaEu(true); } catch (e) { }
+}
+
+/* ---------- Seus extras ---------- */
+function telaEu(silencioso) {
+  const r = S.eu, ext = r.extras || [], peds = r.pedidos || [];
+  const pend = peds.filter(p => p.status === 'PENDENTE');
+  let h = '<h1>Olá, ' + esc(r.nome) + '!</h1>';
+  if (r.cadastro === 'PENDENTE' && !ext.length) h += '<p class="sub">Seu cadastro foi enviado. Assim que o gestor confirmar, você registra a entrada aqui.</p>';
+  else if (ext.length) h += '<p class="sub">Este é o seu extra de hoje aqui no ' + esc(r.unidade.nome) + '.</p>';
+  ext.forEach(x => {
+    h += '<div class="card ext"><div class="t"><div><b>' + esc(x.funcao) + '</b><div class="m">' + esc(x.setor) + ' · ' + esc(x.hora_ini) + ' às ' + esc(x.hora_fim) + '</div></div>' +
+      '<span class="v">' + dinheiro(x.valor) + '</span></div>' +
+      '<div class="h"><div class="' + (x.entrada ? 'feito' : '') + '"><small>Entrada</small><strong>' + (x.entrada || x.ent_de + '–' + x.ent_ate) + '</strong></div>' +
+      '<div class="' + (x.saida ? 'feito' : '') + '"><small>Saída</small><strong>' + (x.saida || x.sai_de + '–' + x.sai_ate) + '</strong></div></div>';
+    if (!x.aprovado && !x.fechado) h += '<div class="aviso az">Extra ainda esperando a aprovação da gestora. Pode registrar normalmente.</div>';
+    if (x.aviso) h += '<div class="aviso' + (x.fechado ? ' vd' : (x.acao ? '' : ' am')) + '">' + esc(x.aviso) + '</div>';
+    if (x.acao === 'ENT') h += '<button class="btn" data-foto="ENT" data-id="' + esc(x.esc_id) + '">' + IC.camera + 'Registrar entrada</button>';
+    if (x.acao === 'SAI') h += '<button class="btn" data-foto="SAI" data-id="' + esc(x.esc_id) + '">' + IC.camera + 'Registrar saída</button>';
+    if (x.acao === 'ANTES') h += '<button class="btn claro" data-foto="ANTES" data-id="' + esc(x.esc_id) + '">Vou sair antes do horário</button>';
+    h += '<div class="m" style="margin-top:10px;color:var(--mute);font-size:12.5px">O valor é o combinado com a gestora. A hora vale pelo sistema.</div></div>';
+  });
+  pend.forEach(p => {
+    h += '<div class="card"><span class="pill am">Esperando o gestor</span><p style="margin:10px 0 0;font-size:15px;line-height:1.5">Você pediu para trabalhar no setor <b>' + esc(p.setor) + '</b> até <b>' + esc(p.hora_fim) + '</b> (pedido às ' + esc(p.criado) + ').' +
+      ' Assim que o gestor liberar, esta tela atualiza sozinha.</p></div>';
+  });
+  peds.filter(p => p.status === 'RECUSADO').forEach(p => {
+    h += '<div class="aviso am">Seu pedido de hoje não foi liberado' + (p.motivo_recusa ? ': ' + esc(p.motivo_recusa) : '') + '.</div>';
+  });
+  if (!ext.length && !pend.length && r.cadastro !== 'PENDENTE') {
+    h += '<div class="card"><p style="margin:0 0 14px;font-size:16px;line-height:1.5">Não encontrei um extra seu hoje aqui no <b>' + esc(r.unidade.nome) + '</b>.</p>' +
+      '<button class="btn" data-acao="pedir">Pedir liberação ao gestor</button></div>';
+  }
+  h += '<button class="btn link" data-acao="trocar">Não é ' + esc(r.nome) + '? Trocar o celular</button>';
+  tela(h);
+  /* Atualiza sozinha enquanto espera o gestor ou a janela abrir */
+  clearInterval(S.timer);
+  if (pend.length || ext.some(x => x.acao === 'AGUARDA' || x.acao === 'ANTES') || r.cadastro === 'PENDENTE') S.timer = setInterval(() => { if (!document.hidden) atualizar(); }, 20000);
+}
+
+/* ---------- Pedido sem escala / cadastro novo ---------- */
+function opcoesSetor() { return S.info.setores.map(s => '<option>' + esc(s) + '</option>').join(''); }
+function horaSugerida() { const d = new Date(Date.now() + 8 * 3600e3); return pad(d.getHours()) + ':00'; }
+function telaPedido() {
+  parar();
+  tela('<h1>Pedir liberação</h1><p class="sub">O gestor recebe na hora. Quando ele liberar, você registra a entrada.</p>' +
+    '<form id="f-ped" class="card"><div class="campo"><label for="setor">Setor</label><select id="setor" name="setor">' + opcoesSetor() + '</select></div>' +
+    '<div class="campo"><label for="hf">Até que horas você vai ficar?</label><input id="hf" name="hora_fim" type="time" value="' + horaSugerida() + '" required></div>' +
+    '<div class="campo"><label for="obs">Quem te chamou? (opcional)</label><textarea id="obs" name="obs" maxlength="300" placeholder="Ex.: a Fabrícia me chamou ontem"></textarea></div>' +
+    '<button class="btn" type="submit">Enviar pedido</button></form><button class="btn link" data-acao="voltar">Voltar</button>');
+  $('#f-ped').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target;
+    carregando('Enviando o pedido…');
+    try { S.eu = await api('qrPedido', { tel: S.tel, setor: f.setor.value, hora_fim: f.hora_fim.value, obs: f.obs.value, disp: disp() }); telaEu(); toast('Pedido enviado ao gestor.'); }
+    catch (e) { toast(e.message, 'err'); telaPedido(); }
+  });
+}
+function telaNovo() {
+  parar();
+  tela('<h1>Primeira vez com a gente?</h1><p class="sub">Não achei o celular <b>' + esc(telFmt(S.tel)) + '</b> no cadastro de extras. Se você nunca trabalhou com a gente, faça o cadastro. Leva 1 minuto.</p>' +
+    '<div class="pilha"><button class="btn" data-acao="cadastro">Fazer meu cadastro</button><button class="btn claro" data-acao="trocar">Errei o número</button></div>');
+}
+function telaCadastro() {
+  tela('<h1>Seu cadastro</h1><p class="sub">Você preenche só uma vez. O gestor confere antes de valer.</p>' +
+    '<form id="f-cad" class="card" autocomplete="on">' +
+    '<div class="campo"><label for="nome">Nome completo</label><input id="nome" name="nome" autocomplete="name" required minlength="5"></div>' +
+    '<div class="campo"><label for="cpf">CPF</label><input id="cpf" name="cpf" inputmode="numeric" placeholder="000.000.000-00" required></div>' +
+    '<div class="campo"><label for="pt">Tipo da chave PIX</label><select id="pt" name="pix_tipo" required><option value="">Escolha</option><option value="CPF">CPF</option><option value="TELEFONE">Celular</option><option value="EMAIL">E-mail</option><option value="ALEATORIA">Chave aleatória</option></select></div>' +
+    '<div class="campo"><label for="pc">Chave PIX</label><input id="pc" name="pix_chave" required autocomplete="off"><span class="dica">É para onde vai o pagamento. Confira com cuidado.</span></div>' +
+    '<div class="campo"><label for="setor">Setor em que vai trabalhar hoje</label><select id="setor" name="setor">' + opcoesSetor() + '</select></div>' +
+    '<div class="campo"><label for="hf">Até que horas vai ficar?</label><input id="hf" name="hora_fim" type="time" value="' + horaSugerida() + '" required></div>' +
+    '<div class="campo"><label for="obs">Quem te chamou? (opcional)</label><textarea id="obs" name="obs" maxlength="300"></textarea></div>' +
+    '<label class="check"><input type="checkbox" name="lgpd" required><span>Autorizo o Q Food Group a usar meu nome, celular, CPF e PIX só para registrar e pagar meus extras, e a selfie e a localização só para comprovar a presença.</span></label>' +
+    '<button class="btn" type="submit">Enviar cadastro</button></form><button class="btn link" data-acao="trocar">Voltar</button>');
+  const c = $('#cpf'); c.addEventListener('input', () => { c.value = cpfFmt(c.value); });
+  $('#pt').addEventListener('change', ev => { if (ev.target.value === 'CPF' && !$('#pc').value) $('#pc').value = c.value.replace(/\D/g, ''); if (ev.target.value === 'TELEFONE' && !$('#pc').value) $('#pc').value = S.tel; });
+  $('#f-cad').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target;
+    const dados = { tel: S.tel, nome: f.nome.value.trim(), cpf: f.cpf.value, pix_tipo: f.pix_tipo.value, pix_chave: f.pix_chave.value.trim(), setor: f.setor.value, hora_fim: f.hora_fim.value, obs: f.obs.value, lgpd: f.lgpd.checked, disp: disp() };
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Enviando…';
+    try { S.eu = await api('qrCadastro', dados); telaEu(); toast('Cadastro enviado. Agora é só esperar o gestor.'); }
+    catch (e) { toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'Enviar cadastro'; }
+  });
+}
+
+/* ---------- Câmera ao vivo (sem galeria) ---------- */
+function distM(a1, o1, a2, o2) {
+  const R = 6371000, rad = Math.PI / 180, dA = (a2 - a1) * rad, dO = (o2 - o1) * rad;
+  const h = Math.sin(dA / 2) ** 2 + Math.cos(a1 * rad) * Math.cos(a2 * rad) * Math.sin(dO / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+const distTxt = m => m < 1000 ? Math.round(m) + ' m' : (Math.round(m / 100) / 10).toString().replace('.', ',') + ' km';
+function telaCamera(escId, modo) {
+  parar();
+  const x = S.eu.extras.find(e => e.esc_id === escId); if (!x) return telaEu();
+  const tipo = modo === 'ENT' ? 'ENT' : 'SAI', antes = modo === 'ANTES';
+  S.cam = { id: escId, tipo, antes, stream: null, pos: null, watch: null, img: '', dist: null };
+  const c = S.cam;
+  tela('<h1>' + (tipo === 'ENT' ? 'Registrar entrada' : 'Registrar saída') + '</h1>' +
+    '<p class="sub">' + (antes ? 'Saída antes do horário: diga o motivo abaixo.' : 'Rosto dentro do contorno, sem boné e sem óculos escuros.') + '</p>' +
+    '<div class="cam"><video id="v" playsinline autoplay muted></video><img id="im" alt="Sua foto" hidden><span class="oval" aria-hidden="true"></span><span class="vivo">Ao vivo</span></div>' +
+    '<div class="gps" id="gps">' + IC.local + 'Buscando sua localização…</div>' +
+    (antes ? '<div class="campo"><label for="mot">Motivo da saída antes</label><textarea id="mot" placeholder="Ex.: o gestor liberou mais cedo"></textarea></div>' : '') +
+    '<div class="pilha" id="bts"><button class="btn" data-acao="tirar">' + IC.camera + 'Tirar foto</button><button class="btn link" data-acao="voltar">Cancelar</button></div>');
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { $('.cam').innerHTML = '<div class="erro">Este navegador não abre a câmera. Abra o link no Chrome ou no Safari.</div>'; return; }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 1280 } }, audio: false })
+    .then(st => { if (S.cam !== c) return st.getTracks().forEach(t => t.stop()); c.stream = st; const v = $('#v'); if (v) v.srcObject = st; })
+    .catch(() => { if (S.cam !== c) return; $('.cam').innerHTML = '<div class="erro">Não consegui abrir a câmera. Toque no cadeado ao lado do endereço, libere a <b>Câmera</b> e tente de novo.</div>'; });
+  const ref = S.info.ref;
+  if (navigator.geolocation) {
+    const ok = p => {
+      if (S.cam !== c) return;
+      if (!c.pos || p.coords.accuracy < c.pos.prec) c.pos = { lat: p.coords.latitude, lng: p.coords.longitude, prec: Math.round(p.coords.accuracy) };
+      c.dist = ref ? distM(c.pos.lat, c.pos.lng, ref.lat, ref.lng) : null;
+      const g = $('#gps');
+      if (g) g.innerHTML = IC.local + (c.dist != null ? (c.dist <= S.info.raio ? '<b style="color:var(--green-ink)">Você está na unidade</b>' : '<b style="color:var(--amber-ink)">Você está a ' + distTxt(c.dist) + ' da unidade</b>') : '<b>Localização registrada</b>') + ' · precisão ' + c.pos.prec + ' m';
+    };
+    const erro = () => { if (S.cam !== c || c.pos) return; const g = $('#gps'); if (g) g.innerHTML = IC.local + '<b style="color:var(--amber-ink)">Sem localização.</b> Ligue a localização do celular. A foto vai sem GPS e o gestor confere.'; };
+    navigator.geolocation.getCurrentPosition(ok, erro, { enableHighAccuracy: true, timeout: 15000, maximumAge: 20000 });
+    try { c.watch = navigator.geolocation.watchPosition(ok, () => { }, { enableHighAccuracy: true, maximumAge: 10000 }); } catch (e) { }
+  }
+}
+function tirar() {
+  const c = S.cam, v = $('#v');
+  if (!c || !v || !v.videoWidth) return toast('A câmera ainda está abrindo.', 'err');
+  const w = Math.min(720, v.videoWidth), h = Math.round(w * v.videoHeight / v.videoWidth);
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const g = cv.getContext('2d'); g.drawImage(v, 0, 0, w, h);
+  const d = new Date();
+  const linhas = [pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' · ' + (c.tipo === 'ENT' ? 'Entrada' : 'Saída') + ' · ' + S.eu.nome,
+    S.info.nome + (c.pos ? ' · GPS ±' + c.pos.prec + ' m' + (c.dist != null ? ' · ' + distTxt(c.dist) + ' da unidade' : '') : ' · sem GPS') + ' · QR'];
+  const fs = Math.max(14, Math.round(w / 34)), alt = fs * 1.5 * linhas.length + fs * .8;
+  g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, h - alt, w, alt);
+  g.fillStyle = '#fff'; g.font = '600 ' + fs + 'px Inter, system-ui, sans-serif'; g.textBaseline = 'top';
+  linhas.forEach((t, i) => g.fillText(t, fs * .7, h - alt + fs * .5 + i * fs * 1.5));
+  c.img = cv.toDataURL('image/jpeg', 0.74);
+  const im = $('#im'); im.src = c.img; im.hidden = false; v.hidden = true;
+  $('#bts').innerHTML = '<button class="btn ok" data-acao="enviar">' + IC.check + 'Enviar foto</button><button class="btn claro" data-acao="denovo">Tirar de novo</button>';
+}
+function deNovo() {
+  const c = S.cam; if (!c) return;
+  c.img = ''; $('#im').hidden = true; $('#v').hidden = false;
+  $('#bts').innerHTML = '<button class="btn" data-acao="tirar">' + IC.camera + 'Tirar foto</button><button class="btn link" data-acao="voltar">Cancelar</button>';
+}
+async function enviar() {
+  const c = S.cam; if (!c || !c.img) return;
+  const motivo = c.antes ? ($('#mot').value || '').trim() : '';
+  if (c.antes && motivo.length < 5) return toast('Diga o motivo da saída antes do horário.', 'err');
+  const p = { tel: S.tel, esc_id: c.id, tipo: c.tipo, foto: c.img, antes: c.antes, motivo, disp: disp() };
+  if (c.pos) Object.assign(p, { lat: c.pos.lat, lng: c.pos.lng, prec: c.pos.prec });
+  const b = $('#bts'); b.innerHTML = '<div class="espera" style="padding:12px 0"><span class="roda"></span>Enviando a foto…</div>';
+  try {
+    const r = await api('qrPonto', p);
+    parar(); S.eu = r;
+    const x = r.extras.find(e => e.esc_id === c.id);
+    tela('<div class="ok-grande">' + IC.check + '</div><div class="centro"><h1>' + (c.tipo === 'ENT' ? 'Entrada' : 'Saída') + ' registrada às ' + esc(r.feito.hora) + '</h1>' +
+      '<p class="sub">' + (c.tipo === 'ENT' ? 'Bom trabalho, ' + esc(r.nome) + '! Na saída, leia o QR de novo e registre a saída' + (x ? ' (de ' + esc(x.sai_de) + ' às ' + esc(x.sai_ate) + ')' : '') + '.'
+        : 'Obrigado, ' + esc(r.nome) + '! Agora a gestora confere e libera o pagamento.') + '</p></div>' +
+      '<button class="btn claro" data-acao="voltar">Ver meu extra</button>');
+  } catch (e) {
+    toast(e.message, 'err');
+    b.innerHTML = '<button class="btn ok" data-acao="enviar">' + IC.check + 'Tentar enviar de novo</button><button class="btn claro" data-acao="denovo">Tirar de novo</button>';
+  }
+}
+
+/* ---------- Cliques ---------- */
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-acao],[data-foto]'); if (!el) return;
+  if (el.dataset.foto) return telaCamera(el.dataset.id, el.dataset.foto);
+  switch (el.dataset.acao) {
+    case 'pedir': return telaPedido();
+    case 'cadastro': return telaCadastro();
+    case 'trocar': LS.del('qfood_ponto_tel'); S.tel = ''; S.eu = null; return telaTel();
+    case 'voltar': parar(); return S.eu ? telaEu() : telaTel();
+    case 'tirar': return tirar();
+    case 'denovo': return deNovo();
+    case 'enviar': return enviar();
+  }
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.eu && !S.cam && S.timer) atualizar(); });
+iniciar();
+</script>
+</body>
+</html>
