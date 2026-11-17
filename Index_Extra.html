@@ -340,7 +340,7 @@ button.item:hover,.item.click:hover{border-color:#C9CCD1}
    guardados no aparelho.
    ════════════════════════════════════════════════════════════════ */
 const CFG = {
-  VERSAO: '2026.11.15-b',
+  VERSAO: '2026.11.17-a',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec',
   MENU_URL: 'https://rodsilveira-rs.github.io/qfood-dashboard/Index_Menu.html',
   SESSAO_H: 8,
@@ -623,7 +623,7 @@ function sair() {
 const S = {
   sessao: null, base: null, d: null, fila: [], enviando: false,
   view: 'inicio', sync: { estado: 'mute', hora: '' },
-  f: { solEscopo: 'abertas', solEmp: '', solBusca: '', banco: '', bancoFun: '', bancoSem: '', pagTab: 'apagar', valTab: 'pendentes', resEnv: 'novos', resEmp: '', indAba: 'resumo', indPer: '30', indEmp: '', indUni: '', indSet: '', indCc: '', indFun: '', indVin: '' },
+  f: { solEscopo: 'abertas', solEmp: '', solBusca: '', banco: '', bancoFun: '', bancoSem: '', pagTab: 'apagar', valTab: '', resEnv: 'novos', resEmp: '', indAba: 'resumo', indPer: '30', indEmp: '', indUni: '', indSet: '', indCc: '', indFun: '', indVin: '' },
   sel: {}, modalCtx: null
 };
 const U = () => S.d.usuario;
@@ -964,7 +964,7 @@ function abrirPedido() {
    ════════════════════════════════════════════════════════════════ */
 function contar() {
   const d = S.d, am = agoraMin(), h = hojeStr();
-  const aprovar = d.solicitacoes.filter(s => s.status === 'SOLICITADA' && podeAprovar(s) && !(low(s.solicitante) === U().email && !autoaprova(s)));
+  const aprovar = d.solicitacoes.filter(s => s.status === 'SOLICITADA' && podeAprovar(s) && !(low(s.solicitante) === U().email && !autoaprova(s)) && !d.escalas.some(e => e.sol_id === s.sol_id && e.origem === 'QR_SEM_ESCALA'));
   const vagas = d.solicitacoes.filter(s => ['APROVADA', 'EM_ESCALA'].indexOf(s.status) >= 0 && turno(s).ini > am && podeEscalar(s))
     .map(s => ({ s, falta: num(s.vagas) - ocupadas(s) })).filter(x => x.falta > 0)
     .sort((a, b) => turno(a.s).ini - turno(b.s).ini);
@@ -974,8 +974,8 @@ function contar() {
   const pagar = U().financeiro ? d.escalas.filter(e => e.status === 'VALIDADO' && (e.status_fin === 'LIBERADO' || (e.status_fin === 'AGENDADO' && e.pag_data_prevista <= h))) : [];
   const risco = d.pessoas.filter(p => pessoaAtiva(p) && riscoHoje(p) !== 'verde');
   const meus = d.log.filter(l => (l.tipo === 'CONFLITO' || l.tipo === 'REJEITADO') && l.usuario === U().email && l.data_hora.slice(0, 10) >= addDias(h, -3));
-  const fotos = fotoPendentes(), liberar = paraLiberar(), pedidos = pedidosPend();
-  return { aprovar, vagas, validar, pagar, risco, meus, fotos, liberar, pedidos };
+  const fotos = fotoPendentes(), liberar = paraLiberar(), pedidos = pedidosPend(), conferir = paraConferir();
+  return { aprovar, vagas, validar, pagar, risco, meus, fotos, liberar, pedidos, conferir };
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -984,9 +984,9 @@ function contar() {
 function navItens(c) {
   const u = U();
   const l = [
-    { v: 'inicio', t: 'Início', i: 'inicio', n: c.aprovar.length + c.validar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length + c.liberar.length + c.pedidos.length },
+    { v: 'inicio', t: 'Início', i: 'inicio', n: c.aprovar.length + c.validar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length + c.liberar.length + c.pedidos.length + c.conferir.length },
     { v: 'solicitacoes', t: 'Solicitações', i: 'lista', n: c.vagas.length },
-    { v: 'validacao', t: 'Validação', i: 'validar', n: c.validar.length + c.liberar.length, so: u.gestor || u.liberaRH },
+    { v: 'validacao', t: 'Validação', i: 'validar', n: c.validar.length + c.liberar.length + c.conferir.length, so: u.gestor || u.liberaRH },
     { v: 'banco', t: 'Banco de extras', i: 'pessoas' },
     { v: 'pagamentos', t: 'Pagamentos', i: 'pagar', n: c.pagar.length, so: u.financeiro },
     { v: 'risco', t: 'Recorrência', i: 'risco', n: c.risco.filter(p => riscoHoje(p) === 'vermelho').length, so: u.admin || u.financeiro || u.gestor },
@@ -1014,9 +1014,9 @@ function renderMoldura(c) {
     '<button type="button" class="avatar" data-act="mais-menu" aria-label="Conta">' + esc(iniciais(u.nome)) + '</button>';
   const b = (v, t, i, n) => '<button type="button" data-act="ir" data-v="' + v + '" class="' + (S.view === v ? 'on' : '') + '">' + ic(i) +
     (n ? '<span class="bdg">' + n + '</span>' : '') + esc(t) + '</button>';
-  $('#bnav').innerHTML = b('inicio', 'Início', 'inicio', c.aprovar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length + c.pedidos.length) + b('solicitacoes', 'Solicitações', 'lista', c.vagas.length) +
+  $('#bnav').innerHTML = b('inicio', 'Início', 'inicio', c.aprovar.length + c.pagar.length + c.fotos.filter(e => estadoFoto(e).aberta).length + c.pedidos.length + c.conferir.length) + b('solicitacoes', 'Solicitações', 'lista', c.vagas.length) +
     '<div><button type="button" class="fab" data-act="nova" aria-label="Nova solicitação">' + ic('mais') + '</button></div>' +
-    (u.gestor || u.liberaRH ? b('validacao', 'Validar', 'validar', c.validar.length + c.liberar.length) : b('banco', 'Banco', 'pessoas')) +
+    (u.gestor || u.liberaRH ? b('validacao', 'Validar', 'validar', c.validar.length + c.liberar.length + c.conferir.length) : b('banco', 'Banco', 'pessoas')) +
     '<button type="button" data-act="mais-menu" class="' + (['banco', 'pagamentos', 'risco', 'config'].indexOf(S.view) >= 0 && u.gestor ? 'on' : '') + '">' + ic('menu') + 'Mais</button>';
 }
 function pintarSync() {
@@ -1082,12 +1082,15 @@ function vInicio(c) {
   if (u.aprovador) k.push(kpi('amber', 'relogio', 'Para aprovar', c.aprovar.length, (c.aprovar.length === 1 ? 'solicitação esperando' : 'solicitações esperando') + ' você', 'ir-sol-aprovar'));
   k.push(kpi('blue', 'pessoas', 'Vagas a preencher', faltam, 'em ' + plural(c.vagas.length, 'solicitação', 'solicitações'), 'ir-sol-abertas'));
   if (u.gestor) k.push(kpi('purple', 'validar', 'Turnos para validar', c.validar.length, 'já começaram ou acabaram', 'ir-validacao'));
-  if (u.liberaRH) k.push(kpi('green', 'enviar', 'Liberar ao RH', c.liberar.length, dinheiro(c.liberar.reduce((t, e) => t + num(e.valor_final || e.valor_combinado), 0)) + ' com foto', 'ir-liberar'));
+  if (u.liberaRH) k.push(kpi('green', 'enviar', 'Conferir e pagar', c.liberar.length + c.conferir.length, dinheiro(c.liberar.reduce((t, e) => t + num(e.valor_final || e.valor_combinado), 0)) + ' prontos para pagar', 'ir-liberar'));
   if (u.financeiro) k.push(kpi('red', 'pagar', 'Para pagar hoje', c.pagar.length, dinheiro(c.pagar.reduce((t, e) => t + num(e.valor_final), 0)), 'ir-pagamentos'));
   if ((u.admin || u.financeiro || u.gestor) && k.length < 4) k.push(kpi('slate', 'risco', 'Recorrência', c.risco.length, (c.risco.length === 1 ? 'pessoa' : 'pessoas') + ' em amarelo ou vermelho', 'ir-risco'));
   html += '<div class="kpis">' + k.join('') + '</div>';
 
   const partes = [];
+  if (c.conferir.length) {
+    partes.push('<div class="sec"><div class="sec-t">🙋 Entrou sem escala (' + c.conferir.length + ')<span class="grow"></span><span class="tiny mute">já registrou a entrada no QR</span></div><div class="list">' + c.conferir.map(itemConferir).join('') + '</div></div>');
+  }
   if (c.pedidos.length) {
     partes.push('<div class="sec"><div class="sec-t">🙋 Chegou sem escala (' + c.pedidos.length + ')<span class="grow"></span><span class="tiny mute">pediram pelo QR</span></div><div class="list">' + c.pedidos.map(itemPedido).join('') + '</div></div>');
   }
@@ -1175,10 +1178,11 @@ function vSolicitacoes() {
 
 /* ---------- Validação ---------- */
 function vValidacao(c) {
-  const tab = S.f.valTab, h = hojeStr();
+  const tab = S.f.valTab || (U().liberaRH ? 'liberar' : 'pendentes'), h = hojeStr();
   let corpo;
   if (tab === 'fotos') corpo = c.fotos.length ? '<div class="list">' + c.fotos.map(itemFoto).join('') + '</div>' : '<div class="empty">Nenhum extra com foto faltando foto.</div>';
-  else if (tab === 'liberar' && U().liberaRH) corpo = vLiberar(c);
+  else if (tab === 'liberar' && U().liberaRH) corpo = (c.conferir.length ? '<div class="sec"><div class="sec-t">1. Confira quem entrou sem escala (' + c.conferir.length + ')</div><div class="list">' + c.conferir.map(itemConferir).join('') + '</div></div>' +
+      '<div class="sec-t" style="margin-top:14px">2. Libere e mande ao Gustavo</div>' : '') + vLiberar(c);
   else if (tab === 'resumo') corpo = vResumo();
   else if (tab === 'pendentes') corpo = c.validar.length ? '<div class="list">' + c.validar.map(itemValidar).join('') + '</div>' : '<div class="empty">Nenhum turno esperando validação.</div>';
   else {
@@ -1192,9 +1196,10 @@ function vValidacao(c) {
       '<div class="r"><b class="num">' + (e.status === 'VALIDADO' ? dinheiro(e.valor_final) : '—') + '</b></div></div>').join('') + '</div>' : '<div class="empty">Nada validado nos últimos 14 dias.</div>';
   }
   return ph('Validação', 'Sem validação o financeiro não paga. Valide logo depois do turno.') +
-    '<div class="tabs"><button class="' + (tab === 'pendentes' ? 'on' : '') + '" data-act="f-val" data-v="pendentes">Para validar (' + c.validar.length + ')</button>' +
+    '<div class="tabs">' + (U().liberaRH ? '<button class="' + (tab === 'liberar' ? 'on' : '') + '" data-act="f-val" data-v="liberar">Conferir e pagar (' + (c.liberar.length + c.conferir.length) + ')</button>' : '') +
+    '<button class="' + (tab === 'pendentes' ? 'on' : '') + '" data-act="f-val" data-v="pendentes">Para validar (' + c.validar.length + ')</button>' +
     '<button class="' + (tab === 'fotos' ? 'on' : '') + '" data-act="f-val" data-v="fotos">Fotos (' + c.fotos.length + ')</button>' +
-    (U().liberaRH ? '<button class="' + (tab === 'liberar' ? 'on' : '') + '" data-act="f-val" data-v="liberar">Liberar ao RH (' + c.liberar.length + ')</button>' : '') +
+
     '<button class="' + (tab === 'resumo' ? 'on' : '') + '" data-act="f-val" data-v="resumo">PDF pagamento</button>' +
     '<button class="' + (tab === 'feitos' ? 'on' : '') + '" data-act="f-val" data-v="feitos">Validados recentes</button></div>' + corpo;
 }
@@ -1708,7 +1713,7 @@ function abrirNova() {
     '<div class="row2"><div class="field"><label>Unidade <span class="req">*</span></label><select name="unidade" required><option value="">—</option></select></div>' +
     '<div class="field"><label>Setor <span class="req">*</span></label><select name="setor" required><option value="">—</option></select></div></div>' +
     '<div class="field"><label>Função <span class="req">*</span></label><select name="funcao_id" required><option value="">Escolha</option>' + d.funcoes.map(f => '<option value="' + esc(f.funcao_id) + '">' + esc(f.nome) + ' · ' + esc(f.grupo) + '</option>').join('') + '</select></div>' +
-    '<div class="field"><label>Quando</label><div class="seg" id="nova-modo"><button type="button" class="on" data-act="nova-modo" data-m="um">Um dia</button><button type="button" data-act="nova-modo" data-m="varios">Dias fixos</button><button type="button" data-act="nova-modo" data-m="foto">Com foto 📷</button></div>' +
+    '<div class="field"><label>Quando</label><div class="seg" id="nova-modo"><button type="button" class="on" data-act="nova-modo" data-m="um">Um dia</button><button type="button" data-act="nova-modo" data-m="varios">Dias fixos</button><button type="button" data-act="nova-modo" data-m="foto">Já sei quem vem</button></div>' +
       '<span class="hint" id="nova-modo-hint" hidden></span></div>' +
     '<div id="nova-varios" hidden>' +
       '<div class="field"><label>Dias da semana <span class="req">*</span></label><div class="chips" id="nova-sem">' + ORDEM_SEM.map(w => '<button type="button" class="chip" data-act="nova-dia" data-d="' + w + '">' + SEM_CURTA[w] + '</button>').join('') + '</div></div>' +
@@ -1735,6 +1740,7 @@ function abrirNova() {
     '</form>';
   modal('Nova solicitação', h, '<div id="nova-botoes" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%"></div>');
   atualizarNova();
+  preencherUltimaNova();
 }
 /* ---------- Assinatura com o dedo (canvas) ---------- */
 function padAssin(id) {
@@ -1813,7 +1819,7 @@ function atualizarNova(campo) {
     atualizarAssin(f, campo);
     if (f.data.value && f.hora_ini.value && f.hora_fim.value) {
       const j = fotoJan(), t = extTurno_(f.data.value, f.hora_ini.value, f.hora_fim.value);
-      $('#nova-modo-hint').innerHTML = 'Foto do rosto, ao vivo, na entrada (<b>' + hhmm(t.ini - j) + ' às ' + hhmm(t.ini + j) + '</b>) e na saída (<b>' + hhmm(t.fim - j) + ' às ' + hhmm(t.fim + j) + '</b>). Sem assinatura.';
+      $('#nova-modo-hint').innerHTML = (usaQr(f.empresa.value) ? 'A pessoa registra no QR da unidade: ' : '') + 'Foto do rosto, ao vivo, na entrada (<b>' + hhmm(t.ini - j) + ' às ' + hhmm(t.ini + j) + '</b>) e na saída (<b>' + hhmm(t.fim - j) + ' às ' + hhmm(t.fim + j) + '</b>). Sem assinatura.';
     } else $('#nova-modo-hint').textContent = 'Foto do rosto, ao vivo, na entrada e na saída. Sem assinatura.';
   }
   $$('#nova-modo button').forEach(b => b.classList.toggle('on', b.dataset.m === c.modo));
@@ -1906,6 +1912,7 @@ function enviarNova(auto) {
   if (extDia_(datas.datas[0]) < extDia_(hojeStr()) - retro) return toast('A data ' + dataBr(datas.datas[0]) + ' passou de ' + retro + ' dias.', 'err');
   const base = { empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, hora_ini: x.hora_ini, hora_fim: x.hora_fim,
     motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: obsDobras(x), vagas: vg, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), autoaprovar: auto };
+  lembrarNova(x);
   fechar();
   if (varios) {
     Fila.add('criarSerie', Object.assign(base, { serie_id: uid('ser'), itens: datas.datas.map(dt => ({ sol_id: uid('sol'), data: dt })) }));
@@ -1959,9 +1966,11 @@ function enviarComFoto(auto) {
   const payload = { sol_id: uid('sol'), esc_id: uid('esc'), empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, data: x.data,
     hora_ini: x.hora_ini, hora_fim: x.hora_fim, intervalo_min: Math.max(0, Math.round(num(x.intervalo_min))), motivo: x.motivo, motivo_detalhe: x.motivo_detalhe, obs: obsDobras(x),
     pessoa_id: x.pessoa_id, valor_combinado: v, justificativa: x.justificativa || '', autoaprovar: auto };
+  lembrarNova(x);
   fechar();
   Fila.add('criarComFoto', payload);
   S.view = 'inicio'; render();
+  if (usaQr(x.empresa)) return toast('Lançado. ' + (pessoaDe(x.pessoa_id) || {}).nome + ' registra a entrada e a saída no QR da unidade.');
   const e = S.d.escalas.find(z => z.esc_id === payload.esc_id), st = e && estadoFoto(e);
   if (st && st.aberta) abrirCamera(e.esc_id, 'ENT');
   else if (st) toast('Lançado. A foto de entrada libera às ' + hhmm(st.ini) + ' e fica em Início › Fotos.');
@@ -2570,7 +2579,7 @@ function vLiberar(c) {
   const tot = sel.reduce((t, e) => t + num(e.valor_final || e.valor_combinado), 0);
   const limpos = l.filter(e => !alertasFoto(e).length);
   return (limpos.length ? '<div class="lib-topo"><span><b>' + plural(limpos.length, 'extra sem alerta', 'extras sem alerta') + '</b> · ' + dinheiro(limpos.reduce((t, e) => t + num(e.valor_final || e.valor_combinado), 0)) +
-      '<br><small class="mute">Fotos no horário, na unidade e horas dentro do previsto.</small></span><button class="btn ok sm" data-act="lib-sem-alerta">Liberar os ' + limpos.length + ' de uma vez</button></div>' : '') +
+      '<br><small class="mute">Fotos no horário, na unidade e horas dentro do previsto.</small></span><button class="btn ok sm" data-act="lib-sem-alerta">Liberar os ' + limpos.length + ' e gerar PDF</button></div>' : '') +
     (l.length > limpos.length ? '<div class="small mute" style="margin:0 0 8px">' + plural(l.length - limpos.length, 'extra com alerta precisa', 'extras com alerta precisam') + ' de justificativa, um a um.</div>' : '') +
     '<div class="list">' + l.map(e => {
     const s = solDe(e.sol_id), al = alertasFoto(e), on = !!LIB.sel[e.esc_id];
@@ -2583,7 +2592,7 @@ function vLiberar(c) {
   }).join('') + '</div>' +
     '<div class="lib-barra"><span>' + plural(sel.length, 'selecionado') + ' · <b>' + dinheiro(tot) + '</b></span>' +
     '<button class="btn sm ghost" data-act="lib-todos">' + (sel.length === l.length ? 'Desmarcar todos' : 'Marcar todos') + '</button>' +
-    '<button class="btn ok" data-act="lib-enviar"' + (sel.length ? '' : ' disabled') + '>Liberar e enviar ao RH (' + sel.length + ')</button></div>';
+    '<button class="btn ok" data-act="lib-enviar"' + (sel.length ? '' : ' disabled') + '>Liberar e gerar PDF (' + sel.length + ')</button></div>';
 }
 async function liberarEnviar() {
   const ids = Object.keys(LIB.sel).filter(id => LIB.sel[id]);
@@ -2597,7 +2606,7 @@ async function liberarEnviar() {
     const r = await online('liberarRH', { esc_ids: ids, justif }, 'Liberando…');
     ids.forEach(id => { delete LIB.sel[id]; delete LIB.just[id]; });
     await carregar();
-    await prepararCards(r.escs.map(x => x.esc_id), r.rh);
+    await gerarResumo(r.escs.map(x => x.esc_id));
   } catch (err) { /* toast já mostrado */ }
 }
 /* Gera os cards e abre a tela de envio (o envio precisa de um toque: regra do celular) */
@@ -3111,6 +3120,82 @@ function liberarSemAlerta() {
 }
 
 /* ════════════════════════════════════════════════════════════════
+   CONFERIR quem entrou pelo QR sem escala (a pessoa já registrou a
+   entrada; aqui a gestora confirma função e valor, ou recusa)
+   ════════════════════════════════════════════════════════════════ */
+function paraConferir() {
+  return S.d.escalas.filter(e => {
+    const s = solDe(e.sol_id);
+    return e.origem === 'QR_SEM_ESCALA' && s && s.status === 'SOLICITADA' && e.status !== 'CANCELADO' && (podeValidar(s) || podeLiberar(s) || podeAprovar(s));
+  }).sort((a, b) => String(a.foto_ent_em).localeCompare(String(b.foto_ent_em)));
+}
+function itemConferir(e) {
+  const s = solDe(e.sol_id), pes = pessoaDe(e.pessoa_id) || {}, novo = pes.status === 'PENDENTE';
+  return '<div class="item"><span class="avatar" style="background:var(--red-q)">' + esc(iniciais(e.pessoa_nome)) + '</span><div class="grow"><div class="t">' + esc(e.pessoa_nome) + ' ' +
+    pill(novo ? ['Cadastro novo', 'p-amber'] : ['Sem escala', 'p-amber']) + '</div>' +
+    '<div class="m">' + esc(local(s)) + ' · ' + esc(e.setor) + ' · entrou às ' + esc(String(e.foto_ent_em).slice(11, 16)) + ' · até ' + esc(e.hora_fim) + '</div>' +
+    '<div class="m">' + esc(s.funcao_nome) + ' · ' + dinheiro(e.valor_combinado) + (s.obs ? ' · “' + esc(s.obs) + '”' : '') + '</div>' + linhaFotos(e) +
+    '<div class="acts"><button class="btn ok sm" data-act="conf-abrir" data-id="' + esc(e.sol_id) + '">Conferir</button>' +
+    '<button class="btn ghost sm" data-act="ver-fotos" data-id="' + esc(e.esc_id) + '">' + ic('camera', 'sm') + 'Ver foto</button>' +
+    '<button class="btn ghost sm" data-act="conf-recusar" data-id="' + esc(e.sol_id) + '">Recusar</button></div></div></div>';
+}
+function abrirConferir(solId) {
+  const s = solDe(solId), e = S.d.escalas.find(x => x.sol_id === solId && x.origem === 'QR_SEM_ESCALA'); if (!s || !e) return;
+  const pes = pessoaDe(e.pessoa_id) || {}, novo = pes.status === 'PENDENTE';
+  const funcs = S.d.funcoes.slice().sort((a, b) => (norm(b.grupo) === norm(s.setor)) - (norm(a.grupo) === norm(s.setor)) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  S.modalCtx = { tipo: 'conferir', id: solId, esc: e.esc_id, data: s.data, valorEditado: false };
+  modal('Conferir extra sem escala',
+    '<div class="resumo"><b>' + esc(e.pessoa_nome) + '</b> registrou a entrada às ' + esc(String(e.foto_ent_em).slice(11, 16)) + ' pelo QR e fica até ' + esc(e.hora_fim) + ' (' + esc(s.setor) + ').' +
+      (novo ? '<br>Cadastro novo, feito pela própria pessoa (CPF e PIX guardados no servidor).' : '') + '</div>' + linhaFotos(e) +
+    '<form id="f-conf"><div class="field"><label>Função</label><select name="funcao_id">' + funcs.map(f => '<option value="' + esc(f.funcao_id) + '"' + (f.funcao_id === s.funcao_id ? ' selected' : '') + '>' + esc(f.nome) + ' · ' + esc(f.grupo) + '</option>').join('') + '</select></div>' +
+    '<div class="field"><label>Valor combinado (R$)</label><input name="valor_combinado" inputmode="decimal" value="' + esc(String(e.valor_combinado || '').replace('.', ',')) + '"><span class="hint" id="conf-hint"></span></div>' +
+    (novo ? '<div class="field"><label>Vínculo <span class="req">*</span></label><select name="tipo_vinculo"><option value="">Escolha</option>' +
+      ['EXTERNO_AUTONOMO', 'CLT_GRUPO', 'OUTRO'].map(v => '<option value="' + v + '">' + esc(VINCULO[v]) + '</option>').join('') + '</select></div>' +
+      '<div class="field" id="conf-orig" hidden><label>Empresa de origem</label><select name="empresa_origem"><option value="">Escolha</option>' +
+      [...new Set(S.d.estrutura.map(r => r.empresa))].map(x => '<option value="' + esc(x) + '">' + esc(empNome(x)) + '</option>').join('') + '</select></div>' : '') + '</form>',
+    '<button class="btn ghost" data-act="conf-recusar" data-id="' + esc(solId) + '">Recusar</button><button class="btn ok" data-act="conf-ok">Confirmar</button>');
+  atualizarConferir();
+}
+function atualizarConferir(campo) {
+  const f = $('#f-conf'); if (!f || !S.modalCtx) return;
+  if (campo === 'tipo_vinculo' && $('#conf-orig')) $('#conf-orig').hidden = f.tipo_vinculo.value !== 'CLT_GRUPO';
+  const s = solDe(S.modalCtx.id), hs = horasTurno(s.data, s.hora_ini, s.hora_fim, s.intervalo_min), v = valorDe(f.funcao_id.value, hs, s.data);
+  if (campo === 'funcao_id' && !S.modalCtx.valorEditado) f.valor_combinado.value = v ? String(v.toFixed(2)).replace('.', ',') : '';
+  $('#conf-hint').textContent = hFmt(hs) + ' previstas · tabela ' + dinheiro(v);
+}
+async function confirmarConferir() {
+  const c = S.modalCtx, f = $('#f-conf'); if (!c || !f) return;
+  const x = formDados(f);
+  if (!(num(x.valor_combinado) > 0)) return toast('Informe o valor combinado.', 'err');
+  if (f.tipo_vinculo && !x.tipo_vinculo) return toast('Escolha o vínculo.', 'err');
+  try {
+    await online('qrConferir', Object.assign({}, x, { sol_id: c.id, aceitar: true, valor_combinado: Math.round(num(x.valor_combinado) * 100) / 100 }), 'Confirmando…');
+    fechar(); await carregar(); toast('Conferido. Entra na lista para pagar.');
+  } catch (e) { }
+}
+function recusarConferir(solId) {
+  const e = S.d.escalas.find(x => x.sol_id === solId && x.origem === 'QR_SEM_ESCALA'); if (!e) return;
+  S.modalCtx = { tipo: 'conferir-recusa', id: solId };
+  modal('Recusar extra', '<div class="resumo">' + esc(e.pessoa_nome) + ' · entrou às ' + esc(String(e.foto_ent_em).slice(11, 16)) + '. Recusado, não vai para pagamento.</div>' +
+    '<div class="field"><label>Motivo <span class="req">*</span></label><textarea id="conf-mot" placeholder="Ex.: ninguém chamou hoje"></textarea></div>',
+    '<button class="btn ghost" data-act="fechar">Voltar</button><button class="btn danger" data-act="conf-recusar-ok">Recusar</button>');
+}
+async function recusarConferirOk() {
+  const m = ($('#conf-mot').value || '').trim();
+  if (m.length < 3) return toast('Diga o motivo.', 'err');
+  try { await online('qrConferir', { sol_id: S.modalCtx.id, aceitar: false, motivo: m }, 'Recusando…'); fechar(); await carregar(); toast('Recusado.'); } catch (e) { }
+}
+/* Últimas escolhas da Nova solicitação, para não preencher tudo de novo */
+const ULT_NOVA = () => 'qfood_ext_ult_' + (U().email || '');
+function lembrarNova(x) { try { localStorage.setItem(ULT_NOVA(), JSON.stringify({ empresa: x.empresa, unidade: x.unidade, setor: x.setor, funcao_id: x.funcao_id, motivo: x.motivo })); } catch (e) { } }
+function preencherUltimaNova() {
+  let u = null; try { u = JSON.parse(localStorage.getItem(ULT_NOVA()) || 'null'); } catch (e) { }
+  const f = $('#f-nova'); if (!u || !f) return;
+  const pos = (campo, v) => { if (v && [...f[campo].options].some(o => o.value === v || o.text === v)) { f[campo].value = v; atualizarNova(campo); } };
+  pos('empresa', u.empresa); pos('unidade', u.unidade); pos('setor', u.setor); pos('funcao_id', u.funcao_id); pos('motivo', u.motivo);
+}
+
+/* ════════════════════════════════════════════════════════════════
    CLIQUES
    ════════════════════════════════════════════════════════════════ */
 document.addEventListener('click', ev => {
@@ -3139,6 +3224,10 @@ document.addEventListener('click', ev => {
     case 'lib-enviar': liberarEnviar(); break;
     case 'cards-enviar': enviarCards(); break;
     case 'ped-abrir': abrirPedidoQr(id); break;
+    case 'conf-abrir': abrirConferir(id); break;
+    case 'conf-recusar': recusarConferir(id); break;
+    case 'conf-ok': confirmarConferir(); break;
+    case 'conf-recusar-ok': recusarConferirOk(); break;
     case 'ped-recusar': recusarPedidoQr(id); break;
     case 'ped-autorizar': autorizarPedidoQr(); break;
     case 'ped-recusar-ok': recusarPedidoQrOk(); break;
@@ -3226,12 +3315,14 @@ document.addEventListener('change', ev => {
   if (el.dataset.f) { S.f[el.dataset.f] = el.value; render(); return; }
   if (el.closest('#f-nova')) atualizarNova(el.name);
   if (el.closest('#f-ped')) atualizarPedidoQr(el.name);
+  if (el.closest('#f-conf')) atualizarConferir(el.name);
   if (el.closest('#val-sim')) calcValidar();
 });
 document.addEventListener('input', ev => {
   const el = ev.target;
   if (el.name === 'valor_combinado' && S.modalCtx) S.modalCtx.valorEditado = true;
   if (el.dataset && el.dataset.libJust) { LIB.just[el.dataset.libJust] = el.value; return; }
+  if (el.closest && el.closest('#f-conf') && el.name === 'valor_combinado' && S.modalCtx) S.modalCtx.valorEditado = true;
   if (el.closest && el.closest('#f-ped') && el.name !== 'valor_combinado' && el.name !== 'justificativa') atualizarPedidoQr(el.name);
   if (el.id === 'esc-busca') { clearTimeout(el._t); el._t = setTimeout(() => abrirEscalar(S.modalCtx.id, el.value), 250); return; }
   if (el.dataset && (el.dataset.f === 'solBusca' || el.dataset.f === 'banco')) {

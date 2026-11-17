@@ -85,7 +85,7 @@ h1{font-size:26px;line-height:1.15;margin:4px 0 6px;letter-spacing:-.02em}
 <script>
 'use strict';
 const CFG = {
-  VERSAO: '2026.11.15-a',
+  VERSAO: '2026.11.17-a',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec'
 };
 const $ = s => document.querySelector(s);
@@ -167,7 +167,7 @@ async function entrar(tel, auto) {
   }
 }
 async function atualizar() {
-  try { S.eu = await api('qrEu', { tel: S.tel }); if (!S.cam && !$('form#f-ped') && !$('form#f-cad')) telaEu(true); } catch (e) { }
+  try { S.eu = await api('qrEu', { tel: S.tel }); if (!S.cam && !$('form#f-ped') && !$('form#f-cad') && !$('form#f-sem')) telaEu(true); } catch (e) { }
 }
 
 /* ---------- Seus extras ---------- */
@@ -175,14 +175,13 @@ function telaEu(silencioso) {
   const r = S.eu, ext = r.extras || [], peds = r.pedidos || [];
   const pend = peds.filter(p => p.status === 'PENDENTE');
   let h = '<h1>Olá, ' + esc(r.nome) + '!</h1>';
-  if (r.cadastro === 'PENDENTE' && !ext.length) h += '<p class="sub">Seu cadastro foi enviado. Assim que o gestor confirmar, você registra a entrada aqui.</p>';
-  else if (ext.length) h += '<p class="sub">Este é o seu extra de hoje aqui no ' + esc(r.unidade.nome) + '.</p>';
+  if (ext.length) h += '<p class="sub">Este é o seu extra de hoje aqui no ' + esc(r.unidade.nome) + '.</p>';
   ext.forEach(x => {
     h += '<div class="card ext"><div class="t"><div><b>' + esc(x.funcao) + '</b><div class="m">' + esc(x.setor) + ' · ' + esc(x.hora_ini) + ' às ' + esc(x.hora_fim) + '</div></div>' +
       '<span class="v">' + dinheiro(x.valor) + '</span></div>' +
       '<div class="h"><div class="' + (x.entrada ? 'feito' : '') + '"><small>Entrada</small><strong>' + (x.entrada || x.ent_de + '–' + x.ent_ate) + '</strong></div>' +
       '<div class="' + (x.saida ? 'feito' : '') + '"><small>Saída</small><strong>' + (x.saida || x.sai_de + '–' + x.sai_ate) + '</strong></div></div>';
-    if (!x.aprovado && !x.fechado) h += '<div class="aviso az">Extra ainda esperando a aprovação da gestora. Pode registrar normalmente.</div>';
+    if (!x.aprovado && !x.fechado) h += '<div class="aviso az">' + (x.sem_escala ? 'Você entrou sem escala: a gestora confere função e valor. Pode trabalhar normalmente.' : 'Extra ainda esperando a aprovação da gestora. Pode registrar normalmente.') + '</div>';
     if (x.aviso) h += '<div class="aviso' + (x.fechado ? ' vd' : (x.acao ? '' : ' am')) + '">' + esc(x.aviso) + '</div>';
     if (x.acao === 'ENT') h += '<button class="btn" data-foto="ENT" data-id="' + esc(x.esc_id) + '">' + IC.camera + 'Registrar entrada</button>';
     if (x.acao === 'SAI') h += '<button class="btn" data-foto="SAI" data-id="' + esc(x.esc_id) + '">' + IC.camera + 'Registrar saída</button>';
@@ -196,15 +195,22 @@ function telaEu(silencioso) {
   peds.filter(p => p.status === 'RECUSADO').forEach(p => {
     h += '<div class="aviso am">Seu pedido de hoje não foi liberado' + (p.motivo_recusa ? ': ' + esc(p.motivo_recusa) : '') + '.</div>';
   });
-  if (!ext.length && !pend.length && r.cadastro !== 'PENDENTE') {
-    h += '<div class="card"><p style="margin:0 0 14px;font-size:16px;line-height:1.5">Não encontrei um extra seu hoje aqui no <b>' + esc(r.unidade.nome) + '</b>.</p>' +
-      '<button class="btn" data-acao="pedir">Pedir liberação ao gestor</button></div>';
+  if (!ext.some(x => !x.fechado) && !pend.length) {
+    /* Sem escala: registra a entrada já; a gestora confere depois */
+    h += '<form id="f-sem" class="card"><p style="margin:0 0 14px;font-size:16px;line-height:1.5">' +
+      (ext.length ? 'Vai fazer outro extra hoje aqui?' : 'Não tem extra seu marcado para hoje aqui. <b>Pode registrar a entrada agora</b>: a gestora confere depois.') + '</p>' +
+      (S.info.setores.length > 1 ? '<div class="campo"><label for="setor">Setor</label><select id="setor" name="setor">' + opcoesSetor() + '</select></div>' : '<input type="hidden" name="setor" value="' + esc(S.info.setores[0] || '') + '">') +
+      campoHora('Até que horas você vai ficar?', horaSugerida()) +
+      '<div class="campo"><label for="obs">Quem te chamou? (opcional)</label><input id="obs" name="obs" maxlength="200" placeholder="Ex.: a Fabrícia"></div>' +
+      '<button class="btn" type="submit">' + IC.camera + 'Registrar entrada</button></form>';
   }
   h += '<button class="btn link" data-acao="trocar">Não é ' + esc(r.nome) + '? Trocar o celular</button>';
   tela(h);
+  const fs = $('#f-sem');
+  if (fs) fs.addEventListener('submit', ev => { ev.preventDefault(); telaCamera(null, 'SEM', { setor: fs.setor.value, hora_fim: fs.hora_fim.value, obs: fs.obs.value }); });
   /* Atualiza sozinha enquanto espera o gestor ou a janela abrir */
   clearInterval(S.timer);
-  if (pend.length || ext.some(x => x.acao === 'AGUARDA' || x.acao === 'ANTES') || r.cadastro === 'PENDENTE') S.timer = setInterval(() => { if (!document.hidden) atualizar(); }, 20000);
+  if (pend.length || ext.some(x => x.acao === 'AGUARDA' || x.acao === 'ANTES')) S.timer = setInterval(() => { if (!document.hidden) atualizar(); }, 20000);
 }
 
 /* ---------- Pedido sem escala / cadastro novo ---------- */
@@ -258,24 +264,22 @@ function telaNovo() {
     '<div class="pilha"><button class="btn" data-acao="cadastro">Fazer meu cadastro</button><button class="btn claro" data-acao="trocar">Errei o número</button></div>');
 }
 function telaCadastro() {
-  tela('<h1>Seu cadastro</h1><p class="sub">Você preenche só uma vez. O gestor confere antes de valer.</p>' +
+  tela('<h1>Seu cadastro</h1><p class="sub">Você preenche só uma vez. Depois já registra a entrada.</p>' +
     '<form id="f-cad" class="card" autocomplete="on">' +
     '<div class="campo"><label for="nome">Nome completo</label><input id="nome" name="nome" autocomplete="name" required minlength="5"></div>' +
     '<div class="campo"><label for="cpf">CPF</label><input id="cpf" name="cpf" inputmode="numeric" placeholder="000.000.000-00" required></div>' +
     '<div class="campo"><label for="pt">Tipo da chave PIX</label><select id="pt" name="pix_tipo" required><option value="">Escolha</option><option value="CPF">CPF</option><option value="TELEFONE">Celular</option><option value="EMAIL">E-mail</option><option value="ALEATORIA">Chave aleatória</option></select></div>' +
     '<div class="campo"><label for="pc">Chave PIX</label><input id="pc" name="pix_chave" required autocomplete="off"><span class="dica">É para onde vai o pagamento. Confira com cuidado.</span></div>' +
-    '<div class="campo"><label for="setor">Setor em que vai trabalhar hoje</label><select id="setor" name="setor">' + opcoesSetor() + '</select></div>' +
-    campoHora('Até que horas vai ficar?', horaSugerida()) +
-    '<div class="campo"><label for="obs">Quem te chamou? (opcional)</label><textarea id="obs" name="obs" maxlength="300"></textarea></div>' +
+
     '<label class="check"><input type="checkbox" name="lgpd" required><span>Autorizo o Q Food Group a usar meu nome, celular, CPF e PIX só para registrar e pagar meus extras, e a selfie e a localização só para comprovar a presença.</span></label>' +
     '<button class="btn" type="submit">Enviar cadastro</button></form><button class="btn link" data-acao="trocar">Voltar</button>');
   const c = $('#cpf'); c.addEventListener('input', () => { c.value = cpfFmt(c.value); });
   $('#pt').addEventListener('change', ev => { if (ev.target.value === 'CPF' && !$('#pc').value) $('#pc').value = c.value.replace(/\D/g, ''); if (ev.target.value === 'TELEFONE' && !$('#pc').value) $('#pc').value = S.tel; });
   $('#f-cad').addEventListener('submit', async ev => {
     ev.preventDefault(); const f = ev.target;
-    const dados = { tel: S.tel, nome: f.nome.value.trim(), cpf: f.cpf.value, pix_tipo: f.pix_tipo.value, pix_chave: f.pix_chave.value.trim(), setor: f.setor.value, hora_fim: f.hora_fim.value, obs: f.obs.value, lgpd: f.lgpd.checked, disp: disp() };
+    const dados = { tel: S.tel, nome: f.nome.value.trim(), cpf: f.cpf.value, pix_tipo: f.pix_tipo.value, pix_chave: f.pix_chave.value.trim(), lgpd: f.lgpd.checked, disp: disp() };
     const btn = f.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Enviando…';
-    try { S.eu = await api('qrCadastro', dados); telaEu(); toast('Cadastro enviado. Agora é só esperar o gestor.'); }
+    try { S.eu = await api('qrCadastro', dados); telaEu(); toast('Cadastro feito. Agora registre a entrada.'); }
     catch (e) { toast(e.message, 'err'); btn.disabled = false; btn.textContent = 'Enviar cadastro'; }
   });
 }
@@ -287,11 +291,11 @@ function distM(a1, o1, a2, o2) {
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 const distTxt = m => m < 1000 ? Math.round(m) + ' m' : (Math.round(m / 100) / 10).toString().replace('.', ',') + ' km';
-function telaCamera(escId, modo) {
+function telaCamera(escId, modo, sem) {
   parar();
-  const x = S.eu.extras.find(e => e.esc_id === escId); if (!x) return telaEu();
-  const tipo = modo === 'ENT' ? 'ENT' : 'SAI', antes = modo === 'ANTES';
-  S.cam = { id: escId, tipo, antes, stream: null, pos: null, watch: null, img: '', dist: null };
+  const x = escId ? S.eu.extras.find(e => e.esc_id === escId) : null; if (!x && modo !== 'SEM') return telaEu();
+  const tipo = modo === 'ENT' || modo === 'SEM' ? 'ENT' : 'SAI', antes = modo === 'ANTES';
+  S.cam = { id: escId, tipo, antes, sem: modo === 'SEM' ? sem : null, stream: null, pos: null, watch: null, img: '', dist: null };
   const c = S.cam;
   tela('<h1>' + (tipo === 'ENT' ? 'Registrar entrada' : 'Registrar saída') + '</h1>' +
     '<p class="sub">' + (antes ? 'Saída antes do horário: diga o motivo abaixo.' : 'Rosto dentro do contorno, sem boné e sem óculos escuros.') + '</p>' +
@@ -370,13 +374,13 @@ async function enviar() {
   const c = S.cam; if (!c || !c.img) return;
   const motivo = c.antes ? ($('#mot').value || '').trim() : '';
   if (c.antes && motivo.length < 5) return toast('Diga o motivo da saída antes do horário.', 'err');
-  const p = { tel: S.tel, esc_id: c.id, tipo: c.tipo, foto: c.img, antes: c.antes, motivo, disp: disp() };
+  const p = c.sem ? Object.assign({ tel: S.tel, foto: c.img, disp: disp() }, c.sem) : { tel: S.tel, esc_id: c.id, tipo: c.tipo, foto: c.img, antes: c.antes, motivo, disp: disp() };
   if (c.pos) Object.assign(p, { lat: c.pos.lat, lng: c.pos.lng, prec: c.pos.prec });
   const b = $('#bts'); b.innerHTML = '<div class="espera" style="padding:12px 0"><span class="roda"></span>Enviando a foto…</div>';
   try {
-    const r = await api('qrPonto', p);
+    const r = await api(c.sem ? 'qrEntrarSemEscala' : 'qrPonto', p);
     parar(); S.eu = r;
-    const x = r.extras.find(e => e.esc_id === c.id);
+    const x = c.sem ? r.extras.filter(e => e.sem_escala && e.entrada === r.feito.hora).pop() : r.extras.find(e => e.esc_id === c.id);
     tela('<div class="ok-grande">' + IC.check + '</div><div class="centro"><h1>' + (c.tipo === 'ENT' ? 'Entrada' : 'Saída') + ' registrada às ' + esc(r.feito.hora) + '</h1>' +
       '<p class="sub">' + (c.tipo === 'ENT' ? 'Bom trabalho, ' + esc(r.nome) + '! Na saída, leia o QR de novo e registre a saída' + (x ? ' (de ' + esc(x.sai_de) + ' às ' + esc(x.sai_ate) + ')' : '') + '.'
         : 'Obrigado, ' + esc(r.nome) + '! Agora a gestora confere e libera o pagamento.') + '</p></div>' +
@@ -400,7 +404,7 @@ document.addEventListener('click', ev => {
     case 'tirar': return tirar();
     case 'denovo': return deNovo();
     case 'enviar': return enviar();
-    case 'cam-denovo': { const c = S.cam; if (!c) return; return telaCamera(c.id, c.antes ? 'ANTES' : c.tipo); }
+    case 'cam-denovo': { const c = S.cam; if (!c) return; return telaCamera(c.id, c.sem ? 'SEM' : c.antes ? 'ANTES' : c.tipo, c.sem); }
   }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.eu && !S.cam && S.timer) atualizar(); });
