@@ -85,7 +85,7 @@ h1{font-size:26px;line-height:1.15;margin:4px 0 6px;letter-spacing:-.02em}
 <script>
 'use strict';
 const CFG = {
-  VERSAO: '2026.11.17-a',
+  VERSAO: '2026.11.18-a',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwBc-EXOlX-SpXNGfYc0g0JekacWor2ty7BHzQ3LJEzYTh6Pg7PALbe26TgjzJZ_-eY/exec'
 };
 const $ = s => document.querySelector(s);
@@ -115,13 +115,21 @@ function toast(m, tipo) {
   clearTimeout(toast.t); toast.t = setTimeout(() => { t.className = 'toast'; }, 4200);
 }
 async function api(action, payload) {
+  const leitura = action === 'qrInfo' || action === 'qrEu';
+  const falhou = m => { const er = new Error(m); er.rede = true; return er; };
   let r;
-  try {
-    r = await fetch(CFG.GAS_URL + '?modulo=extras', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action, payload: Object.assign({ u: S.u }, payload || {}) }) });
-  } catch (e) { throw new Error('Sem internet. Confira a conexão e tente de novo.'); }
+  for (let i = 0; ; i++) {
+    try {
+      r = await fetch(CFG.GAS_URL + '?modulo=extras', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action, payload: Object.assign({ u: S.u }, payload || {}) }) });
+      break;
+    } catch (e) {
+      if (leitura && i < 2) { await new Promise(ok => setTimeout(ok, 1500 * (i + 1))); continue; }
+      throw falhou('Sem internet. Confira a conexão e tente de novo.');
+    }
+  }
   let j;
-  try { j = await r.json(); } catch (e) { throw new Error('O sistema não respondeu. Tente de novo.'); }
+  try { j = await r.json(); } catch (e) { throw falhou('O sistema não respondeu. Tente de novo.'); }
   if (!j.ok) throw new Error(j.error || 'Não deu certo. Tente de novo.');
   return j.resultado;
 }
@@ -139,7 +147,16 @@ function parar() {
 async function iniciar() {
   if (!S.u) return tela('<h1>QR incompleto</h1><p class="sub">Leia de novo o QR que está na parede da unidade.</p>');
   try { S.info = await api('qrInfo'); }
-  catch (e) { $('#uni').textContent = '—'; return tela('<h1>QR não vale mais</h1><p class="sub">' + esc(e.message) + '</p>'); }
+  catch (e) {
+    $('#uni').textContent = '—';
+    if (e.rede) {
+      tela('<h1>Sem conexão</h1><p class="sub">O celular não conseguiu falar com o sistema. Confira se a internet (4G ou Wi-Fi) está ligada e toque em <b>Tentar de novo</b>.</p>' +
+        '<button class="btn" data-acao="reabrir">Tentar de novo</button>');
+      window.addEventListener('online', () => { if (!S.info) { carregando('Conectando…'); iniciar(); } }, { once: true });
+      return;
+    }
+    return tela('<h1>QR não vale mais</h1><p class="sub">' + esc(e.message) + '</p>');
+  }
   $('#uni').textContent = S.info.nome;
   if (S.tel) entrar(S.tel, true); else telaTel();
 }
@@ -397,6 +414,7 @@ document.addEventListener('click', ev => {
   const el = ev.target.closest('[data-acao],[data-foto]'); if (!el) return;
   if (el.dataset.foto) return telaCamera(el.dataset.id, el.dataset.foto);
   switch (el.dataset.acao) {
+    case 'reabrir': carregando('Conectando…'); return iniciar();
     case 'pedir': return telaPedido();
     case 'cadastro': return telaCadastro();
     case 'trocar': LS.del('qfood_ponto_tel'); S.tel = ''; S.eu = null; return telaTel();
